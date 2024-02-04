@@ -22,6 +22,9 @@
 
 #pragma once 
 #include <cstdint>
+#include <array>
+#include <vector>
+#include <string>
 
 typedef std::uintptr_t SPOK_Handle;
 
@@ -30,4 +33,23 @@ class SPOKCore
 public:
 	int GetVersion();
 };
+
+#define SHA1_DIGEST_SIZE 20
+#define SHA256_DIGEST_SIZE 32
+
+enum class NCRYPT_MACHINE_KEY
+{
+	YES,
+	NO
+};
+
+//NONCE
+typedef std::array<uint8_t, SHA1_DIGEST_SIZE> SPOK_Nonce;
+
+//RSA Key Blob
+typedef std::vector<uint8_t> SPOK_RSAKeyBlob;
+
+//IdBindingBlob
+typedef std::vector<uint8_t> SPOK_BindingBlob;
+
 

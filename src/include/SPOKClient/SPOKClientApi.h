@@ -41,10 +41,41 @@ extern "C"
 #endif
 
 	SPOKCLIENT_API SPOK_Handle SPC_Create();
-	SPOKCLIENT_API void SPOK_AIKActivateChallenge(SPOK_Handle hSpok);
+		
+	//AIK Management
+	SPOKCLIENT_API void SPC_AIKCreate();
+	SPOKCLIENT_API void SPC_AIKDelete();
+	SPOKCLIENT_API void SPC_AIKExists();
 
+	//AIK Attestation
+	SPOKCLIENT_API void SPC_AIKGetKeyAttestation();
+	SPOKCLIENT_API void SPC_AIKGetPlatformAttestation();
 
+	//AIK Public Key
+	SPOKCLIENT_API void SPC_AIKGetPublicKey();
 
+	//Endorsement Key Access
+	SPOKCLIENT_API void SPC_GetEndorsementPublicKey();
+
+	//AIK Challenge
+	SPOKCLIENT_API void SPC_AIKGetChallengeBinding();
+	SPOKCLIENT_API void SPC_AIKActivateChallenge();
+
+	//AIK Quote and Verify
+	SPOKCLIENT_API void SPC_GetBootLog();	
+	SPOKCLIENT_API void SPC_GetPCRTable();
+
+	//SRK Access
+	SPOKCLIENT_API void SPC_GetStorageRootKey();
+
+	//User Key Addition
+	SPOKCLIENT_API void SPC_PlatformImportKey();
+
+	//Cryptographic Operations
+	SPOKCLIENT_API void SPC_PlatformDecrypt();
+	SPOKCLIENT_API void SPC_PlatformEncrypt();
+	SPOKCLIENT_API void SPC_PlatformSign();
+	SPOKCLIENT_API void SPC_PlatformVerifySignature();
 
 #ifdef __cplusplus
 }

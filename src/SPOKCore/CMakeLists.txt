@@ -3,6 +3,7 @@ cmake_path(GET CMAKE_CURRENT_SOURCE_DIR PARENT_PATH PARENT_DIR)
 
 set( externHeadersCore 
     ${PARENT_DIR}/include/SPOK/SPOKCore.h
+    ${PARENT_DIR}/include/SPOK/NCryptUtil.h
 )
 
 set( libHeaders 
@@ -12,6 +13,7 @@ set( libHeaders
 
 set( libSource
 	${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKCore.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NCryptUtil.cpp
 )
 
 add_library (SPOKCore STATIC ${libSource} ${libHeaders} ${externHeaders}) 

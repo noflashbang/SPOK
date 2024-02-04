@@ -41,10 +41,34 @@ extern "C"
 #endif
 
 	SPOKSERVER_API SPOK_Handle SPS_Create();
-	SPOKSERVER_API void SPS_AIKActivateChallenge(SPOK_Handle hSpok);
+	
+	//AIK Platform Attestation
+	SPOKSERVER_API void SPS_AIKAttestationDecode();
+	SPOKSERVER_API void	SPS_AIKAttestationGetPCR();
+	SPOKSERVER_API void SPS_AIKAttestationGetTcgLog();
+	SPOKSERVER_API void SPS_AIKAttestationVerify();
 
+	//AIK Attestation
+	SPOKSERVER_API void SPS_AIKDecodeBinding();
+	SPOKSERVER_API void SPS_AIKFreeBinding();
+	SPOKSERVER_API void SPS_AIKGetChallenge();
+	
+	//AIK Key Attestation
+	SPOKSERVER_API void SPS_AIKKeyAttestationDecode();
+	SPOKSERVER_API void SPS_AIKKeyAttestationVerify();
 
+	SPOKSERVER_API void SPS_AIKRawVerifyNonce();
+	SPOKSERVER_API void SPS_AIKRawVerifySignature();
 
+	//Basic Crypto Operations
+	SPOKSERVER_API void SPS_Decrypt();
+	SPOKSERVER_API void SPS_Encrypt();
+	SPOKSERVER_API void SPS_Sign();
+	SPOKSERVER_API void SPS_VerifySignature();
+
+	//Key Helpers
+	SPOKSERVER_API void SPS_GenerateRSA256KeyPair();
+	SPOKSERVER_API void SPS_WrapKeyForPlatformImport();
 
 #ifdef __cplusplus
 }
