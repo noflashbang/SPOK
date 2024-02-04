@@ -29,10 +29,10 @@
 #include "SPOKCore.h"
 
 
-#ifdef SPOK_EXPORTS
-#define SPOK_API __declspec(dllexport)
+#ifdef SPOKSERVER_EXPORTS
+#define SPOKSERVER_API __declspec(dllexport)
 #else
-#define SPOK_API __declspec(dllimport) 
+#define SPOKSERVER_API __declspec(dllimport) 
 #endif
 
 #ifdef __cplusplus
@@ -40,7 +40,11 @@ extern "C"
 {
 #endif
 
-	SPOK_API SPOK_Handle SPOK_Create();
+	SPOKSERVER_API SPOK_Handle SPS_Create();
+	SPOKSERVER_API void SPS_AIKActivateChallenge(SPOK_Handle hSpok);
+
+
+
 
 #ifdef __cplusplus
 }

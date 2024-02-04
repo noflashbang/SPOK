@@ -14,9 +14,16 @@ FetchContent_MakeAvailable(Catch2)
 
 cmake_path(GET CMAKE_CURRENT_SOURCE_DIR PARENT_PATH PARENT_DIR)
 
-set( externHeaders 
-	${PARENT_DIR}/include/SPOK/SPOKApi.h
+set( externHeadersCore 
     ${PARENT_DIR}/include/SPOK/SPOKCore.h
+)
+
+set( externHeadersClient
+    ${PARENT_DIR}/include/SPOKClient/SPOKClientApi.h
+)
+
+set( externHeadersServer
+    ${PARENT_DIR}/include/SPOKServer/SPOKServerApi.h
 )
 
 set( testSource 
@@ -25,11 +32,15 @@ set( testSource
 
 add_executable(SPOKTest ${testSource} ${externHeaders})
 target_link_libraries(SPOKTest PRIVATE Catch2::Catch2WithMain)
-target_link_libraries(SPOKTest PUBLIC SPOK)
+target_link_libraries(SPOKTest PUBLIC SPOKClient)
+target_link_libraries(SPOKTest PUBLIC SPOKServer)
 
-add_dependencies(SPOKTest SPOK)
+add_dependencies(SPOKTest SPOKClient)
+add_dependencies(SPOKTest SPOKServer)
 
 target_include_directories( SPOKTest	PUBLIC ${PARENT_DIR}/SPOK/include/SPOK )
+target_include_directories( SPOKTest	PUBLIC ${PARENT_DIR}/SPOK/include/SPOKClient )
+target_include_directories( SPOKTest	PUBLIC ${PARENT_DIR}/SPOK/include/SPOKServer )
 
 target_sources( SPOKTest PRIVATE 
     ${testSource}
