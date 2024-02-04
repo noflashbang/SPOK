@@ -3,5 +3,6 @@
 
 SPOK_Handle SPC_Create()
 {
-	return 0;
+	SPOKCore core;
+	return core.GetVersion();
 }

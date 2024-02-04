@@ -30,6 +30,9 @@ target_sources( SPOKServer PRIVATE ${libSource} ${libHeaders} )
 target_sources( SPOKServer PUBLIC FILE_SET HEADERS BASE_DIRS ${PARENT_DIR}/include/SPOKServer FILES ${externHeaders} )
 target_sources( SPOKServer PUBLIC FILE_SET HEADERS BASE_DIRS ${PARENT_DIR}/include/SPOK FILES ${externHeadersCore} )
 
+target_link_libraries(SPOKServer PUBLIC SPOKCore)
+add_dependencies(SPOKServer SPOKCore)
+
 install(TARGETS SPOKServer
         RUNTIME DESTINATION bin          
         LIBRARY DESTINATION lib

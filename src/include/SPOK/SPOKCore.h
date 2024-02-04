@@ -25,5 +25,9 @@
 
 typedef std::uintptr_t SPOK_Handle;
 
-
+class SPOKCore
+{
+public:
+	int GetVersion();
+};
 
