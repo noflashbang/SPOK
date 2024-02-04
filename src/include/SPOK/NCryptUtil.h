@@ -21,8 +21,14 @@ class NCryptKeyHandle
 {
 public:
 	NCryptKeyHandle(std::wstring name, long flags);
+	NCryptKeyHandle(const NCRYPT_KEY_HANDLE& hKey);
 	~NCryptKeyHandle();
 	operator NCRYPT_KEY_HANDLE() const;
+
+	bool IsValid() const
+	{
+		return m_hKey != NULL;
+	}
 
 private:
 	NCryptProvHandle m_hProv;

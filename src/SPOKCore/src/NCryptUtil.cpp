@@ -30,9 +30,13 @@ NCryptKeyHandle::NCryptKeyHandle(std::wstring name, long flags)
 	HRESULT status = NCryptOpenKey(m_hProv, &hKey, name.c_str(), 0, flags);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("NCryptOpenKey failed");
+		m_hKey = NULL;
 	}
 	m_hKey = hKey;
+}
+
+NCryptKeyHandle::NCryptKeyHandle(const NCRYPT_KEY_HANDLE& hKey) : m_hKey(hKey)
+{
 }
 
 NCryptKeyHandle::~NCryptKeyHandle()
@@ -97,4 +101,61 @@ SPOK_RSAKeyBlob PlatformAik::GetPublicKey()
 	}
 
 	return key;
+}
+
+bool NCryptUtil::DoesAikExists(std::wstring keyName, NCRYPT_MACHINE_KEY flag)
+{
+	NCryptProvHandle hProv;
+
+	NCryptKeyHandle hKey(keyName, flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	
+	return hKey.IsValid();
+}
+
+PlatformAik NCryptUtil::CreateAik(std::wstring keyName, NCRYPT_MACHINE_KEY flag, SPOK_Nonce nonce)
+{
+	NCryptProvHandle hProv;
+
+	NCRYPT_KEY_HANDLE hKey;
+	// Create the key
+	HRESULT status = NCryptCreatePersistedKey(hProv, &hKey, BCRYPT_RSA_ALGORITHM, keyName.c_str(), 0, flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptCreatePersistedKey failed");
+	}
+	// RAII
+	NCryptKeyHandle keyHandle(hKey);
+
+	// Set the nonce
+	status = NCryptSetProperty(hKey, NCRYPT_PCP_TPM12_IDBINDING_PROPERTY, nonce.data(), nonce.size(), 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptSetProperty \"NCRYPT_PCP_TPM12_IDBINDING_NONCE_PROPERTY\" failed");
+	}
+
+	// Finalize the key
+	status = NCryptFinalizeKey(hKey, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptFinalizeKey failed");
+	}
+		
+	return PlatformAik(keyName, flag);
+}
+
+void NCryptUtil::DeleteKey(std::wstring keyName, NCRYPT_MACHINE_KEY flag)
+{
+	NCryptProvHandle hProv;
+	NCryptKeyHandle hKey(keyName, flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+
+	if (!hKey.IsValid())
+	{
+		return;
+	}
+	// Delete the key
+	HRESULT status = NCryptDeleteKey(hKey, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptDeleteKey failed");
+	}
 }
