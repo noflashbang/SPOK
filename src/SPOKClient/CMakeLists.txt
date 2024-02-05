@@ -18,6 +18,7 @@ set( libHeaders
 
 set( libSource
 	${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKClientApi.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKClient.cpp
 )
 
 add_library (SPOKClient SHARED ${libSource} ${libHeaders} ${externHeaders}) 

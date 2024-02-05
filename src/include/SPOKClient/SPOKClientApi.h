@@ -43,9 +43,9 @@ extern "C"
 	SPOKCLIENT_API SPOK_Handle SPC_Create();
 		
 	//AIK Management
-	SPOKCLIENT_API void SPC_AIKCreate();
-	SPOKCLIENT_API void SPC_AIKDelete();
-	SPOKCLIENT_API void SPC_AIKExists();
+	SPOKCLIENT_API void SPC_AIKCreate(std::wstring name, NCRYPT_MACHINE_KEY flag, SPOK_Nonce nonce);
+	SPOKCLIENT_API void SPC_AIKDelete(std::wstring name, NCRYPT_MACHINE_KEY flag);
+	SPOKCLIENT_API bool SPC_AIKExists(std::wstring name, NCRYPT_MACHINE_KEY flag);
 
 	//AIK Attestation
 	SPOKCLIENT_API void SPC_AIKGetKeyAttestation();

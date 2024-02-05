@@ -24,6 +24,8 @@ target_sources( SPOKCore PRIVATE ${libSource} ${libHeaders} )
 
 target_sources( SPOKCore PUBLIC FILE_SET HEADERS BASE_DIRS ${PARENT_DIR}/include/SPOK FILES ${externHeadersCore} )
 
+target_link_libraries( SPOKCore PUBLIC bcrypt.lib ncrypt.lib )
+
 install(TARGETS SPOKCore
         RUNTIME DESTINATION bin          
         LIBRARY DESTINATION lib

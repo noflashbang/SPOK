@@ -32,7 +32,10 @@ NCryptKeyHandle::NCryptKeyHandle(std::wstring name, long flags)
 	{
 		m_hKey = NULL;
 	}
-	m_hKey = hKey;
+	else
+	{
+		m_hKey = hKey;
+	}
 }
 
 NCryptKeyHandle::NCryptKeyHandle(const NCRYPT_KEY_HANDLE& hKey) : m_hKey(hKey)
@@ -114,11 +117,12 @@ bool NCryptUtil::DoesAikExists(std::wstring keyName, NCRYPT_MACHINE_KEY flag)
 
 PlatformAik NCryptUtil::CreateAik(std::wstring keyName, NCRYPT_MACHINE_KEY flag, SPOK_Nonce nonce)
 {
+	DWORD ncryptKeyUsage = NCRYPT_PCP_IDENTITY_KEY;
 	NCryptProvHandle hProv;
-
 	NCRYPT_KEY_HANDLE hKey;
 	// Create the key
-	HRESULT status = NCryptCreatePersistedKey(hProv, &hKey, BCRYPT_RSA_ALGORITHM, keyName.c_str(), 0, flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	long flags = NCRYPT_OVERWRITE_KEY_FLAG | (flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	HRESULT status = NCryptCreatePersistedKey(hProv, &hKey, BCRYPT_RSA_ALGORITHM, keyName.c_str(), 0, flags);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptCreatePersistedKey failed");
@@ -126,15 +130,22 @@ PlatformAik NCryptUtil::CreateAik(std::wstring keyName, NCRYPT_MACHINE_KEY flag,
 	// RAII
 	NCryptKeyHandle keyHandle(hKey);
 
-	// Set the nonce
-	status = NCryptSetProperty(hKey, NCRYPT_PCP_TPM12_IDBINDING_PROPERTY, nonce.data(), nonce.size(), 0);
+	//set the key usage policy
+	status = NCryptSetProperty(keyHandle, NCRYPT_PCP_KEY_USAGE_POLICY_PROPERTY, (PBYTE)&ncryptKeyUsage, sizeof(ncryptKeyUsage), 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("NCryptSetProperty \"NCRYPT_PCP_TPM12_IDBINDING_NONCE_PROPERTY\" failed");
+		throw std::runtime_error("NCryptSetProperty \"NCRYPT_PCP_KEY_USAGE_POLICY_PROPERTY\" failed");
+	}
+
+	// Set the nonce
+	status = NCryptSetProperty(keyHandle, NCRYPT_PCP_TPM12_IDBINDING_PROPERTY, nonce.data(), nonce.size(), 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptSetProperty \"NCRYPT_PCP_TPM12_IDBINDING_PROPERTY\" failed");
 	}
 
 	// Finalize the key
-	status = NCryptFinalizeKey(hKey, 0);
+	status = NCryptFinalizeKey(keyHandle, 0);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptFinalizeKey failed");
