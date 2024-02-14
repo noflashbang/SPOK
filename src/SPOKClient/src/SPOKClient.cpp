@@ -9,17 +9,29 @@ SPOKClient::~SPOKClient()
 {
 }
 
-void SPOKClient::AIKCreate(std::wstring name, NCRYPT_MACHINE_KEY flag, SPOK_Nonce nonce)
+void SPOKClient::AIKCreate(const SPOK_PlatformKey& aik, SPOK_Nonce nonce)
 {
-	NCryptUtil::CreateAik(name, flag, nonce);
+	NCryptUtil::CreateAik(aik, nonce);
 }
 
-void SPOKClient::AIKDelete(std::wstring name, NCRYPT_MACHINE_KEY flag)
+void SPOKClient::AIKDelete(const SPOK_PlatformKey& aik)
 {
-	NCryptUtil::DeleteKey(name, flag);
+	NCryptUtil::DeleteKey(aik);
 }
 
-bool SPOKClient::AIKExists(std::wstring name, NCRYPT_MACHINE_KEY flag)
+bool SPOKClient::AIKExists(const SPOK_PlatformKey& aik)
 {
-	return NCryptUtil::DoesAikExists(name, flag);
+	return NCryptUtil::DoesAikExists(aik);
+}
+
+SPOK_Blob SPOKClient::AIKGetPublicKey(const SPOK_PlatformKey& aik)
+{
+	auto aiKey = PlatformAik(aik);
+	return aiKey.GetPublicKey();
+}
+
+SPOK_Blob SPOKClient::AIKGetChallengeBinding(const SPOK_PlatformKey& aik)
+{
+	auto aiKey = PlatformAik(aik);
+	return aiKey.GetIdBinding();
 }

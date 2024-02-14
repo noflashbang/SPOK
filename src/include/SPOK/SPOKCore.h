@@ -43,13 +43,16 @@ enum class NCRYPT_MACHINE_KEY
 	NO
 };
 
-//NONCE
+struct SPOK_PlatformKey
+{
+	std::wstring Name;
+	NCRYPT_MACHINE_KEY Flag;
+};
+
+// NONCE
 typedef std::array<uint8_t, SHA1_DIGEST_SIZE> SPOK_Nonce;
 
-//RSA Key Blob
-typedef std::vector<uint8_t> SPOK_RSAKeyBlob;
-
-//IdBindingBlob
-typedef std::vector<uint8_t> SPOK_BindingBlob;
+// IdBindingBlob, RSABlob, etc.
+typedef std::vector<uint8_t> SPOK_Blob;
 
 

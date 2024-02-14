@@ -56,7 +56,7 @@ NCryptKeyHandle::operator NCRYPT_KEY_HANDLE() const
 	return m_hKey;
 }
 
-PlatformAik::PlatformAik(std::wstring keyName, NCRYPT_MACHINE_KEY flag) : m_keyName(keyName), m_flag(flag)
+PlatformAik::PlatformAik(const SPOK_PlatformKey& aik) : m_keyName(aik.Name), m_flag(aik.Flag)
 {
 }
 
@@ -64,7 +64,7 @@ PlatformAik::~PlatformAik()
 {
 }
 
-SPOK_BindingBlob PlatformAik::GetIdBinding()
+SPOK_Blob PlatformAik::GetIdBinding()
 {
 	NCryptKeyHandle hKey(m_keyName, m_flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
 	DWORD bindingSize = 0;
@@ -75,7 +75,7 @@ SPOK_BindingBlob PlatformAik::GetIdBinding()
 		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_TPM12_IDBINDING_PROPERTY\" failed");
 	}
 
-	SPOK_BindingBlob binding(bindingSize);
+	SPOK_Blob binding(bindingSize);
 	status = NCryptGetProperty(hKey, NCRYPT_PCP_TPM12_IDBINDING_PROPERTY, binding.data(), binding.size(), &bindingSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
@@ -85,7 +85,7 @@ SPOK_BindingBlob PlatformAik::GetIdBinding()
 	return binding;
 }
 
-SPOK_RSAKeyBlob PlatformAik::GetPublicKey()
+SPOK_Blob PlatformAik::GetPublicKey()
 {
 	NCryptKeyHandle hKey(m_keyName, m_flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
 	DWORD keySize = 0;
@@ -96,7 +96,7 @@ SPOK_RSAKeyBlob PlatformAik::GetPublicKey()
 		throw std::runtime_error("NCryptExportKey failed");
 	}
 
-	SPOK_RSAKeyBlob key(keySize);
+	SPOK_Blob key(keySize);
 	status = NCryptExportKey(hKey, NULL, BCRYPT_RSAPUBLIC_BLOB, NULL, key.data(), key.size(), &keySize, 0);
 	if (status != ERROR_SUCCESS)
 	{
@@ -106,23 +106,23 @@ SPOK_RSAKeyBlob PlatformAik::GetPublicKey()
 	return key;
 }
 
-bool NCryptUtil::DoesAikExists(std::wstring keyName, NCRYPT_MACHINE_KEY flag)
+bool NCryptUtil::DoesAikExists(const SPOK_PlatformKey& aik)
 {
 	NCryptProvHandle hProv;
 
-	NCryptKeyHandle hKey(keyName, flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	NCryptKeyHandle hKey(aik.Name, aik.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
 	
 	return hKey.IsValid();
 }
 
-PlatformAik NCryptUtil::CreateAik(std::wstring keyName, NCRYPT_MACHINE_KEY flag, SPOK_Nonce nonce)
+PlatformAik NCryptUtil::CreateAik(const SPOK_PlatformKey& aik, SPOK_Nonce nonce)
 {
 	DWORD ncryptKeyUsage = NCRYPT_PCP_IDENTITY_KEY;
 	NCryptProvHandle hProv;
 	NCRYPT_KEY_HANDLE hKey;
 	// Create the key
-	long flags = NCRYPT_OVERWRITE_KEY_FLAG | (flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
-	HRESULT status = NCryptCreatePersistedKey(hProv, &hKey, BCRYPT_RSA_ALGORITHM, keyName.c_str(), 0, flags);
+	long flags = NCRYPT_OVERWRITE_KEY_FLAG | (aik.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	HRESULT status = NCryptCreatePersistedKey(hProv, &hKey, BCRYPT_RSA_ALGORITHM, aik.Name.c_str(), 0, flags);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptCreatePersistedKey failed");
@@ -151,13 +151,13 @@ PlatformAik NCryptUtil::CreateAik(std::wstring keyName, NCRYPT_MACHINE_KEY flag,
 		throw std::runtime_error("NCryptFinalizeKey failed");
 	}
 		
-	return PlatformAik(keyName, flag);
+	return PlatformAik(aik);
 }
 
-void NCryptUtil::DeleteKey(std::wstring keyName, NCRYPT_MACHINE_KEY flag)
+void NCryptUtil::DeleteKey(const SPOK_PlatformKey& aik)
 {
 	NCryptProvHandle hProv;
-	NCryptKeyHandle hKey(keyName, flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	NCryptKeyHandle hKey(aik.Name, aik.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
 
 	if (!hKey.IsValid())
 	{

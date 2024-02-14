@@ -11,20 +11,22 @@ public:
 	SPOKClient();
 	~SPOKClient();
 
-	void AIKCreate(std::wstring name, NCRYPT_MACHINE_KEY flag, SPOK_Nonce nonce);
-	void AIKDelete(std::wstring name, NCRYPT_MACHINE_KEY flag);
-	bool AIKExists(std::wstring name, NCRYPT_MACHINE_KEY flag);
+	void AIKCreate(const SPOK_PlatformKey& aik, SPOK_Nonce nonce);
+	void AIKDelete(const SPOK_PlatformKey& aik);
+	bool AIKExists(const SPOK_PlatformKey& aik);
 
 	void AIKGetKeyAttestation();
 	void AIKGetPlatformAttestation();
-	void AIKGetPublicKey();
+	SPOK_Blob AIKGetPublicKey(const SPOK_PlatformKey& aik);
 	void GetEndorsementPublicKey();
-	void AIKGetChallengeBinding();
+	SPOK_Blob AIKGetChallengeBinding(const SPOK_PlatformKey& aik);
 	void AIKActivateChallenge();
 	void GetBootLog();
 	void GetPCRTable();
 	void GetStorageRootKey();
+
 	void PlatformImportKey();
+	
 	void PlatformDecrypt();
 	void PlatformEncrypt();
 	void PlatformSign();

@@ -52,13 +52,13 @@ extern "C"
 	SPOKCLIENT_API void SPC_AIKGetPlatformAttestation();
 
 	//AIK Public Key
-	SPOKCLIENT_API void SPC_AIKGetPublicKey();
+	SPOKCLIENT_API void SPC_AIKGetPublicKey(std::wstring name, NCRYPT_MACHINE_KEY flag, unsigned char* pBytesOut, size_t cbBytesOut, size_t& sizeOut);
 
 	//Endorsement Key Access
 	SPOKCLIENT_API void SPC_GetEndorsementPublicKey();
 
 	//AIK Challenge
-	SPOKCLIENT_API void SPC_AIKGetChallengeBinding();
+	SPOKCLIENT_API void SPC_AIKGetChallengeBinding(std::wstring name, NCRYPT_MACHINE_KEY flag, unsigned char* pBytesOut, size_t cbBytesOut, size_t& sizeOut);
 	SPOKCLIENT_API void SPC_AIKActivateChallenge();
 
 	//AIK Quote and Verify

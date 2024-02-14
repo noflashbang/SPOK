@@ -40,11 +40,11 @@ private:
 class PlatformAik
 {
 	public:
-		PlatformAik(std::wstring keyName, NCRYPT_MACHINE_KEY flag);
+		PlatformAik(const SPOK_PlatformKey& aik);
 		~PlatformAik();
 
-		SPOK_BindingBlob GetIdBinding();
-		SPOK_RSAKeyBlob GetPublicKey();
+		SPOK_Blob GetIdBinding();
+		SPOK_Blob GetPublicKey();
 
 private:
 	std::wstring m_keyName;
@@ -54,7 +54,7 @@ private:
 class NCryptUtil
 {
 public:
-	static bool DoesAikExists(std::wstring keyName, NCRYPT_MACHINE_KEY flag);
-	static PlatformAik CreateAik(std::wstring keyName, NCRYPT_MACHINE_KEY flag, SPOK_Nonce nonce);
-	static void DeleteKey(std::wstring keyName, NCRYPT_MACHINE_KEY flag);
+	static bool DoesAikExists(const SPOK_PlatformKey& aik);
+	static PlatformAik CreateAik(const SPOK_PlatformKey& aik, SPOK_Nonce nonce);
+	static void DeleteKey(const SPOK_PlatformKey& aik);
 };

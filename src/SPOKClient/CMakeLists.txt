@@ -14,11 +14,13 @@ set( externHeadersCore
 set( libHeaders 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/StandardLib.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Util.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Blob.h
 )
 
 set( libSource
 	${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKClientApi.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKClient.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Blob.cpp
 )
 
 add_library (SPOKClient SHARED ${libSource} ${libHeaders} ${externHeaders}) 
