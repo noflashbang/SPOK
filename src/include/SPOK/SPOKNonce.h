@@ -21,18 +21,34 @@
 //SOFTWARE.
 
 #pragma once 
-#include <string>
+#include <array>
+#include <vector>
+#include <algorithm>
 
 #include "SPOKApiTypes.h"
+#include "SPOKCore.h"
 
 
-#define SHA1_DIGEST_SIZE 20
-#define SHA256_DIGEST_SIZE 32
-
-
-struct SPOK_PlatformKey
+class SPOK_Nonce
 {
-	std::wstring Name;
-	NCRYPT_MACHINE_KEY Flag;
+public:
+
+	typedef std::array<uint8_t, SHA1_DIGEST_SIZE> Nonce;
+
+	static Nonce Zero()
+	{
+		Nonce nonce;
+		std::fill(nonce.begin(), nonce.end(), 0);
+		return nonce;
+	};
+
+	static Nonce Make(const uint8_t* data, size_t size)
+	{
+		auto nonce = Zero();
+		auto min = std::min(size, nonce.max_size());
+		memcpy(nonce.data(), data, min);
+		return nonce;
+	};
 };
+
 

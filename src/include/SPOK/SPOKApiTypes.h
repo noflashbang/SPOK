@@ -21,18 +21,15 @@
 //SOFTWARE.
 
 #pragma once 
+#include <cstdint>
+#include <array>
+#include <vector>
 #include <string>
 
-#include "SPOKApiTypes.h"
+typedef std::uintptr_t SPOK_Handle;
 
-
-#define SHA1_DIGEST_SIZE 20
-#define SHA256_DIGEST_SIZE 32
-
-
-struct SPOK_PlatformKey
+enum class NCRYPT_MACHINE_KEY : int
 {
-	std::wstring Name;
-	NCRYPT_MACHINE_KEY Flag;
+	NO = 0,
+	YES = 1
 };
-

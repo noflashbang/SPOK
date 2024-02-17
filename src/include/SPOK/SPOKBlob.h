@@ -21,18 +21,26 @@
 //SOFTWARE.
 
 #pragma once 
+#include <array>
+#include <vector>
+#include <algorithm>
 #include <string>
 
 #include "SPOKApiTypes.h"
 
-
-#define SHA1_DIGEST_SIZE 20
-#define SHA256_DIGEST_SIZE 32
+// IdBindingBlob, RSABlob, etc.
 
 
-struct SPOK_PlatformKey
+class SPOK_Blob
 {
-	std::wstring Name;
-	NCRYPT_MACHINE_KEY Flag;
+public:
+
+	typedef std::vector<uint8_t> Blob;
+
+	static Blob New(const size_t size);
+	static Blob New(const uint8_t* data, const size_t size);
+
+	static void Copy2CStylePtr(const Blob& source, uint8_t* destPtr, const size_t destSize, size_t& sizeOut);
+
 };
 

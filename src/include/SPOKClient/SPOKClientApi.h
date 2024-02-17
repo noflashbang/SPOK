@@ -26,7 +26,7 @@
 #include <vector>
 #include <memory>
 
-#include "SPOKCore.h"
+#include "SPOKApiTypes.h"
 
 
 #ifdef SPOKCLIENT_EXPORTS
@@ -43,27 +43,27 @@ extern "C"
 	SPOKCLIENT_API SPOK_Handle SPC_Create();
 		
 	//AIK Management
-	SPOKCLIENT_API void SPC_AIKCreate(std::wstring name, NCRYPT_MACHINE_KEY flag, SPOK_Nonce nonce);
-	SPOKCLIENT_API void SPC_AIKDelete(std::wstring name, NCRYPT_MACHINE_KEY flag);
-	SPOKCLIENT_API bool SPC_AIKExists(std::wstring name, NCRYPT_MACHINE_KEY flag);
+	SPOKCLIENT_API void SPC_AIKCreate(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* nonce, const size_t cbNonce);
+	SPOKCLIENT_API void SPC_AIKDelete(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);
+	SPOKCLIENT_API bool SPC_AIKExists(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);
 
 	//AIK Attestation
 	SPOKCLIENT_API void SPC_AIKGetKeyAttestation();
 	SPOKCLIENT_API void SPC_AIKGetPlatformAttestation();
 
 	//AIK Public Key
-	SPOKCLIENT_API void SPC_AIKGetPublicKey(std::wstring name, NCRYPT_MACHINE_KEY flag, unsigned char* pBytesOut, size_t cbBytesOut, size_t& sizeOut);
+	SPOKCLIENT_API void SPC_AIKGetPublicKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 
 	//Endorsement Key Access
 	SPOKCLIENT_API void SPC_GetEndorsementPublicKey();
 
 	//AIK Challenge
-	SPOKCLIENT_API void SPC_AIKGetChallengeBinding(std::wstring name, NCRYPT_MACHINE_KEY flag, unsigned char* pBytesOut, size_t cbBytesOut, size_t& sizeOut);
+	SPOKCLIENT_API void SPC_AIKGetChallengeBinding(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 	SPOKCLIENT_API void SPC_AIKActivateChallenge();
 
 	//AIK Quote and Verify
 	SPOKCLIENT_API void SPC_GetBootLog();	
-	SPOKCLIENT_API void SPC_GetPCRTable();
+	SPOKCLIENT_API void SPC_GetPCRTable(uint8_t* pPcrTable, const size_t cbPcrTable, size_t& sizeOut);
 
 	//SRK Access
 	SPOKCLIENT_API void SPC_GetStorageRootKey();

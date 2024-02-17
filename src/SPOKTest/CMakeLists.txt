@@ -16,6 +16,7 @@ cmake_path(GET CMAKE_CURRENT_SOURCE_DIR PARENT_PATH PARENT_DIR)
 
 set( externHeadersCore 
     ${PARENT_DIR}/include/SPOK/SPOKCore.h
+    ${PARENT_DIR}/include/SPOK/SPOKApiTypes.h
 )
 
 set( externHeadersClient

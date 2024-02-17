@@ -9,18 +9,20 @@ set( externHeaders
 
 set( externHeadersCore 
     ${PARENT_DIR}/include/SPOK/SPOKCore.h
+    ${PARENT_DIR}/include/SPOK/SPOKApiTypes.h
+    ${PARENT_DIR}/include/SPOK/SPOKNonce.h
+    ${PARENT_DIR}/include/SPOK/SPOKBlob.h
+    ${PARENT_DIR}/include/SPOK/SPOKPcrs.h
 )
 
 set( libHeaders 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/StandardLib.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Util.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Blob.h
 )
 
 set( libSource
 	${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKClientApi.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKClient.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Blob.cpp
 )
 
 add_library (SPOKClient SHARED ${libSource} ${libHeaders} ${externHeaders}) 

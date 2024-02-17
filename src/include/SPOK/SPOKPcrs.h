@@ -21,18 +21,39 @@
 //SOFTWARE.
 
 #pragma once 
+#include <cstdint>
+#include <array>
+#include <vector>
 #include <string>
+#include <iterator>
 
+#include "SPOKCore.h"
 #include "SPOKApiTypes.h"
+#include "SPOKBlob.h"
+
+#define TPM_PCRS_CNT (24) 
+#define TPM_PCRS_MAXSIZE (SHA256_DIGEST_SIZE) // PCRS are SHA1 or SHA256
+#define TPM_PCR_TABLE_MAXSIZE (TPM_PCRS_CNT * TPM_PCRS_MAXSIZE)
 
 
-#define SHA1_DIGEST_SIZE 20
-#define SHA256_DIGEST_SIZE 32
-
-
-struct SPOK_PlatformKey
+class SPOK_Pcrs
 {
-	std::wstring Name;
-	NCRYPT_MACHINE_KEY Flag;
-};
+public:
+	SPOK_Pcrs(uint8_t digestSize);
+	SPOK_Pcrs(SPOK_Blob::Blob blob);
+	~SPOK_Pcrs() = default;
 
+	SPOK_Blob::Blob GetBlob() const;
+
+	std::array<uint8_t, TPM_PCRS_MAXSIZE> GetPcr(const uint8_t pcrRegister) const;
+	void SetPcr(const uint8_t pcrRegister, const std::array<uint8_t, TPM_PCRS_MAXSIZE>& pcrValue);
+	
+	std::array<uint8_t, TPM_PCR_TABLE_MAXSIZE> GetPcrTable() const;
+	void SetPcrTable(const std::array<uint8_t, TPM_PCR_TABLE_MAXSIZE>& pcrTable);
+
+	uint8_t GetDigestSize() const;
+
+private:
+	std::array<uint8_t, TPM_PCR_TABLE_MAXSIZE> _pcrTable;
+	uint8_t _digestSize;
+};

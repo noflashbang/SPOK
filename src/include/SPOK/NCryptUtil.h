@@ -1,6 +1,9 @@
 
 #pragma once
 #include "SPOKCore.h"
+#include "SPOKNonce.h"
+#include "SPOKBlob.h"
+
 #include "standardlib.h"
 #include <windows.h>
 #include <bcrypt.h>
@@ -43,8 +46,8 @@ class PlatformAik
 		PlatformAik(const SPOK_PlatformKey& aik);
 		~PlatformAik();
 
-		SPOK_Blob GetIdBinding();
-		SPOK_Blob GetPublicKey();
+		SPOK_Blob::Blob GetIdBinding();
+		SPOK_Blob::Blob GetPublicKey();
 
 private:
 	std::wstring m_keyName;
@@ -55,6 +58,8 @@ class NCryptUtil
 {
 public:
 	static bool DoesAikExists(const SPOK_PlatformKey& aik);
-	static PlatformAik CreateAik(const SPOK_PlatformKey& aik, SPOK_Nonce nonce);
+	static PlatformAik CreateAik(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce nonce);
 	static void DeleteKey(const SPOK_PlatformKey& aik);
+
+	static SPOK_Blob::Blob GetPcrTable();
 };

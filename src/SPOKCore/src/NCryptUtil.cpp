@@ -64,7 +64,7 @@ PlatformAik::~PlatformAik()
 {
 }
 
-SPOK_Blob PlatformAik::GetIdBinding()
+SPOK_Blob::Blob PlatformAik::GetIdBinding()
 {
 	NCryptKeyHandle hKey(m_keyName, m_flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
 	DWORD bindingSize = 0;
@@ -75,7 +75,7 @@ SPOK_Blob PlatformAik::GetIdBinding()
 		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_TPM12_IDBINDING_PROPERTY\" failed");
 	}
 
-	SPOK_Blob binding(bindingSize);
+	auto binding = SPOK_Blob::New(bindingSize);
 	status = NCryptGetProperty(hKey, NCRYPT_PCP_TPM12_IDBINDING_PROPERTY, binding.data(), binding.size(), &bindingSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
@@ -85,7 +85,7 @@ SPOK_Blob PlatformAik::GetIdBinding()
 	return binding;
 }
 
-SPOK_Blob PlatformAik::GetPublicKey()
+SPOK_Blob::Blob PlatformAik::GetPublicKey()
 {
 	NCryptKeyHandle hKey(m_keyName, m_flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
 	DWORD keySize = 0;
@@ -96,7 +96,7 @@ SPOK_Blob PlatformAik::GetPublicKey()
 		throw std::runtime_error("NCryptExportKey failed");
 	}
 
-	SPOK_Blob key(keySize);
+	auto key = SPOK_Blob::New(keySize);
 	status = NCryptExportKey(hKey, NULL, BCRYPT_RSAPUBLIC_BLOB, NULL, key.data(), key.size(), &keySize, 0);
 	if (status != ERROR_SUCCESS)
 	{
@@ -115,7 +115,7 @@ bool NCryptUtil::DoesAikExists(const SPOK_PlatformKey& aik)
 	return hKey.IsValid();
 }
 
-PlatformAik NCryptUtil::CreateAik(const SPOK_PlatformKey& aik, SPOK_Nonce nonce)
+PlatformAik NCryptUtil::CreateAik(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce nonce)
 {
 	DWORD ncryptKeyUsage = NCRYPT_PCP_IDENTITY_KEY;
 	NCryptProvHandle hProv;
@@ -137,8 +137,8 @@ PlatformAik NCryptUtil::CreateAik(const SPOK_PlatformKey& aik, SPOK_Nonce nonce)
 		throw std::runtime_error("NCryptSetProperty \"NCRYPT_PCP_KEY_USAGE_POLICY_PROPERTY\" failed");
 	}
 
-	// Set the nonce
-	status = NCryptSetProperty(keyHandle, NCRYPT_PCP_TPM12_IDBINDING_PROPERTY, nonce.data(), nonce.size(), 0);
+	// Set the nonce 
+	status = NCryptSetProperty(keyHandle, NCRYPT_PCP_TPM12_IDBINDING_PROPERTY, const_cast<uint8_t*>(nonce.data()), nonce.size(), 0);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptSetProperty \"NCRYPT_PCP_TPM12_IDBINDING_PROPERTY\" failed");
@@ -169,4 +169,24 @@ void NCryptUtil::DeleteKey(const SPOK_PlatformKey& aik)
 	{
 		throw std::runtime_error("NCryptDeleteKey failed");
 	}
+}
+
+SPOK_Blob::Blob NCryptUtil::GetPcrTable()
+{
+	NCryptProvHandle hProv;
+	DWORD pcrTableSize = 0;
+	// Get the PCR table
+	HRESULT status = NCryptGetProperty(hProv, NCRYPT_PCP_PCRTABLE_PROPERTY, NULL, 0, &pcrTableSize, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_PCRTABLE_PROPERTY\" failed");
+	}
+
+	auto pcrTable = SPOK_Blob::New(pcrTableSize);
+	status = NCryptGetProperty(hProv, NCRYPT_PCP_PCRTABLE_PROPERTY, pcrTable.data(), pcrTable.size(), &pcrTableSize, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_PCRTABLE_PROPERTY\" failed");
+	}
+	return pcrTable;
 }
