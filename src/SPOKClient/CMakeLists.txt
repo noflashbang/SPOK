@@ -13,6 +13,9 @@ set( externHeadersCore
     ${PARENT_DIR}/include/SPOK/SPOKNonce.h
     ${PARENT_DIR}/include/SPOK/SPOKBlob.h
     ${PARENT_DIR}/include/SPOK/SPOKPcrs.h
+    ${PARENT_DIR}/include/SPOK/BCryptUtil.h
+    ${PARENT_DIR}/include/SPOK/NCryptUtil.h
+    ${PARENT_DIR}/include/SPOK/HasherUtil.h
 )
 
 set( libHeaders 

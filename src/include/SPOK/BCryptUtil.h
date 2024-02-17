@@ -4,7 +4,6 @@
 #include "SPOKNonce.h"
 #include "SPOKBlob.h"
 
-#include "standardlib.h"
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
@@ -12,15 +11,28 @@
 #include <windows.h>
 #include <bcrypt.h>
 
+
+enum class AlgId : uint32_t
+{
+	RSA,
+	SHA1,
+	SHA256,
+	SHA384,
+	SHA512
+};
+
 class BCryptAlgHandle
 {
 public:
-	BCryptAlgHandle();
+	BCryptAlgHandle(AlgId alg);
 	~BCryptAlgHandle();
 	operator BCRYPT_ALG_HANDLE() const;
 
+	std::string Name() const;
+
 private:
 	BCRYPT_ALG_HANDLE m_hAlg;
+	AlgId m_algId;
 };
 
 class BCryptKey
@@ -30,6 +42,8 @@ public:
 	BCryptKey(const BCRYPT_KEY_HANDLE& hKey);
 	~BCryptKey();
 	operator BCRYPT_KEY_HANDLE() const;
+
+	SPOK_Blob::Blob GetPublicKey();
 
 	bool IsValid() const
 	{
@@ -56,7 +70,8 @@ enum class KeySize : uint32_t
 class BCryptUtil
 {
 public:
-	static std::wstring RsaKeyType(const SPOK_Blob::Blob keyBlob);
-	static BCryptKey Open(SPOK_Blob::Blob keyBlob);
+	static std::wstring RsaKeyType(const SPOK_Blob::Blob& keyBlob);
+
+	static BCryptKey Open(SPOK_Blob::Blob& keyBlob);
 	static SPOK_Blob::Blob GenerateRsaKeyPair(KeySize keySize);
 };

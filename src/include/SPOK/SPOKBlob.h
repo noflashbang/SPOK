@@ -41,6 +41,7 @@ public:
 	static Blob New(const uint8_t* data, const size_t size);
 
 	static void Copy2CStylePtr(const Blob& source, uint8_t* destPtr, const size_t destSize, size_t& sizeOut);
-
+	static std::string BlobToHex(const Blob& blob);
+	static Blob HexToBlob(const std::string& hex);
 };
 

@@ -1,4 +1,6 @@
 #include "NCryptUtil.h"
+#include "BCryptUtil.h"
+
 #include <TBS.h>
 #include <wbcl.h>
 #include "Util.h"
@@ -80,7 +82,7 @@ SPOK_Blob::Blob PlatformAik::GetIdBinding()
 	}
 
 	auto binding = SPOK_Blob::New(bindingSize);
-	status = NCryptGetProperty(hKey, NCRYPT_PCP_TPM12_IDBINDING_PROPERTY, binding.data(), SAFE_CAST_TO_INT(binding.size()), &bindingSize, 0);
+	status = NCryptGetProperty(hKey, NCRYPT_PCP_TPM12_IDBINDING_PROPERTY, binding.data(), SAFE_CAST_TO_INT32(binding.size()), &bindingSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_TPM12_IDBINDING_PROPERTY\" failed");
@@ -101,7 +103,7 @@ SPOK_Blob::Blob PlatformAik::GetPublicKey()
 	}
 
 	auto key = SPOK_Blob::New(keySize);
-	status = NCryptExportKey(hKey, NULL, BCRYPT_RSAPUBLIC_BLOB, NULL, key.data(), SAFE_CAST_TO_INT(key.size()), &keySize, 0);
+	status = NCryptExportKey(hKey, NULL, BCRYPT_RSAPUBLIC_BLOB, NULL, key.data(), SAFE_CAST_TO_INT32(key.size()), &keySize, 0);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptExportKey failed");
@@ -116,7 +118,7 @@ SPOK_Blob::Blob PlatformAik::ActiveChallenge(const SPOK_Blob::Blob& challenge)
 	DWORD responseSize = 0;
 	
 	//Set the AIK challenge
-	HRESULT status = NCryptSetProperty(hKey, NCRYPT_PCP_TPM12_IDACTIVATION_PROPERTY, const_cast<uint8_t*>(challenge.data()), SAFE_CAST_TO_INT(challenge.size()), 0);
+	HRESULT status = NCryptSetProperty(hKey, NCRYPT_PCP_TPM12_IDACTIVATION_PROPERTY, const_cast<uint8_t*>(challenge.data()), SAFE_CAST_TO_INT32(challenge.size()), 0);
 	if(status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptSetProperty \"NCRYPT_PCP_TPM12_IDACTIVATION_PROPERTY\" failed");
@@ -124,7 +126,7 @@ SPOK_Blob::Blob PlatformAik::ActiveChallenge(const SPOK_Blob::Blob& challenge)
 
 	// Get the secret
 	auto response = SPOK_Blob::New(AIK_CHALLENGE_SECRET_SIZE);
-	status = NCryptGetProperty(hKey, NCRYPT_PCP_TPM12_IDACTIVATION_PROPERTY, response.data(), SAFE_CAST_TO_INT(response.size()), &responseSize, 0);
+	status = NCryptGetProperty(hKey, NCRYPT_PCP_TPM12_IDACTIVATION_PROPERTY, response.data(), SAFE_CAST_TO_INT32(response.size()), &responseSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptSignHash failed");
@@ -133,6 +135,132 @@ SPOK_Blob::Blob PlatformAik::ActiveChallenge(const SPOK_Blob::Blob& challenge)
 	return response;
 }
 
+PlatformKey::PlatformKey(const SPOK_PlatformKey& aik)
+{
+	NCryptProvHandle hProv;
+	NCryptKeyHandle hKey(aik.Name, aik.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+}
+
+PlatformKey::~PlatformKey()
+{
+}
+
+SPOK_Blob::Blob PlatformKey::GetPublicKey()
+{
+	NCryptKeyHandle hKey(m_keyName, m_flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	DWORD keySize = 0;
+	// Get the public key
+	HRESULT status = NCryptExportKey(hKey, NULL, BCRYPT_RSAPUBLIC_BLOB, NULL, NULL, 0, &keySize, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptExportKey failed");
+	}
+
+	auto key = SPOK_Blob::New(keySize);
+	status = NCryptExportKey(hKey, NULL, BCRYPT_RSAPUBLIC_BLOB, NULL, key.data(), SAFE_CAST_TO_INT32(key.size()), &keySize, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptExportKey failed");
+	}
+
+	return key;
+}
+
+SPOK_Blob::Blob PlatformKey::Encrypt(const SPOK_Blob::Blob& data)
+{
+	NCryptKeyHandle hKey(m_keyName, m_flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	DWORD dataSize = 0;
+
+	//OAEP padding
+	uint8_t* szLabel = (uint8_t*)"DUPLICATE";
+	DWORD cbLabel = 10;
+
+	auto paddingInfo = BCRYPT_OAEP_PADDING_INFO{ BCRYPT_SHA256_ALGORITHM, szLabel, cbLabel };
+
+	// Encrypt the data
+	HRESULT status = NCryptEncrypt(hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT32(data.size()), &paddingInfo, NULL, 0, &dataSize, NCRYPT_PAD_OAEP_FLAG);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptEncrypt failed");
+	}
+
+	auto encryptedData = SPOK_Blob::New(dataSize);
+	status = NCryptEncrypt(hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT32(data.size()), &paddingInfo, encryptedData.data(), SAFE_CAST_TO_INT32(encryptedData.size()), &dataSize, NCRYPT_PAD_OAEP_FLAG);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptEncrypt failed");
+	}
+
+	return encryptedData;
+
+}
+
+SPOK_Blob::Blob PlatformKey::Decrypt(const SPOK_Blob::Blob& data)
+{
+	NCryptKeyHandle hKey(m_keyName, m_flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	DWORD dataSize = 0;
+
+	//OAEP padding
+	uint8_t* szLabel = (uint8_t*)"DUPLICATE";
+	DWORD cbLabel = 10;
+
+	auto paddingInfo = BCRYPT_OAEP_PADDING_INFO{ BCRYPT_SHA256_ALGORITHM, szLabel, cbLabel };
+
+	// Decrypt the data
+	HRESULT status = NCryptDecrypt(hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT32(data.size()), &paddingInfo, NULL, 0, &dataSize, NCRYPT_PAD_OAEP_FLAG);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptDecrypt failed");
+	}
+
+	auto decryptedData = SPOK_Blob::New(dataSize);
+	status = NCryptDecrypt(hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT32(data.size()), &paddingInfo, decryptedData.data(), SAFE_CAST_TO_INT32(decryptedData.size()), &dataSize, NCRYPT_PAD_OAEP_FLAG);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptDecrypt failed");
+	}
+
+	return decryptedData;
+
+}
+
+SPOK_Blob::Blob PlatformKey::Sign(const SPOK_Blob::Blob& data)
+{
+	auto signature = SPOK_Blob::New(SHA256_DIGEST_SIZE);
+
+	NCryptKeyHandle hKey(m_keyName, m_flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	DWORD signatureSize = 0;
+
+	//SHA256 padding
+	BCRYPT_PKCS1_PADDING_INFO padInfo;
+	padInfo.pszAlgId = NCRYPT_SHA256_ALGORITHM;
+
+	HRESULT status = NCryptSignHash(hKey, &padInfo, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT32(data.size()), signature.data(), SAFE_CAST_TO_INT32(signature.size()), &signatureSize, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptSignHash failed");
+	}
+
+	return signature;
+}
+
+bool PlatformKey::Verify(const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature)
+{
+	NCryptKeyHandle hKey(m_keyName, m_flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	DWORD signatureSize = 0;
+
+	//SHA256 padding
+	BCRYPT_PKCS1_PADDING_INFO padInfo;
+	padInfo.pszAlgId = NCRYPT_SHA256_ALGORITHM;
+
+	HRESULT status = NCryptVerifySignature(hKey, &padInfo, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT32(data.size()), const_cast<uint8_t*>(signature.data()), SAFE_CAST_TO_INT32(signature.size()), 0);
+	if (status != NTE_BAD_SIGNATURE && SUCCEEDED(status))
+	{
+		return true;
+	}
+
+	return false;
+}
 
 bool NCryptUtil::DoesAikExists(const SPOK_PlatformKey& aik)
 {
@@ -143,7 +271,7 @@ bool NCryptUtil::DoesAikExists(const SPOK_PlatformKey& aik)
 	return hKey.IsValid();
 }
 
-PlatformAik NCryptUtil::CreateAik(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce nonce)
+PlatformAik NCryptUtil::CreateAik(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce)
 {
 	DWORD ncryptKeyUsage = NCRYPT_PCP_IDENTITY_KEY;
 	NCryptProvHandle hProv;
@@ -166,7 +294,7 @@ PlatformAik NCryptUtil::CreateAik(const SPOK_PlatformKey& aik, const SPOK_Nonce:
 	}
 
 	// Set the nonce 
-	status = NCryptSetProperty(keyHandle, NCRYPT_PCP_TPM12_IDBINDING_PROPERTY, const_cast<uint8_t*>(nonce.data()), SAFE_CAST_TO_INT(nonce.size()), 0);
+	status = NCryptSetProperty(keyHandle, NCRYPT_PCP_TPM12_IDBINDING_PROPERTY, const_cast<uint8_t*>(nonce.data()), SAFE_CAST_TO_INT32(nonce.size()), 0);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptSetProperty \"NCRYPT_PCP_TPM12_IDBINDING_PROPERTY\" failed");
@@ -211,7 +339,7 @@ SPOK_Blob::Blob NCryptUtil::GetTpmPublicEndorsementKey()
 	}
 
 	auto key = SPOK_Blob::New(keySize);
-	status = NCryptGetProperty(hProv, NCRYPT_PCP_EKPUB_PROPERTY, key.data(), SAFE_CAST_TO_INT(key.size()), &keySize, 0);
+	status = NCryptGetProperty(hProv, NCRYPT_PCP_EKPUB_PROPERTY, key.data(), SAFE_CAST_TO_INT32(key.size()), &keySize, 0);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_EKPUB_PROPERTY\" failed");
@@ -232,7 +360,7 @@ SPOK_Blob::Blob NCryptUtil::GetTpmSrk()
 	}
 
 	auto key = SPOK_Blob::New(keySize);
-	status = NCryptGetProperty(hProv, NCRYPT_PCP_SRKPUB_PROPERTY, key.data(), SAFE_CAST_TO_INT(key.size()), &keySize, 0);
+	status = NCryptGetProperty(hProv, NCRYPT_PCP_SRKPUB_PROPERTY, key.data(), SAFE_CAST_TO_INT32(key.size()), &keySize, 0);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_SRKPUB_PROPERTY\" failed");
@@ -254,7 +382,7 @@ SPOK_Blob::Blob NCryptUtil::GetPcrTable()
 	}
 
 	auto pcrTable = SPOK_Blob::New(pcrTableSize);
-	status = NCryptGetProperty(hProv, NCRYPT_PCP_PCRTABLE_PROPERTY, pcrTable.data(), SAFE_CAST_TO_INT(pcrTable.size()), &pcrTableSize, 0);
+	status = NCryptGetProperty(hProv, NCRYPT_PCP_PCRTABLE_PROPERTY, pcrTable.data(), SAFE_CAST_TO_INT32(pcrTable.size()), &pcrTableSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_PCRTABLE_PROPERTY\" failed");
@@ -286,7 +414,7 @@ SPOK_Blob::Blob NCryptUtil::GetBootLog()
 	return bootLog;
 }
 
-void NCryptUtil::ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key)
+void NCryptUtil::ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type)
 {
 	NCryptProvHandle hProv;
 	NCRYPT_KEY_HANDLE hKey = NULL;
@@ -296,106 +424,52 @@ void NCryptUtil::ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob:
 	NCryptBuffer keyProperties[] = { {0, NCRYPTBUFFER_PKCS_KEY_NAME, NULL}, {sizeof(BCRYPT_RSA_ALGORITHM), NCRYPTBUFFER_PKCS_ALG_ID, (PBYTE)BCRYPT_RSA_ALGORITHM} };
 	NCryptBufferDesc keyParameters = { NCRYPTBUFFER_VERSION, 2, keyProperties };
 
-	keyProperties[0].cbBuffer = SAFE_CAST_TO_ULONG(aik.Name.size());
+	keyProperties[0].cbBuffer = SAFE_CAST_TO_UINT32(aik.Name.size());
 	keyProperties[0].pvBuffer = (void*)aik.Name.c_str();
-	
-	HRESULT status = NCryptImportKey(hProv, NULL, BCRYPT_OPAQUE_KEY_BLOB, &keyParameters, &hKey, const_cast<uint8_t*>(key.data()), SAFE_CAST_TO_INT(key.size()), flags);
-	if (hKey != NULL)
+
+	if (type == KeyBlobType::WRAPPED)
 	{
-		NCryptKeyHandle keyHandle(hKey);
+		HRESULT status = NCryptImportKey(hProv, NULL, BCRYPT_OPAQUE_KEY_BLOB, &keyParameters, &hKey, const_cast<uint8_t*>(key.data()), SAFE_CAST_TO_INT32(key.size()), flags);
+		if (hKey != NULL)
+		{
+			NCryptKeyHandle keyHandle(hKey);
+		}
+	}
+	else
+	{
+		auto rsaType = BCryptUtil::RsaKeyType(key);
+		keyProperties[1].BufferType = NCRYPTBUFFER_PKCS_ALG_OID;
+		keyProperties[1].cbBuffer = SAFE_CAST_TO_UINT32(rsaType.size());
+		keyProperties[1].pvBuffer = (void*)rsaType.c_str();
+
+		HRESULT status = NCryptImportKey(hProv, NULL, rsaType.c_str(), &keyParameters, &hKey, const_cast<uint8_t*>(key.data()), SAFE_CAST_TO_INT32(key.size()), flags);
+		if (hKey != NULL)
+		{
+			NCryptKeyHandle keyHandle(hKey);
+		}
 	}
 }
 
 SPOK_Blob::Blob NCryptUtil::Encrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data)
 {
-	NCryptKeyHandle hKey(key.Name, key.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
-	DWORD dataSize = 0;
-
-	//OAEP padding
-	uint8_t* szLabel = (uint8_t*)"DUPLICATE";
-	DWORD cbLabel = 10;
-
-	auto paddingInfo = BCRYPT_OAEP_PADDING_INFO{ BCRYPT_SHA256_ALGORITHM, szLabel, cbLabel };
-
-	// Encrypt the data
-	HRESULT status = NCryptEncrypt(hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT(data.size()), &paddingInfo, NULL, 0, &dataSize, NCRYPT_PAD_OAEP_FLAG);
-	if (status != ERROR_SUCCESS)
-	{
-		throw std::runtime_error("NCryptEncrypt failed");
-	}
-
-	auto encryptedData = SPOK_Blob::New(dataSize);
-	status = NCryptEncrypt(hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT(data.size()), &paddingInfo, encryptedData.data(), SAFE_CAST_TO_INT(encryptedData.size()), &dataSize, NCRYPT_PAD_OAEP_FLAG);
-	if (status != ERROR_SUCCESS)
-	{
-		throw std::runtime_error("NCryptEncrypt failed");
-	}
-
-	return encryptedData;
+	PlatformKey platformKey(key);
+	return platformKey.Encrypt(data);
 }
 
 SPOK_Blob::Blob NCryptUtil::Decrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data)
 {
-	NCryptKeyHandle hKey(key.Name, key.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
-	DWORD dataSize = 0;
-
-	//OAEP padding
-	uint8_t* szLabel = (uint8_t*)"DUPLICATE";
-	DWORD cbLabel = 10;
-
-	auto paddingInfo = BCRYPT_OAEP_PADDING_INFO{ BCRYPT_SHA256_ALGORITHM, szLabel, cbLabel };
-
-	// Decrypt the data
-	HRESULT status = NCryptDecrypt(hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT(data.size()), &paddingInfo, NULL, 0, &dataSize, NCRYPT_PAD_OAEP_FLAG);
-	if (status != ERROR_SUCCESS)
-	{
-		throw std::runtime_error("NCryptDecrypt failed");
-	}
-
-	auto decryptedData = SPOK_Blob::New(dataSize);
-	status = NCryptDecrypt(hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT(data.size()), &paddingInfo, decryptedData.data(), SAFE_CAST_TO_INT(decryptedData.size()), &dataSize, NCRYPT_PAD_OAEP_FLAG);
-	if (status != ERROR_SUCCESS)
-	{
-		throw std::runtime_error("NCryptDecrypt failed");
-	}
-
-	return decryptedData;
+	PlatformKey platformKey(key);
+	return platformKey.Decrypt(data);
 }
 
 SPOK_Blob::Blob NCryptUtil::Sign(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data)
 {
-	auto signature = SPOK_Blob::New(SHA256_DIGEST_SIZE);
-
-	NCryptKeyHandle hKey(key.Name, key.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
-	DWORD signatureSize = 0;
-
-	//SHA256 padding
-	BCRYPT_PKCS1_PADDING_INFO padInfo;
-	padInfo.pszAlgId = NCRYPT_SHA256_ALGORITHM;
-
-	HRESULT status = NCryptSignHash(hKey, &padInfo, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT(data.size()), signature.data(), SAFE_CAST_TO_INT(signature.size()), &signatureSize, 0);
-	if (status != ERROR_SUCCESS)
-	{
-		throw std::runtime_error("NCryptSignHash failed");
-	}
-
-	return signature;
+	PlatformKey platformKey(key);
+	return platformKey.Sign(data);
 }
 
 bool NCryptUtil::Verify(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature)
 {
-	NCryptKeyHandle hKey(key.Name, key.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
-	DWORD signatureSize = 0;
-
-	//SHA256 padding
-	BCRYPT_PKCS1_PADDING_INFO padInfo;
-	padInfo.pszAlgId = NCRYPT_SHA256_ALGORITHM;
-
-	HRESULT status = NCryptVerifySignature(hKey, &padInfo, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT(data.size()), const_cast<uint8_t*>(signature.data()), SAFE_CAST_TO_INT(signature.size()), 0);
-	if (status != NTE_BAD_SIGNATURE && SUCCEEDED(status))
-	{
-		return true;
-	}
-
-	return false;
+	PlatformKey platformKey(key);
+	return platformKey.Verify(data, signature);
 }

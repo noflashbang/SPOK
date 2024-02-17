@@ -45,8 +45,6 @@ private:
 	NCRYPT_KEY_HANDLE m_hKey;
 };
 
-
-
 class PlatformAik
 {
 	public:
@@ -63,11 +61,35 @@ private:
 	NCRYPT_MACHINE_KEY m_flag;
 };
 
+class PlatformKey
+{
+public:
+	PlatformKey(const SPOK_PlatformKey& aik);
+	~PlatformKey();
+
+	SPOK_Blob::Blob GetPublicKey();
+
+	SPOK_Blob::Blob Encrypt(const SPOK_Blob::Blob& data);
+	SPOK_Blob::Blob Decrypt(const SPOK_Blob::Blob& data);
+	SPOK_Blob::Blob Sign(const SPOK_Blob::Blob& data);
+	bool Verify(const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature);
+
+private:
+	std::wstring m_keyName;
+	NCRYPT_MACHINE_KEY m_flag;
+};
+
+enum class KeyBlobType : uint32_t
+{
+	WRAPPED = 0,
+	PLAIN = 1
+};
+
 class NCryptUtil
 {
 public:
 	static bool DoesAikExists(const SPOK_PlatformKey& aik);
-	static PlatformAik CreateAik(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce nonce);
+	static PlatformAik CreateAik(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce);
 	static void DeleteKey(const SPOK_PlatformKey& aik);
 
 	static SPOK_Blob::Blob GetTpmPublicEndorsementKey();
@@ -76,7 +98,7 @@ public:
 	static SPOK_Blob::Blob GetBootLog();
 
 	//import an opaque key into the TPM
-	static void ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key);
+	static void ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type);
 
 	//Platform key operations
 	static SPOK_Blob::Blob Encrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);

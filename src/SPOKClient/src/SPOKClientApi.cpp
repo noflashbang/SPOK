@@ -85,12 +85,20 @@ void SPC_GetStorageRootKey(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOu
 	SPOK_Blob::Copy2CStylePtr(blob, pBytes, cbBytes, sizeOut);
 }
 
-void SPC_PlatformImportKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pKeyBlob, const size_t cbKeyBlob)
+void SPC_PlatformImportWrappedKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pKeyBlob, const size_t cbKeyBlob)
 {
 	auto key = SPOK_PlatformKey{ name, flag };
 	auto blob = SPOK_Blob::New(pKeyBlob, cbKeyBlob);
 	SPOKClient client;
-	client.PlatformImportKey(key, blob);
+	client.PlatformImportKey(key, blob, KeyBlobType::WRAPPED);
+}
+
+void SPC_PlatformImportRSAKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pKeyBlob, const size_t cbKeyBlob)
+{
+	auto key = SPOK_PlatformKey{ name, flag };
+	auto blob = SPOK_Blob::New(pKeyBlob, cbKeyBlob);
+	SPOKClient client;
+	client.PlatformImportKey(key, blob, KeyBlobType::PLAIN);
 }
 
 void SPC_PlatformDecrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut)

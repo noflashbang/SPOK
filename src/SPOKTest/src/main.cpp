@@ -4,6 +4,11 @@
 
 #include <SPOKClientApi.h>
 #include <SPOKServerApi.h>
+
+#include <HasherUtil.h>
+#include <SPOKBlob.h>
+
+
 #include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("SPC_Create returns a valid handle")
@@ -78,6 +83,27 @@ TEST_CASE("SPC_AIKGetPublicKey")
 	SPC_AIKGetPublicKey(name.c_str(), flag, pBytes.get(), cbSize, sizeOut);
 
 	REQUIRE(sizeOut > 0);
+}
+
+TEST_CASE("SPC_GetPublicEndorsementKey")
+{
+	std::unique_ptr<unsigned char[]> pBytes = nullptr;
+	size_t cbSize = 512;
+
+	pBytes = std::make_unique<unsigned char[]>(cbSize);
+
+	size_t sizeOut = 0;
+
+	//get the size
+	SPC_GetEndorsementPublicKey(pBytes.get(), cbSize, sizeOut);
+
+	SPOK_Blob::Blob blob = SPOK_Blob::New(pBytes.get(), sizeOut);
+
+	auto hash = Hasher::PublicKeyHash(blob);
+	auto str = SPOK_Blob::BlobToHex(hash);
+
+	REQUIRE(sizeOut > 0);
+	REQUIRE(str.size() > 0);
 }
 
 TEST_CASE("SPC_AIKGetChallengeBinding")

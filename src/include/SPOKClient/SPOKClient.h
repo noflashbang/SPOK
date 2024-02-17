@@ -13,7 +13,7 @@ public:
 	SPOKClient();
 	~SPOKClient();
 
-	void AIKCreate(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce nonce);
+	void AIKCreate(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce);
 	void AIKDelete(const SPOK_PlatformKey& aik);
 	bool AIKExists(const SPOK_PlatformKey& aik);
 
@@ -27,7 +27,7 @@ public:
 	SPOK_Blob::Blob GetBootLog();
 	SPOK_Blob::Blob GetPCRTable();
 	SPOK_Blob::Blob GetStorageRootKey();
-	void PlatformImportKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key);
+	void PlatformImportKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type);
 	SPOK_Blob::Blob PlatformDecrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);
 	SPOK_Blob::Blob PlatformEncrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);
 	SPOK_Blob::Blob PlatformSign(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);

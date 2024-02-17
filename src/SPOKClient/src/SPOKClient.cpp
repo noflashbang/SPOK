@@ -9,7 +9,7 @@ SPOKClient::~SPOKClient()
 {
 }
 
-void SPOKClient::AIKCreate(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce nonce)
+void SPOKClient::AIKCreate(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce)
 {
 	NCryptUtil::CreateAik(aik, nonce);
 }
@@ -62,9 +62,9 @@ SPOK_Blob::Blob SPOKClient::GetStorageRootKey()
 	return NCryptUtil::GetTpmSrk();
 }
 
-void SPOKClient::PlatformImportKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key)
+void SPOKClient::PlatformImportKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type)
 {
-	NCryptUtil::ImportPlatformKey(aik, key);
+	NCryptUtil::ImportPlatformKey(aik, key, type);
 }
 
 SPOK_Blob::Blob SPOKClient::PlatformDecrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data)
