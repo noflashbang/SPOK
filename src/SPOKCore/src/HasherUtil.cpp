@@ -72,30 +72,109 @@ SPOK_Blob::Blob Hasher::PublicKeyHash(const SPOK_Blob::Blob& keyBlob)
 	const BCRYPT_RSAKEY_BLOB* pBlob = (const BCRYPT_RSAKEY_BLOB*)keyBlob.data();
 
 	// Extract the modulus and exponent from the BLOB
-	std::vector<uint8_t> modulus(pBlob->cbModulus);
-	std::vector<uint8_t> exponent(pBlob->cbPublicExp);
-	memcpy(modulus.data(), keyBlob.data() + sizeof(BCRYPT_RSAKEY_BLOB), pBlob->cbModulus);
-	memcpy(exponent.data(), keyBlob.data() + sizeof(BCRYPT_RSAKEY_BLOB) + pBlob->cbModulus, pBlob->cbPublicExp);
+	std::vector<uint8_t> modulusV(pBlob->cbModulus);
+	std::vector<uint8_t> exponentV(pBlob->cbPublicExp);
+	memcpy(exponentV.data(), keyBlob.data() + sizeof(BCRYPT_RSAKEY_BLOB), pBlob->cbPublicExp);
+	memcpy(modulusV.data(), keyBlob.data() + sizeof(BCRYPT_RSAKEY_BLOB) + pBlob->cbPublicExp, pBlob->cbModulus);
 
 	SPOK_Blob::Blob encodedKey;
+	SPOK_BinaryStream bw(encodedKey);
+
+	std::vector<uint8_t> modulusTL;
+	std::vector<uint8_t> exponentTL;
+	std::vector<uint8_t> sequenceTL;
+
+	auto modSize = modulusV.size();
+	auto expSize = exponentV.size();
+
+	bool modLeading = false;
+	auto modulusFirstByte = *modulusV.data();
+	if (modSize >= 128 && modulusFirstByte | 0x80)
+	{
+		modSize++;
+		modLeading = true;
+	};
+	modulusTL.push_back(0x02);
+	if (modSize < 128)
+	{
+		modulusTL.push_back(static_cast<uint8_t>(modSize));
+	}
+	else if (modSize < 256)
+	{
+		modulusTL.push_back(0x81);
+		modulusTL.push_back(static_cast<uint8_t>(modSize));
+	}
+	else
+	{
+		modulusTL.push_back(0x82);
+		modulusTL.push_back(static_cast<uint8_t>((modSize >> 8) & 0xFF));
+		modulusTL.push_back(static_cast<uint8_t>(modSize & 0xFF));
+	}
+
+	bool expLeading = false;
+	auto expFirstByte = *exponentV.data();
+	if (expSize >= 128 && expFirstByte | 0x80)
+	{
+		expSize++;
+		expLeading = true;
+	};
+	exponentTL.push_back(0x02);
+	if (expSize < 128)
+	{
+		exponentTL.push_back(static_cast<uint8_t>(expSize));
+	}
+	else if (expSize < 256)
+	{
+		exponentTL.push_back(0x81);
+		exponentTL.push_back(static_cast<uint8_t>(expSize));
+	}
+	else
+	{
+		exponentTL.push_back(0x82);
+		exponentTL.push_back(static_cast<uint8_t>((expSize >> 8) & 0xFF));
+		exponentTL.push_back(static_cast<uint8_t>(expSize & 0xFF));
+	}
+
+
+	uint16_t length = modSize + expSize + exponentTL.size() + modulusTL.size();
+
+	
+	sequenceTL.push_back(0x30);
+	if (length < 128)
+	{
+		sequenceTL.push_back(static_cast<uint8_t>(length));
+	}
+	else if (length < 256)
+	{
+		sequenceTL.push_back(0x81);
+		sequenceTL.push_back(static_cast<uint8_t>(length));
+	}
+	else
+	{
+		sequenceTL.push_back(0x82);
+		sequenceTL.push_back(static_cast<uint8_t>((length >> 8) & 0xFF));
+		sequenceTL.push_back(static_cast<uint8_t>(length & 0xFF));
+	}
+	
+	bw.Resize(length + sequenceTL.size());
 
 	// Add the ASN.1 header (sequence tag and length)
-	encodedKey.push_back(0x30); // Sequence tag
-	int length = modulus.size() + exponent.size() + 2;
-	//encodedKey.push_back(static_cast<uint8_t>(modulus.size() + exponent.size() + 2)); // Length
+	bw.Write(sequenceTL.data(), sequenceTL.size());
 
-	// Add the modulus (integer tag and length)
-	encodedKey.push_back(0x02); // Integer tag
-	int modLength = modulus.size();
-	//encodedKey.push_back(static_cast<uint8_t>(modulus.size()));
-	encodedKey.insert(encodedKey.end(), modulus.begin(), modulus.end());
+	bw.Write(modulusTL.data(), modulusTL.size());
+	if (modLeading)
+	{
+		bw.Write(0x00);
+	}
+	bw.Write(modulusV.data(), modulusV.size());
 
-	// Add the exponent (integer tag and length)
-	encodedKey.push_back(0x02); // Integer tag
-	int expLength = exponent.size();
-	//encodedKey.push_back(static_cast<uint8_t>(exponent.size()));
-	encodedKey.insert(encodedKey.end(), exponent.begin(), exponent.end());
-
+	bw.Write(exponentTL.data(), exponentTL.size());
+	if (expLeading)
+	{
+		bw.Write(0x00);
+	}
+	bw.Write(exponentV.data(), exponentV.size());
+	
 	// Hash the encoded key
 	HasherUtil hasher(HasherType::SHA256);
 	return hasher.OneShotHash(encodedKey);

@@ -43,5 +43,172 @@ SPOK_Blob::Blob SPOK_Blob::HexToBlob(const std::string& hex)
 	return blob;
 }
 
+uint8_t SPOK_BinaryStream::Read()
+{
+	if(CanRead(1) == false)
+	{
+		return 0;
+	}
+	uint8_t value = m_data[m_cursor];
+	m_cursor++;
+	return value;
+}
+uint16_t SPOK_BinaryStream::LE_Read16()
+{
+	if(CanRead(2) == false)
+	{
+		return 0;
+	}
+	uint16_t value = m_data[m_cursor] | (m_data[m_cursor + 1] << 8);
+	m_cursor += 2;
+	return value;
+}
 
+uint32_t SPOK_BinaryStream::LE_Read32()
+{
+	if(CanRead(4) == false)
+	{
+		return 0;
+	}
+	uint32_t value = (uint32_t)m_data[m_cursor] | ((uint32_t)m_data[m_cursor + 1] << 8) | ((uint32_t)m_data[m_cursor + 2] << 16) | ((uint32_t)m_data[m_cursor + 3] << 24);
+	m_cursor += 4;
+	return value;
+}
 
+uint64_t SPOK_BinaryStream::LE_Read64()
+{
+	if(CanRead(8) == false)
+	{
+		return 0;
+	}
+	uint64_t value = (uint64_t)m_data[m_cursor] | ((uint64_t)m_data[m_cursor + 1] << 8) | ((uint64_t)m_data[m_cursor + 2] << 16) | ((uint64_t)m_data[m_cursor + 3] << 24) | ((uint64_t)m_data[m_cursor + 4] << 32) | ((uint64_t)m_data[m_cursor + 5] << 40) | ((uint64_t)m_data[m_cursor + 6] << 48) | ((uint64_t)m_data[m_cursor + 7] << 56);
+	m_cursor += 8;
+	return value;
+}
+
+uint16_t SPOK_BinaryStream::BE_Read16()
+{
+	return EndianSwap::Swap16(LE_Read16());
+}
+
+uint32_t SPOK_BinaryStream::BE_Read32()
+{
+	return EndianSwap::Swap32(LE_Read32());
+}
+
+uint64_t SPOK_BinaryStream::BE_Read64()
+{
+	return EndianSwap::Swap64(LE_Read64());
+}
+
+void SPOK_BinaryStream::Write(const uint8_t value)
+{
+	if(CanWrite(1) == false)
+	{
+		return;
+	}
+	m_data[m_cursor] = value;
+	m_cursor++;
+}
+
+void SPOK_BinaryStream::LE_Write16(const uint16_t value)
+{
+	if(CanWrite(2) == false)
+	{
+		return;
+	}
+	m_data[m_cursor] = value & 0xFF;
+	m_data[m_cursor + 1] = (value >> 8) & 0xFF;
+	m_cursor += 2;
+}
+void SPOK_BinaryStream::LE_Write32(const uint32_t value)
+{
+	if(CanWrite(4) == false)
+	{
+		return;
+	}
+	m_data[m_cursor] = value & 0xFF;
+	m_data[m_cursor + 1] = (value >> 8) & 0xFF;
+	m_data[m_cursor + 2] = (value >> 16) & 0xFF;
+	m_data[m_cursor + 3] = (value >> 24) & 0xFF;
+	m_cursor += 4;
+}
+void SPOK_BinaryStream::LE_Write64(const uint64_t value)
+{
+	if(CanWrite(8) == false)
+	{
+		return;
+	}
+	m_data[m_cursor] = value & 0xFF;
+	m_data[m_cursor + 1] = (value >> 8) & 0xFF;
+	m_data[m_cursor + 2] = (value >> 16) & 0xFF;
+	m_data[m_cursor + 3] = (value >> 24) & 0xFF;
+	m_data[m_cursor + 4] = (value >> 32) & 0xFF;
+	m_data[m_cursor + 5] = (value >> 40) & 0xFF;
+	m_data[m_cursor + 6] = (value >> 48) & 0xFF;
+	m_data[m_cursor + 7] = (value >> 56) & 0xFF;
+	m_cursor += 8;
+}
+
+void SPOK_BinaryStream::BE_Write16(const uint16_t value)
+{
+	LE_Write16(EndianSwap::Swap16(value));
+}
+void SPOK_BinaryStream::BE_Write32(const uint32_t value)
+{
+	LE_Write32(EndianSwap::Swap32(value));
+}
+void SPOK_BinaryStream::BE_Write64(const uint64_t value)
+{
+	LE_Write64(EndianSwap::Swap64(value));
+}
+
+void SPOK_BinaryStream::Read(uint8_t* dest, const size_t size)
+{
+	if(CanRead(size) == false)
+	{
+		return;
+	}
+	memcpy_s(dest, size, m_data.data() + m_cursor, size);
+	m_cursor += size;
+}
+void SPOK_BinaryStream::Write(const uint8_t* source, const size_t size)
+{
+	if(CanWrite(size) == false)
+	{
+		return;
+	}
+	memcpy_s(m_data.data() + m_cursor, m_data.size() - m_cursor, source, size);
+	m_cursor += size;
+}
+
+void SPOK_BinaryStream::Seek(const size_t position)
+{
+	if(position < m_data.size())
+	{
+		m_cursor = position;
+	}
+}
+size_t SPOK_BinaryStream::Tell() const
+{
+	return m_cursor;
+}
+
+void SPOK_BinaryStream::Clear()
+{
+	m_data.clear();
+	m_cursor = 0;
+}
+void SPOK_BinaryStream::Resize(const size_t size)
+{
+	m_data.resize(size);
+}
+
+bool SPOK_BinaryStream::CanRead(const size_t size) const
+{
+	return m_cursor + size <= m_data.size();
+}
+bool SPOK_BinaryStream::CanWrite(const size_t size) const
+{
+	return m_cursor + size <= m_data.size();
+}
