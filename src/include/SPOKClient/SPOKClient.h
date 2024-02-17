@@ -1,6 +1,5 @@
 #pragma once
 
-#include "standardlib.h"
 #include "SPOKCore.h"
 #include "NCryptUtil.h"
 
@@ -20,18 +19,17 @@ public:
 
 	void AIKGetKeyAttestation();
 	void AIKGetPlatformAttestation();
-	SPOK_Blob::Blob AIKGetPublicKey(const SPOK_PlatformKey& aik);
-	void GetEndorsementPublicKey();
-	SPOK_Blob::Blob AIKGetChallengeBinding(const SPOK_PlatformKey& aik);
-	void AIKActivateChallenge();
-	void GetBootLog();
-	SPOK_Pcrs GetPCRTable();
-	void GetStorageRootKey();
 
-	void PlatformImportKey();
-	
-	void PlatformDecrypt();
-	void PlatformEncrypt();
-	void PlatformSign();
-	void PlatformVerifySignature();
+	SPOK_Blob::Blob AIKGetPublicKey(const SPOK_PlatformKey& aik);
+	SPOK_Blob::Blob GetEndorsementPublicKey();
+	SPOK_Blob::Blob AIKGetChallengeBinding(const SPOK_PlatformKey& aik);
+	SPOK_Blob::Blob AIKActivateChallenge(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& challenge);
+	SPOK_Blob::Blob GetBootLog();
+	SPOK_Blob::Blob GetPCRTable();
+	SPOK_Blob::Blob GetStorageRootKey();
+	void PlatformImportKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key);
+	SPOK_Blob::Blob PlatformDecrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);
+	SPOK_Blob::Blob PlatformEncrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);
+	SPOK_Blob::Blob PlatformSign(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);
+	bool PlatformVerifySignature(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature);
 };

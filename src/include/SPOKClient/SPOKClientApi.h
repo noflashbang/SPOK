@@ -55,27 +55,27 @@ extern "C"
 	SPOKCLIENT_API void SPC_AIKGetPublicKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 
 	//Endorsement Key Access
-	SPOKCLIENT_API void SPC_GetEndorsementPublicKey();
+	SPOKCLIENT_API void SPC_GetEndorsementPublicKey(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 
 	//AIK Challenge
 	SPOKCLIENT_API void SPC_AIKGetChallengeBinding(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
-	SPOKCLIENT_API void SPC_AIKActivateChallenge();
+	SPOKCLIENT_API void SPC_AIKActivateChallenge(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pChallenge, const size_t cbChallenge, uint8_t pSecretOut[32]);
 
 	//AIK Quote and Verify
-	SPOKCLIENT_API void SPC_GetBootLog();	
+	SPOKCLIENT_API void SPC_GetBootLog(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 	SPOKCLIENT_API void SPC_GetPCRTable(uint8_t* pPcrTable, const size_t cbPcrTable, size_t& sizeOut);
 
 	//SRK Access
-	SPOKCLIENT_API void SPC_GetStorageRootKey();
+	SPOKCLIENT_API void SPC_GetStorageRootKey(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 
 	//User Key Addition
-	SPOKCLIENT_API void SPC_PlatformImportKey();
+	SPOKCLIENT_API void SPC_PlatformImportKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pKeyBlob, const size_t cbKeyBlob);
 
 	//Cryptographic Operations
-	SPOKCLIENT_API void SPC_PlatformDecrypt();
-	SPOKCLIENT_API void SPC_PlatformEncrypt();
-	SPOKCLIENT_API void SPC_PlatformSign();
-	SPOKCLIENT_API void SPC_PlatformVerifySignature();
+	SPOKCLIENT_API void SPC_PlatformDecrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut);
+	SPOKCLIENT_API void SPC_PlatformEncrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut);
+	SPOKCLIENT_API void SPC_PlatformSign(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pHash, const size_t cbhash, uint8_t* pSignature, const size_t cbSignature, size_t& sizeOut);
+	SPOKCLIENT_API bool SPC_PlatformVerifySignature(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pHash, const size_t cbhash, const uint8_t* pSignature, const size_t cbSignature);
 
 #ifdef __cplusplus
 }

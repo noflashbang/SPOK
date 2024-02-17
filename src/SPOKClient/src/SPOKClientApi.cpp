@@ -1,5 +1,6 @@
 #include "SPOKClientApi.h"
 #include "SPOKClient.h"
+#include "StandardLib.h"
 
 SPOK_Handle SPC_Create()
 {
@@ -28,6 +29,13 @@ bool SPC_AIKExists(const wchar_t* name, const NCRYPT_MACHINE_KEY flag)
 	return client.AIKExists(key);
 }
 
+void SPC_GetEndorsementPublicKey(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)
+{
+	SPOKClient client;
+	auto blob = client.GetEndorsementPublicKey();
+	SPOK_Blob::Copy2CStylePtr(blob, pBytes, cbBytes, sizeOut);
+}
+
 void SPC_AIKGetPublicKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)
 {
 	auto key = SPOK_PlatformKey{ name, flag };
@@ -45,10 +53,77 @@ void SPC_AIKGetChallengeBinding(const wchar_t* name, const NCRYPT_MACHINE_KEY fl
 
 	SPOK_Blob::Copy2CStylePtr(blob, pBytes, cbBytes, sizeOut);
 }
+void SPC_AIKActivateChallenge(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pChallenge, const size_t cbChallenge, uint8_t pSecretOut[32])
+{
+	auto key = SPOK_PlatformKey{ name, flag };
+	auto challenge = SPOK_Blob::New(pChallenge, cbChallenge);
+	SPOKClient client;
+	auto secret = client.AIKActivateChallenge(key, challenge);
+
+	size_t copySize = std::min(32ULL, secret.size());
+	memcpy(pSecretOut, secret.data(), copySize);
+}
+
+void SPC_GetBootLog(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)
+{
+	SPOKClient client;
+	auto blob = client.GetBootLog();
+	SPOK_Blob::Copy2CStylePtr(blob, pBytes, cbBytes, sizeOut);
+}
 
 void SPC_GetPCRTable(uint8_t* pPcrTable, const size_t cbPcrTable, size_t& sizeOut)
 {
 	SPOKClient client;
 	auto pcrTable = client.GetPCRTable();
-	SPOK_Blob::Copy2CStylePtr(pcrTable.GetBlob(), pPcrTable, cbPcrTable, sizeOut);
+	SPOK_Blob::Copy2CStylePtr(pcrTable, pPcrTable, cbPcrTable, sizeOut);
+}
+
+void SPC_GetStorageRootKey(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)
+{
+	SPOKClient client;
+	auto blob = client.GetStorageRootKey();
+	SPOK_Blob::Copy2CStylePtr(blob, pBytes, cbBytes, sizeOut);
+}
+
+void SPC_PlatformImportKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pKeyBlob, const size_t cbKeyBlob)
+{
+	auto key = SPOK_PlatformKey{ name, flag };
+	auto blob = SPOK_Blob::New(pKeyBlob, cbKeyBlob);
+	SPOKClient client;
+	client.PlatformImportKey(key, blob);
+}
+
+void SPC_PlatformDecrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut)
+{
+	auto key = SPOK_PlatformKey{ name, flag };
+	auto blob = SPOK_Blob::New(pBytes, cbBytes);
+	SPOKClient client;
+	auto decrypted = client.PlatformDecrypt(key, blob);
+	SPOK_Blob::Copy2CStylePtr(decrypted, pData, cbData, sizeOut);
+}
+void SPC_PlatformEncrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut)
+{
+	auto key = SPOK_PlatformKey{ name, flag };
+	auto blob = SPOK_Blob::New(pBytes, cbBytes);
+	SPOKClient client;
+	auto encrypted = client.PlatformEncrypt(key, blob);
+	SPOK_Blob::Copy2CStylePtr(encrypted, pData, cbData, sizeOut);
+
+}
+void SPC_PlatformSign(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pHash, const size_t cbhash, uint8_t* pSignature, const size_t cbSignature, size_t& sizeOut)
+{
+	auto key = SPOK_PlatformKey{ name, flag };
+	auto hash = SPOK_Blob::New(pHash, cbhash);
+	SPOKClient client;
+	auto signature = client.PlatformSign(key, hash);
+	SPOK_Blob::Copy2CStylePtr(signature, pSignature, cbSignature, sizeOut);
+
+}
+bool SPC_PlatformVerifySignature(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pHash, const size_t cbhash, const uint8_t* pSignature, const size_t cbSignature)
+{
+	auto key = SPOK_PlatformKey{ name, flag };
+	auto hash = SPOK_Blob::New(pHash, cbhash);
+	auto signature = SPOK_Blob::New(pSignature, cbSignature);
+	SPOKClient client;
+	return client.PlatformVerifySignature(key, hash, signature);
 }

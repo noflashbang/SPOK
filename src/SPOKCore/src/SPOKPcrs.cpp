@@ -1,5 +1,5 @@
 #include "SPOKPcrs.h"
-
+#include "Util.h"
 
 
 SPOK_Pcrs::SPOK_Pcrs(uint8_t digestSize) : _digestSize(digestSize)
@@ -11,7 +11,7 @@ SPOK_Pcrs::SPOK_Pcrs(SPOK_Blob::Blob blob)
 {
 	auto size = blob.size();
 	auto hashSize = size / TPM_PCRS_CNT;
-	_digestSize = hashSize;
+	_digestSize = SAFE_CAST_TO_UINT8(hashSize);
 	for (int i = 0; i < TPM_PCRS_CNT; i++)
 	{
 		std::copy(blob.begin() + (i * hashSize), blob.begin() + ((i + 1) * hashSize), _pcrTable.begin() + (i * hashSize));

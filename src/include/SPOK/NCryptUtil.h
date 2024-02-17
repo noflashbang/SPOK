@@ -5,9 +5,16 @@
 #include "SPOKBlob.h"
 
 #include "standardlib.h"
+
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
 #include <bcrypt.h>
 #include <ncrypt.h>
+
+
+#define AIK_CHALLENGE_SECRET_SIZE (32)
 
 class NCryptProvHandle
 {
@@ -49,6 +56,8 @@ class PlatformAik
 		SPOK_Blob::Blob GetIdBinding();
 		SPOK_Blob::Blob GetPublicKey();
 
+		SPOK_Blob::Blob ActiveChallenge(const SPOK_Blob::Blob& challenge);
+
 private:
 	std::wstring m_keyName;
 	NCRYPT_MACHINE_KEY m_flag;
@@ -61,5 +70,17 @@ public:
 	static PlatformAik CreateAik(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce nonce);
 	static void DeleteKey(const SPOK_PlatformKey& aik);
 
+	static SPOK_Blob::Blob GetTpmPublicEndorsementKey();
+	static SPOK_Blob::Blob GetTpmSrk();
 	static SPOK_Blob::Blob GetPcrTable();
+	static SPOK_Blob::Blob GetBootLog();
+
+	//import an opaque key into the TPM
+	static void ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key);
+
+	//Platform key operations
+	static SPOK_Blob::Blob Encrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);
+	static SPOK_Blob::Blob Decrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);
+	static SPOK_Blob::Blob Sign(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);
+	static bool Verify(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature);
 };
