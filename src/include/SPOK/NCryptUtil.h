@@ -68,6 +68,8 @@ public:
 	~PlatformKey();
 
 	SPOK_Blob::Blob GetPublicKey();
+	uint16_t KeySize() const;
+	uint16_t MaxMessage() const;
 
 	SPOK_Blob::Blob Encrypt(const SPOK_Blob::Blob& data);
 	SPOK_Blob::Blob Decrypt(const SPOK_Blob::Blob& data);

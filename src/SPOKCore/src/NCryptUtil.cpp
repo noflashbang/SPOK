@@ -166,8 +166,34 @@ SPOK_Blob::Blob PlatformKey::GetPublicKey()
 	return key;
 }
 
+uint16_t PlatformKey::KeySize() const
+{
+	NCryptKeyHandle hKey(m_keyName, m_flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	DWORD keySize = 0;
+	// Get the key size
+	HRESULT status = NCryptGetProperty(hKey, NCRYPT_LENGTH_PROPERTY, (PBYTE)&keySize, sizeof(keySize), 0, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptGetProperty \"NCRYPT_LENGTH_PROPERTY\" failed");
+	}
+
+	return keySize;
+}
+
+uint16_t PlatformKey::MaxMessage() const
+{
+	uint16_t keySize = KeySize();
+	uint16_t maxMessage = (keySize / 8) - 62; // OAEP padding
+	return maxMessage;
+}
+
 SPOK_Blob::Blob PlatformKey::Encrypt(const SPOK_Blob::Blob& data)
 {
+	if (data.size() > MaxMessage())
+	{
+		throw std::runtime_error(std::format("Data too large to encrypt -> Max {} bytes, got {} bytes", MaxMessage(), data.size()));
+	}
+
 	NCryptKeyHandle hKey(m_keyName, m_flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
 	DWORD dataSize = 0;
 
@@ -226,7 +252,10 @@ SPOK_Blob::Blob PlatformKey::Decrypt(const SPOK_Blob::Blob& data)
 
 SPOK_Blob::Blob PlatformKey::Sign(const SPOK_Blob::Blob& data)
 {
-	auto signature = SPOK_Blob::New(SHA256_DIGEST_SIZE);
+	if (data.size() > MaxMessage())
+	{
+		throw std::runtime_error(std::format("Data too large to sign -> Max {} bytes, got {} bytes", MaxMessage(), data.size()));
+	}
 
 	NCryptKeyHandle hKey(m_keyName, m_flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
 	DWORD signatureSize = 0;
@@ -235,7 +264,15 @@ SPOK_Blob::Blob PlatformKey::Sign(const SPOK_Blob::Blob& data)
 	BCRYPT_PKCS1_PADDING_INFO padInfo;
 	padInfo.pszAlgId = NCRYPT_SHA256_ALGORITHM;
 
-	HRESULT status = NCryptSignHash(hKey, &padInfo, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT32(data.size()), signature.data(), SAFE_CAST_TO_INT32(signature.size()), &signatureSize, 0);
+	HRESULT status = NCryptSignHash(hKey, &padInfo, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT32(data.size()), NULL, 0, &signatureSize, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptSignHash failed");
+	}
+
+	auto signature = SPOK_Blob::New(signatureSize);
+
+	status = NCryptSignHash(hKey, &padInfo, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_INT32(data.size()), signature.data(), SAFE_CAST_TO_INT32(signature.size()), &signatureSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptSignHash failed");

@@ -7,6 +7,11 @@ BCryptAlgHandle::BCryptAlgHandle(AlgId alg) : m_hAlg(NULL), m_algId(alg)
 	NTSTATUS status;
 	switch (alg)
 	{
+		case AlgId::RNG:
+		{
+			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_RNG_ALGORITHM, NULL, 0);
+			break;
+		}
 		case AlgId::RSA:
 		{
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_RSA_ALGORITHM, NULL, 0);
@@ -145,8 +150,32 @@ SPOK_Blob::Blob BCryptKey::GetPublicKey()
 	return keyBlob;
 }
 
+uint16_t BCryptKey::KeySize() const
+{
+	DWORD keySize = 0;
+	DWORD cbData = 0;
+	HRESULT status = BCryptGetProperty(m_hKey, BCRYPT_KEY_LENGTH, (PUCHAR)&keySize, sizeof(keySize), &cbData, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("BCryptGetProperty failed");
+	}
+	return keySize;
+}
+
+uint16_t BCryptKey::MaxMessage() const
+{
+	uint16_t keySize = KeySize();
+	uint16_t maxMessage = (keySize / 8) - 62; // OAEP padding
+	return maxMessage;
+}
+
 SPOK_Blob::Blob BCryptKey::Encrypt(const SPOK_Blob::Blob& data)
 {
+	if (data.size() > MaxMessage())
+	{
+		throw std::runtime_error(std::format("Data too large to encrypt -> Max {} bytes, got {} bytes", MaxMessage(), data.size()));
+	}
+
 	DWORD dataSize = 0;
 
 	//OAEP padding
@@ -199,15 +228,25 @@ SPOK_Blob::Blob BCryptKey::Decrypt(const SPOK_Blob::Blob& data)
 	return decryptedData;
 
 }
-SPOK_Blob::Blob BCryptKey::Sign(const SPOK_Blob::Blob& data)
+SPOK_Blob::Blob BCryptKey::Sign(const SPOK_Blob::Blob& hash)
 {
-	auto signature = SPOK_Blob::New(SHA256_DIGEST_SIZE);
-
+	if (hash.size() > MaxMessage())
+	{
+		throw std::runtime_error(std::format("Data too large to sign -> Max {} bytes, got {} bytes", MaxMessage(), hash.size()));
+	}
 	BCRYPT_PKCS1_PADDING_INFO padInfo;
 	padInfo.pszAlgId = NCRYPT_SHA256_ALGORITHM;
 	DWORD signatureSize = 0;
 
-	HRESULT status = BCryptSignHash(m_hKey, &padInfo, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), signature.data(), SAFE_CAST_TO_UINT32(signature.size()), &signatureSize, BCRYPT_PAD_PKCS1);
+	HRESULT status = BCryptSignHash(m_hKey, &padInfo, const_cast<uint8_t*>(hash.data()), SAFE_CAST_TO_UINT32(hash.size()), NULL, 0, &signatureSize, BCRYPT_PAD_PKCS1);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("BCryptSignHash failed");
+	}
+
+	auto signature = SPOK_Blob::New(signatureSize);
+
+	status = BCryptSignHash(m_hKey, &padInfo, const_cast<uint8_t*>(hash.data()), SAFE_CAST_TO_UINT32(hash.size()), signature.data(), SAFE_CAST_TO_UINT32(signature.size()), &signatureSize, BCRYPT_PAD_PKCS1);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("BCryptSignHash failed");
@@ -216,12 +255,12 @@ SPOK_Blob::Blob BCryptKey::Sign(const SPOK_Blob::Blob& data)
 	return signature;
 
 }
-bool BCryptKey::Verify(const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature)
+bool BCryptKey::Verify(const SPOK_Blob::Blob& hash, const SPOK_Blob::Blob& signature)
 {
 	BCRYPT_PKCS1_PADDING_INFO padInfo;
 	padInfo.pszAlgId = NCRYPT_SHA256_ALGORITHM;
 
-	HRESULT status = BCryptVerifySignature(m_hKey, &padInfo, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), const_cast<uint8_t*>(signature.data()), SAFE_CAST_TO_UINT32(signature.size()), BCRYPT_PAD_PKCS1);
+	HRESULT status = BCryptVerifySignature(m_hKey, &padInfo, const_cast<uint8_t*>(hash.data()), SAFE_CAST_TO_UINT32(hash.size()), const_cast<uint8_t*>(signature.data()), SAFE_CAST_TO_UINT32(signature.size()), BCRYPT_PAD_PKCS1);
 	if (status != NTE_BAD_SIGNATURE && SUCCEEDED(status))
 	{
 		return true;
@@ -285,4 +324,16 @@ SPOK_Blob::Blob BCryptUtil::GenerateRsaKeyPair(KeySize keySize)
 		throw std::runtime_error("BCryptExportKey failed");
 	}
 	return keyBlob;
+}
+
+SPOK_Blob::Blob BCryptUtil::GetRandomBytes(uint32_t size)
+{
+	BCryptAlgHandle hAlg(AlgId::RNG);
+	auto randomBytes = SPOK_Blob::New(size);
+	NTSTATUS status = BCryptGenRandom(hAlg, randomBytes.data(), SAFE_CAST_TO_UINT32(randomBytes.size()), 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("BCryptGenRandom failed");
+	}
+	return randomBytes;
 }

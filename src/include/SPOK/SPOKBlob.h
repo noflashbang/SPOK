@@ -28,9 +28,6 @@
 
 #include "SPOKApiTypes.h"
 
-// IdBindingBlob, RSABlob, etc.
-
-
 class SPOK_Blob
 {
 public:
@@ -43,6 +40,9 @@ public:
 	static void Copy2CStylePtr(const Blob& source, uint8_t* destPtr, const size_t destSize, size_t& sizeOut);
 	static std::string BlobToHex(const Blob& blob);
 	static Blob HexToBlob(const std::string& hex);
+
+	static std::string BlobToBase64(const Blob& blob);
+	static Blob Base64ToBlob(const std::string& base64);
 };
 
 class EndianSwap

@@ -14,6 +14,7 @@
 
 enum class AlgId : uint32_t
 {
+	RNG,
 	RSA,
 	SHA1,
 	SHA256,
@@ -50,6 +51,9 @@ public:
 		return m_hKey != NULL;
 	}
 
+	uint16_t KeySize() const;
+	uint16_t MaxMessage() const;
+
 	SPOK_Blob::Blob Encrypt(const SPOK_Blob::Blob& data);
 	SPOK_Blob::Blob Decrypt(const SPOK_Blob::Blob& data);
 	SPOK_Blob::Blob Sign(const SPOK_Blob::Blob& data);
@@ -74,4 +78,5 @@ public:
 
 	static BCryptKey Open(SPOK_Blob::Blob& keyBlob);
 	static SPOK_Blob::Blob GenerateRsaKeyPair(KeySize keySize);
+	static SPOK_Blob::Blob GetRandomBytes(uint32_t size);
 };

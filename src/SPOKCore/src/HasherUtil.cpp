@@ -135,10 +135,8 @@ SPOK_Blob::Blob Hasher::PublicKeyHash(const SPOK_Blob::Blob& keyBlob)
 		exponentTL.push_back(static_cast<uint8_t>(expSize & 0xFF));
 	}
 
-
 	uint16_t length = modSize + expSize + exponentTL.size() + modulusTL.size();
 
-	
 	sequenceTL.push_back(0x30);
 	if (length < 128)
 	{

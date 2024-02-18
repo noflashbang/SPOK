@@ -43,6 +43,84 @@ SPOK_Blob::Blob SPOK_Blob::HexToBlob(const std::string& hex)
 	return blob;
 }
 
+std::string SPOK_Blob::BlobToBase64(const Blob& blob)
+{
+	static const std::string base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	std::string base64;
+	base64.reserve((blob.size() + 2) / 3 * 4);
+	for (size_t i = 0; i < blob.size(); i += 3)
+	{
+		uint32_t value = blob[i];
+		if (i + 1 < blob.size())
+		{
+			value = (value << 8) | blob[i + 1];
+		}
+		if (i + 2 < blob.size())
+		{
+			value = (value << 8) | blob[i + 2];
+		}
+		base64.push_back(base64Chars[(value >> 18) & 0x3F]);
+		base64.push_back(base64Chars[(value >> 12) & 0x3F]);
+		if (i + 1 < blob.size())
+		{
+			base64.push_back(base64Chars[(value >> 6) & 0x3F]);
+		}
+		else
+		{
+			base64.push_back('=');
+		}
+		if (i + 2 < blob.size())
+		{
+			base64.push_back(base64Chars[value & 0x3F]);
+		}
+		else
+		{
+			base64.push_back('=');
+		}
+	}
+	return base64;
+}
+
+SPOK_Blob::Blob SPOK_Blob::Base64ToBlob(const std::string& base64)
+{
+	static const std::array<uint8_t, 256> base64Values = []()
+	{
+		std::array<uint8_t, 256> values;
+		values.fill(0xFF);
+		for (size_t i = 0; i < 64; i++)
+		{
+			values["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[i]] = i;
+		}
+		values['='] = 0;
+		return values;
+	}();
+	Blob blob;
+	blob.reserve((base64.size() + 3) / 4 * 3);
+	for (size_t i = 0; i < base64.size(); i += 4)
+	{
+		uint32_t value = base64Values[base64[i]];
+		value = (value << 6) | base64Values[base64[i + 1]];
+		if (base64[i + 2] != '=')
+		{
+			value = (value << 6) | base64Values[base64[i + 2]];
+		}
+		if (base64[i + 3] != '=')
+		{
+			value = (value << 6) | base64Values[base64[i + 3]];
+		}
+		blob.push_back((value >> 16) & 0xFF);
+		if (base64[i + 2] != '=')
+		{
+			blob.push_back((value >> 8) & 0xFF);
+		}
+		if (base64[i + 3] != '=')
+		{
+			blob.push_back(value & 0xFF);
+		}
+	}
+	return blob;
+}
+
 uint8_t SPOK_BinaryStream::Read()
 {
 	if(CanRead(1) == false)
