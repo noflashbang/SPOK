@@ -104,6 +104,43 @@ TEST_CASE("RSA Operations")
 	REQUIRE(ver_512);
 }
 
+
+TEST_CASE("Platform RSA Operations")
+{		
+	//SPC_CreatePlatformKey(L"TestKey", NCRYPT_MACHINE_KEY::NO);
+
+	auto secret = BCryptUtil::GetRandomBytes(32);
+	
+	std::unique_ptr<unsigned char[]> pBytes = nullptr;
+	size_t cbSize = 512;
+
+	pBytes = std::make_unique<unsigned char[]>(cbSize);
+
+	size_t sizeOut = 0;
+
+	SPC_PlatformEncrypt(L"TestKey", NCRYPT_MACHINE_KEY::NO, secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	auto enc = SPOK_Blob::New(pBytes.get(), sizeOut);
+
+	ZeroMemory(pBytes.get(), cbSize);
+
+	SPC_PlatformDecrypt(L"TestKey", NCRYPT_MACHINE_KEY::NO, enc.data(), enc.size(), pBytes.get(), cbSize, sizeOut);
+
+	REQUIRE(sizeOut == secret.size());
+	REQUIRE(0 == memcmp(pBytes.get(), secret.data(), sizeOut));
+
+	ZeroMemory(pBytes.get(), cbSize);
+
+	SPC_PlatformSign(L"TestKey", NCRYPT_MACHINE_KEY::NO, secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	auto sig = SPOK_Blob::New(pBytes.get(), sizeOut);
+
+	ZeroMemory(pBytes.get(), cbSize);
+
+	auto isGood = SPC_PlatformVerifySignature(L"TestKey", NCRYPT_MACHINE_KEY::NO, secret.data(), secret.size(), sig.data(), sig.size());
+
+	REQUIRE(isGood);
+}
+
+
 TEST_CASE("SPC_AIKGetPublicKey")
 {
  	std::unique_ptr<unsigned char[]> pBytes = nullptr;

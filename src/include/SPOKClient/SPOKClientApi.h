@@ -39,8 +39,6 @@
 extern "C"
 {
 #endif
-
-	SPOKCLIENT_API SPOK_Handle SPC_Create();
 		
 	//AIK Management
 	SPOKCLIENT_API void SPC_AIKCreate(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* nonce, const size_t cbNonce);
@@ -48,7 +46,7 @@ extern "C"
 	SPOKCLIENT_API bool SPC_AIKExists(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);
 
 	//AIK Attestation
-	SPOKCLIENT_API void SPC_AIKGetKeyAttestation();
+	SPOKCLIENT_API void SPC_AIKGetKeyAttestation(const wchar_t* aikName, const NCRYPT_MACHINE_KEY aikFlag, const uint8_t* nonce, const size_t cbNonce, const wchar_t* keyName, const NCRYPT_MACHINE_KEY keyFlag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 	SPOKCLIENT_API void SPC_AIKGetPlatformAttestation();
 
 	//AIK Public Key
@@ -70,7 +68,7 @@ extern "C"
 
 	//User Key Addition
 	SPOKCLIENT_API void SPC_PlatformImportWrappedKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pKeyBlob, const size_t cbKeyBlob);
-	SPOKCLIENT_API void SPC_PlatformImportRSAKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pKeyBlob, const size_t cbKeyBlob);
+	SPOKCLIENT_API void SPC_CreatePlatformKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);
 
 	//Cryptographic Operations
 	SPOKCLIENT_API void SPC_PlatformDecrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut);

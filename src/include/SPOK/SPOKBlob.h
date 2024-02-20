@@ -133,7 +133,10 @@ public:
 	void BE_Write64(const uint64_t value);
 
 	void Read(uint8_t* dest, const size_t size);
+	SPOK_Blob::Blob Read(const size_t size);
+
 	void Write(const uint8_t* source, const size_t size);
+	void Write(const SPOK_Blob::Blob& source);
 
 	void Seek(const size_t position);
 	size_t Tell() const;

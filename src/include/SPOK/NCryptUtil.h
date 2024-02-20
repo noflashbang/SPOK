@@ -10,6 +10,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
+#include <tbs.h>
 #include <bcrypt.h>
 #include <ncrypt.h>
 
@@ -54,6 +55,11 @@ class PlatformAik
 		SPOK_Blob::Blob GetIdBinding();
 		SPOK_Blob::Blob GetPublicKey();
 
+		NCRYPT_PROV_HANDLE GetProviderHandle();
+		TBS_HCONTEXT GetTsbHandle();
+		uint32_t GetPlatformHandle();
+		uint32_t GetSignatureSize();
+
 		SPOK_Blob::Blob ActiveChallenge(const SPOK_Blob::Blob& challenge);
 
 private:
@@ -70,6 +76,11 @@ public:
 	SPOK_Blob::Blob GetPublicKey();
 	uint16_t KeySize() const;
 	uint16_t MaxMessage() const;
+
+	NCRYPT_PROV_HANDLE GetProviderHandle();
+	TBS_HCONTEXT GetTsbHandle();
+	uint32_t GetPlatformHandle();
+	uint32_t GetSignatureSize();
 
 	SPOK_Blob::Blob Encrypt(const SPOK_Blob::Blob& data);
 	SPOK_Blob::Blob Decrypt(const SPOK_Blob::Blob& data);
@@ -101,6 +112,7 @@ public:
 
 	//import an opaque key into the TPM
 	static void ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type);
+	static void CreatePlatformKey(const SPOK_PlatformKey& aik);
 
 	//Platform key operations
 	static SPOK_Blob::Blob Encrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);

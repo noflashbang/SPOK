@@ -250,6 +250,18 @@ void SPOK_BinaryStream::Read(uint8_t* dest, const size_t size)
 	memcpy_s(dest, size, m_data.data() + m_cursor, size);
 	m_cursor += size;
 }
+
+SPOK_Blob::Blob SPOK_BinaryStream::Read(const size_t size)
+{
+	if (CanRead(size) == false)
+	{
+		return SPOK_Blob::New(0);
+	}
+	auto blob = SPOK_Blob::New(m_data.data() + m_cursor, size);
+	m_cursor += size;
+	return blob;
+}
+
 void SPOK_BinaryStream::Write(const uint8_t* source, const size_t size)
 {
 	if(CanWrite(size) == false)
@@ -258,6 +270,11 @@ void SPOK_BinaryStream::Write(const uint8_t* source, const size_t size)
 	}
 	memcpy_s(m_data.data() + m_cursor, m_data.size() - m_cursor, source, size);
 	m_cursor += size;
+}
+
+void SPOK_BinaryStream::Write(const SPOK_Blob::Blob& source)
+{
+	Write(source.data(), source.size());
 }
 
 void SPOK_BinaryStream::Seek(const size_t position)

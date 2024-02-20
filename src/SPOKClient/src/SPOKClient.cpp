@@ -1,5 +1,6 @@
 #include "SPOKClient.h"
 #include "StandardLib.h"
+#include "TPM_20.h"
 
 SPOKClient::SPOKClient()
 {
@@ -22,6 +23,11 @@ void SPOKClient::AIKDelete(const SPOK_PlatformKey& aik)
 bool SPOKClient::AIKExists(const SPOK_PlatformKey& aik)
 {
 	return NCryptUtil::DoesAikExists(aik);
+}
+
+SPOK_Blob::Blob SPOKClient::AIKGetKeyAttestation(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest)
+{
+	return TPM_20::CertifyKey(aik, nonce, keyToAttest);
 }
 
 SPOK_Blob::Blob SPOKClient::AIKGetPublicKey(const SPOK_PlatformKey& aik)
@@ -65,6 +71,11 @@ SPOK_Blob::Blob SPOKClient::GetStorageRootKey()
 void SPOKClient::PlatformImportKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type)
 {
 	NCryptUtil::ImportPlatformKey(aik, key, type);
+}
+
+void SPOKClient::PlatformCreateKey(const SPOK_PlatformKey& aik)
+{
+	NCryptUtil::CreatePlatformKey(aik);
 }
 
 SPOK_Blob::Blob SPOKClient::PlatformDecrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data)

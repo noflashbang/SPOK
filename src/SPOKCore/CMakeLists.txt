@@ -10,6 +10,7 @@ set( externHeadersCore
     ${PARENT_DIR}/include/SPOK/NCryptUtil.h
     ${PARENT_DIR}/include/SPOK/BCryptUtil.h
     ${PARENT_DIR}/include/SPOK/HasherUtil.h
+    ${PARENT_DIR}/include/SPOK/TPM_20.h
 )
 
 set( libHeaders 
@@ -24,6 +25,7 @@ set( libSource
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NCryptUtil.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/BCryptUtil.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HasherUtil.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/TPM_20.cpp
 )
 
 add_library (SPOKCore STATIC ${libSource} ${libHeaders} ${externHeaders}) 

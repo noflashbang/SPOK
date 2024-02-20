@@ -29,6 +29,16 @@ bool SPC_AIKExists(const wchar_t* name, const NCRYPT_MACHINE_KEY flag)
 	return client.AIKExists(key);
 }
 
+void SPC_AIKGetKeyAttestation(const wchar_t* aikName, const NCRYPT_MACHINE_KEY aikFlag, const uint8_t* nonce, const size_t cbNonce, const wchar_t* keyName, const NCRYPT_MACHINE_KEY keyFlag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)
+{
+	auto aik = SPOK_PlatformKey{ aikName, aikFlag };
+	auto key = SPOK_PlatformKey{ keyName, keyFlag };
+	auto spokNonce = SPOK_Nonce::Make(nonce, cbNonce);
+	SPOKClient client;
+	auto blob = client.AIKGetKeyAttestation(aik, spokNonce, key);
+	SPOK_Blob::Copy2CStylePtr(blob, pBytes, cbBytes, sizeOut);
+}
+
 void SPC_GetEndorsementPublicKey(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)
 {
 	SPOKClient client;
@@ -93,12 +103,11 @@ void SPC_PlatformImportWrappedKey(const wchar_t* name, const NCRYPT_MACHINE_KEY 
 	client.PlatformImportKey(key, blob, KeyBlobType::WRAPPED);
 }
 
-void SPC_PlatformImportRSAKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pKeyBlob, const size_t cbKeyBlob)
+void SPC_CreatePlatformKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag)
 {
 	auto key = SPOK_PlatformKey{ name, flag };
-	auto blob = SPOK_Blob::New(pKeyBlob, cbKeyBlob);
 	SPOKClient client;
-	client.PlatformImportKey(key, blob, KeyBlobType::PLAIN);
+	client.PlatformCreateKey(key);
 }
 
 void SPC_PlatformDecrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut)

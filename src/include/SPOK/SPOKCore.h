@@ -29,6 +29,13 @@
 #define SHA1_DIGEST_SIZE 20
 #define SHA256_DIGEST_SIZE 32
 
+#ifndef TPM_VERSION_12
+#define TPM_VERSION_12 0x00010000
+#endif
+
+#ifndef TPM_VERSION_20
+#define TPM_VERSION_20 0x00020000
+#endif
 
 struct SPOK_PlatformKey
 {
@@ -36,3 +43,11 @@ struct SPOK_PlatformKey
 	NCRYPT_MACHINE_KEY Flag;
 };
 
+#define SPOK_KEY_ATT_MAGIC 'SPKA' // Key Attestation Data Structure
+typedef struct _SPOK_KEY_ATT_BLOB {
+    uint32_t Magic;
+    uint32_t TpmVersion;
+    uint32_t HeaderSize;
+    uint32_t KeyAttestSize;
+    uint32_t SignatureSize;
+} SPOK_KEY_ATT_BLOB;
