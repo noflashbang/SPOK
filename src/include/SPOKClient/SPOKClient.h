@@ -18,7 +18,7 @@ public:
 	bool AIKExists(const SPOK_PlatformKey& aik);
 
 	SPOK_Blob::Blob AIKGetKeyAttestation(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest);
-	void AIKGetPlatformAttestation();
+	SPOK_Blob::Blob AIKGetPlatformAttestation(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, uint32_t pcrsToInclude);
 
 	SPOK_Blob::Blob AIKGetPublicKey(const SPOK_PlatformKey& aik);
 	SPOK_Blob::Blob GetEndorsementPublicKey();

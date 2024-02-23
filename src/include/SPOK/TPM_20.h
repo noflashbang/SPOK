@@ -21,6 +21,7 @@ class TPM_20
 {
 public:
 	static SPOK_Blob::Blob CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest);
+	static SPOK_Blob::Blob AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, uint32_t pcrsToInclude);
 
 private:
 

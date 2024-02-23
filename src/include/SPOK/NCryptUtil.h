@@ -108,7 +108,8 @@ public:
 	static SPOK_Blob::Blob GetTpmPublicEndorsementKey();
 	static SPOK_Blob::Blob GetTpmSrk();
 	static SPOK_Blob::Blob GetPcrTable();
-	static SPOK_Blob::Blob GetBootLog();
+	static SPOK_Blob::Blob GetTbsLog();
+	static SPOK_Blob::Blob GetFilteredTbsLog(uint32_t pcrsToInclude);
 
 	//import an opaque key into the TPM
 	static void ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type);

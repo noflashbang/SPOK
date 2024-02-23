@@ -30,6 +30,11 @@ SPOK_Blob::Blob SPOKClient::AIKGetKeyAttestation(const SPOK_PlatformKey& aik, co
 	return TPM_20::CertifyKey(aik, nonce, keyToAttest);
 }
 
+SPOK_Blob::Blob SPOKClient::AIKGetPlatformAttestation(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, uint32_t pcrsToInclude)
+{
+	return TPM_20::AttestPlatform(aik, nonce, pcrsToInclude);
+}
+
 SPOK_Blob::Blob SPOKClient::AIKGetPublicKey(const SPOK_PlatformKey& aik)
 {
 	auto aiKey = PlatformAik(aik);
