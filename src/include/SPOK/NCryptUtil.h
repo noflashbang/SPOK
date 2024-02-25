@@ -14,8 +14,18 @@
 #include <bcrypt.h>
 #include <ncrypt.h>
 
+#define AVAILABLE_PLATFORM_PCRS (24)
 
 #define AIK_CHALLENGE_SECRET_SIZE (32)
+
+#ifndef TCG_EVENT_LOG_FORMAT_1_2
+#define TCG_EVENT_LOG_FORMAT_1_2    (1)
+#endif
+
+#ifndef TCG_EVENT_LOG_FORMAT_2
+#define TCG_EVENT_LOG_FORMAT_2      (2)
+#endif
+
 
 class NCryptProvHandle
 {

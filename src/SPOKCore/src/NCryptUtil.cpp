@@ -1,5 +1,6 @@
 #include "NCryptUtil.h"
 #include "BCryptUtil.h"
+#include "TcgLog.h"
 
 #include <TBS.h>
 #include <wbcl.h>
@@ -564,60 +565,10 @@ SPOK_Blob::Blob NCryptUtil::GetTbsLog()
 }
 SPOK_Blob::Blob NCryptUtil::GetFilteredTbsLog(uint32_t pcrsToInclude)
 {
-	TBS_HCONTEXT hPlatformTbsHandle = 0;
-	WBCL_Iterator wbclIterator;
-	NCryptProvHandle hProv;
-	DWORD holder = 0;
-	UINT32 neededSize = 0;
-	HRESULT hr = S_OK;
-
-	//Get the TSB handle from ncrypt
-	HRESULT status = NCryptGetProperty(hProv, NCRYPT_PCP_PLATFORMHANDLE_PROPERTY, (PBYTE)&hPlatformTbsHandle, sizeof(hPlatformTbsHandle), &holder, 0);
-
-	if (status != ERROR_SUCCESS)
-	{
-		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_PLATFORMHANDLE_PROPERTY\" failed");
-	}
-
-	//Get the boot log size
-	status = Tbsi_Get_TCG_Log(hPlatformTbsHandle, NULL, &neededSize);
-
-	auto bootLog = SPOK_Blob::New(neededSize);
-	auto filteredLog = SPOK_Blob::New(neededSize);
-	auto bw = SPOK_BinaryStream(filteredLog);
-	status = Tbsi_Get_TCG_Log(hPlatformTbsHandle, bootLog.data(), &neededSize);
-
-	WbclApiInitIterator(bootLog.data(), bootLog.size(), &wbclIterator);
-
-	if (wbclIterator.logFormat == TCG_EVENT_LOG_FORMAT_2)
-	{
-		uint32_t firstElementSize = (UINT32)((PBYTE)wbclIterator.currentElementPtr - neededSize);
-		bw.Write(bootLog.data(), firstElementSize);
-	}
-
-	//Filter the log
-	for (; hr == S_OK; hr = WbclApiMoveToNextElement(&wbclIterator))
-	{
-		UINT32 pcrIndex;
-		UINT32 eventType;
-		PBYTE digest;
-		UINT32 eventDataSize;
-		PBYTE eventDataBuffer;
-		hr = WbclApiGetCurrentElement(&wbclIterator, &pcrIndex, &eventType, &digest, &eventDataSize, &eventDataBuffer);
-
-		if (pcrIndex >= AVAILABLE_PLATFORM_PCRS)
-		{
-			continue;
-		}
-
-		// Apply the filter
-		if (((0x00000001 << pcrIndex) & pcrsToInclude) != 0)
-		{
-			// We want to keep this entry
-			bw.Write(wbclIterator.currentElementPtr, wbclIterator.currentElementSize);
-		}
-	}
-	return filteredLog;
+	auto tsbLog = GetTbsLog();
+	auto tcgLog = TcgLogParser::Parse(tsbLog);
+	auto filteredLog = TcgLogParser::Filter(tcgLog, pcrsToInclude);
+	return TcgLogParser::Serialize(filteredLog);
 }
 
 void NCryptUtil::ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type)

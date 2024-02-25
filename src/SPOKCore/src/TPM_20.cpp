@@ -112,7 +112,7 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, uint32_t pcrsToInclude)
 {
 	//Grab the tsb log
-	auto tsb = NCryptUtil::GetBootLog();
+	auto tsbLog = NCryptUtil::GetFilteredTbsLog(pcrsToInclude);
 
 	uint16_t algId = TPM_API_ALG_ID_SHA1;
 
@@ -201,9 +201,9 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	auto sig = br.Read(sigSize);
 
 	// calculate the quote length
-	auto required = sizeof(SPOK_PLATFORM_ATT_BLOB) + quoteSize + sigSize + tsbSize;
-	auto quote = SPOK_Blob::Blob(required);
-	auto bwQuote = SPOK_BinaryStream(quote);
+	auto required = sizeof(SPOK_PLATFORM_ATT_BLOB) + quoteSize + sigSize + tsbLog.size();
+	auto quoteBlob = SPOK_Blob::Blob(required);
+	auto bwQuote = SPOK_BinaryStream(quoteBlob);
 
 	SPOK_PLATFORM_ATT_BLOB platAttBlob;
 	platAttBlob.Magic = SPOK_PLATFORM_ATT_MAGIC;
@@ -212,12 +212,12 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	platAttBlob.PcrMask = pcrsToInclude;
 	platAttBlob.QuoteSize = quoteSize;
 	platAttBlob.SignatureSize = sigSize;
-	platAttBlob.TsbSize = tsbSize;
+	platAttBlob.TsbSize = tsbLog.size();
 
 	bwQuote.Write((uint8_t*)&platAttBlob, sizeof(SPOK_PLATFORM_ATT_BLOB));
 	bwQuote.Write(quote);
 	bwQuote.Write(sig);
-	bwQuote.Write(tsb);
+	bwQuote.Write(tsbLog);
 
-	return quote;
+	return quoteBlob;
 }

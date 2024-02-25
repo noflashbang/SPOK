@@ -60,7 +60,7 @@ SPOK_Blob::Blob SPOKClient::AIKActivateChallenge(const SPOK_PlatformKey& aik, co
 
 SPOK_Blob::Blob SPOKClient::GetBootLog()
 {
-	return NCryptUtil::GetBootLog();
+	return NCryptUtil::GetTbsLog();
 }
 
 SPOK_Blob::Blob SPOKClient::GetPCRTable()

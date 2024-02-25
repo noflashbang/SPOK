@@ -26,8 +26,8 @@
 #include "SPOKApiTypes.h"
 
 
-#define SHA1_DIGEST_SIZE 20
-#define SHA256_DIGEST_SIZE 32
+#define SHA1_DIGEST_SIZE (20)
+#define SHA256_DIGEST_SIZE (32)
 
 #ifndef TPM_VERSION_12
 #define TPM_VERSION_12 0x00010000

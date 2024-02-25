@@ -16,6 +16,7 @@ set( externHeadersCore
 set( libHeaders 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/StandardLib.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Util.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/TcgLog.h
 )
 
 set( libSource
@@ -26,6 +27,7 @@ set( libSource
     ${CMAKE_CURRENT_SOURCE_DIR}/src/BCryptUtil.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HasherUtil.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/TPM_20.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/TcgLog.cpp
 )
 
 add_library (SPOKCore STATIC ${libSource} ${libHeaders} ${externHeaders}) 
@@ -36,7 +38,7 @@ target_sources( SPOKCore PRIVATE ${libSource} ${libHeaders} )
 
 target_sources( SPOKCore PUBLIC FILE_SET HEADERS BASE_DIRS ${PARENT_DIR}/include/SPOK FILES ${externHeadersCore} )
 
-target_link_libraries( SPOKCore PUBLIC bcrypt.lib ncrypt.lib tbs.lib )
+target_link_libraries( SPOKCore PUBLIC bcrypt.lib ncrypt.lib tbs.lib)
 
 install(TARGETS SPOKCore
         RUNTIME DESTINATION bin          
