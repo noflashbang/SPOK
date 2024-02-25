@@ -74,8 +74,7 @@ class PlatformAik
 		SPOK_Blob::Blob ActiveChallenge(const SPOK_Blob::Blob& challenge);
 
 private:
-	std::wstring m_keyName;
-	NCRYPT_MACHINE_KEY m_flag;
+	NCryptKeyHandle m_key;
 };
 
 class PlatformKey
@@ -99,8 +98,7 @@ public:
 	bool Verify(const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature);
 
 private:
-	std::wstring m_keyName;
-	NCRYPT_MACHINE_KEY m_flag;
+	NCryptKeyHandle m_key;
 };
 
 enum class KeyBlobType : uint32_t
