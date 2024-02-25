@@ -3,6 +3,7 @@
 #include "SPOKCore.h"
 #include "SPOKNonce.h"
 #include "SPOKBlob.h"
+#include "SPOKPcrs.h"
 
 #include "standardlib.h"
 

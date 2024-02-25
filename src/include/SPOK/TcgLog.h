@@ -1,12 +1,9 @@
 #pragma once
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <TBS.h>
-#include <wbcl.h>
 #include <stdint.h>
-#include "SPOKCore.h"
+#include <vector>
+#include <array>
+
 
 enum class TPM_ALG_ID : uint16_t
 {
@@ -63,27 +60,27 @@ enum class TcgLogEventType : uint32_t
 };
    
 
-typedef struct _TcgLogDigestSize
+struct TcgLogDigestSize
 {
     TPM_ALG_ID AlgorithmId;
     uint16_t   DigestSize;
-} TcgLogDigestSize;
+};
 
-typedef struct _TcgLogDigest
+struct TcgLogDigest
 {
     TPM_ALG_ID    AlgorithmId;
     std::vector<uint8_t>  Digest;
-} TcgLogDigest;
+};
 
-typedef struct _TcgLogEvent
+struct TcgLogEvent
 {
     uint32_t PCRIndex;
-	TcgLogEventType Type;
+    TcgLogEventType Type;
     std::vector<TcgLogDigest> Digests;
-	std::vector<uint8_t> Data;
-} TcgLogEvent;
+    std::vector<uint8_t> Data;
+};
 
-typedef struct _TcgLogHeaderStruct
+struct TcgLogHeader
 {
     uint8_t                       SpecVersionMajor;
     uint8_t                       SpecVersionMinor;
@@ -95,17 +92,13 @@ typedef struct _TcgLogHeaderStruct
     std::vector<uint8_t>          VendorInfo;
     std::array<uint8_t, 16>       Signature;
     std::vector<TcgLogDigestSize> DigestSizes;
-} TcgLogHeader;
+};
 
-typedef struct _TcgLog
+struct TcgLog
 {
 	TcgLogHeader Header;
 	std::vector<TcgLogEvent> Events;
-} TcgLog;
 
-class TcgLogParser
-{
-public:
     static TcgLogEventType GetEventType(uint32_t eventType);
     static TPM_ALG_ID GetTpmAlgId(uint16_t algId);
     static uint32_t GetDigestSize(TPM_ALG_ID algId);
@@ -113,6 +106,5 @@ public:
     static TcgLog Filter(const TcgLog& tcgLog, uint32_t pcrMask);
     static std::vector<uint8_t> ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_ID algId);
     static std::vector<uint8_t> Serialize(const TcgLog& tcgLog);
-private:
-    
 };
+

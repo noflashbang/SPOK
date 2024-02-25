@@ -148,10 +148,10 @@ uint32_t PlatformAik::GetPlatformHandle()
 	DWORD handleSize = 0;
 	// Get the ID binding
 	HRESULT status = NCryptGetProperty(hKey, NCRYPT_PCP_PLATFORMHANDLE_PROPERTY, reinterpret_cast<PBYTE>(&hPlatformHandle), sizeof(hPlatformHandle), &handleSize, 0);
-		if (status != ERROR_SUCCESS)
-		{
-			throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_PLATFORMHANDLE_PROPERTY\" failed");
-		}
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_PLATFORMHANDLE_PROPERTY\" failed");
+	}
 
 	return hPlatformHandle;
 }
@@ -558,6 +558,7 @@ SPOK_Blob::Blob NCryptUtil::GetTbsLog()
 	//Get the boot log size
 	status = Tbsi_Get_TCG_Log(hPlatformTbsHandle, NULL, &neededSize);
 
+	neededSize++; //appears to be a bug in the TBS API, it returns the size of the buffer needed, but it actually needs the size of the buffer + 1
 	auto bootLog = SPOK_Blob::New(neededSize);
 	status = Tbsi_Get_TCG_Log(hPlatformTbsHandle, bootLog.data(), &neededSize);
 
@@ -566,9 +567,9 @@ SPOK_Blob::Blob NCryptUtil::GetTbsLog()
 SPOK_Blob::Blob NCryptUtil::GetFilteredTbsLog(uint32_t pcrsToInclude)
 {
 	auto tsbLog = GetTbsLog();
-	auto tcgLog = TcgLogParser::Parse(tsbLog);
-	auto filteredLog = TcgLogParser::Filter(tcgLog, pcrsToInclude);
-	return TcgLogParser::Serialize(filteredLog);
+	auto tcgLog = TcgLog::Parse(tsbLog);
+	auto filteredLog = TcgLog::Filter(tcgLog, pcrsToInclude);
+	return TcgLog::Serialize(filteredLog);
 }
 
 void NCryptUtil::ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type)

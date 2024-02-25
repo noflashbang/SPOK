@@ -11,12 +11,12 @@ set( externHeadersCore
     ${PARENT_DIR}/include/SPOK/BCryptUtil.h
     ${PARENT_DIR}/include/SPOK/HasherUtil.h
     ${PARENT_DIR}/include/SPOK/TPM_20.h
+    ${PARENT_DIR}/include/SPOK/TcgLog.h
 )
 
 set( libHeaders 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/StandardLib.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Util.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/TcgLog.h
 )
 
 set( libSource

@@ -47,7 +47,7 @@ extern "C"
 
 	//AIK Attestation
 	SPOKCLIENT_API void SPC_AIKGetKeyAttestation(const wchar_t* aikName, const NCRYPT_MACHINE_KEY aikFlag, const uint8_t* nonce, const size_t cbNonce, const wchar_t* keyName, const NCRYPT_MACHINE_KEY keyFlag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
-	SPOKCLIENT_API void SPC_AIKGetPlatformAttestation();
+	SPOKCLIENT_API void SPC_AIKGetPlatformAttestation(const wchar_t* aikName, const NCRYPT_MACHINE_KEY aikFlag, const uint8_t* nonce, const size_t cbNonce, const uint32_t pcrsToInclude, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 
 	//AIK Public Key
 	SPOKCLIENT_API void SPC_AIKGetPublicKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
@@ -61,6 +61,7 @@ extern "C"
 
 	//AIK Quote and Verify
 	SPOKCLIENT_API void SPC_GetBootLog(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
+	SPOKCLIENT_API void SPC_GetFilteredBootLog(const uint32_t pcrsToInclude, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 	SPOKCLIENT_API void SPC_GetPCRTable(uint8_t* pPcrTable, const size_t cbPcrTable, size_t& sizeOut);
 
 	//SRK Access

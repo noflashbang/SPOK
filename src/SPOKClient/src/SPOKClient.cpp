@@ -63,6 +63,11 @@ SPOK_Blob::Blob SPOKClient::GetBootLog()
 	return NCryptUtil::GetTbsLog();
 }
 
+SPOK_Blob::Blob SPOKClient::GetBootLog(const uint32_t pcrsToInclude)
+{
+	return NCryptUtil::GetFilteredTbsLog(pcrsToInclude);
+}
+
 SPOK_Blob::Blob SPOKClient::GetPCRTable()
 {
 	return NCryptUtil::GetPcrTable();

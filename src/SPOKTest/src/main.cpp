@@ -8,6 +8,7 @@
 #include <HasherUtil.h>
 #include <SPOKBlob.h>
 
+#include <TcgLog.h>
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -249,6 +250,69 @@ TEST_CASE("SPC_GetPCRTable")
 	size_t sizeOut = 0;
 
 	SPC_GetPCRTable(pBytes.get(), cbSize, sizeOut);
+
+	REQUIRE(sizeOut > 0);
+}
+
+TEST_CASE("SPC_GetBootLog")
+{
+	std::unique_ptr<unsigned char[]> pBytes = nullptr;
+	size_t cbSize = 90000;
+
+	pBytes = std::make_unique<unsigned char[]>(cbSize);
+
+	size_t sizeOut = 0;
+
+	SPC_GetBootLog(pBytes.get(), cbSize, sizeOut);
+
+	REQUIRE(sizeOut > 0);
+
+	auto blob = SPOK_Blob::New(pBytes.get(), sizeOut);
+	auto log = TcgLog::Parse(blob);
+
+	REQUIRE(log.Events.size() > 0);
+}
+
+TEST_CASE("SPC_GetFilteredBootLog")
+{
+	std::unique_ptr<unsigned char[]> pBytes = nullptr;
+	size_t cbSize = 90000;
+
+	pBytes = std::make_unique<unsigned char[]>(cbSize);
+
+	size_t sizeOut = 0;
+
+	SPC_GetFilteredBootLog((PCR_13 | PCR_14), pBytes.get(), cbSize, sizeOut);
+
+	REQUIRE(sizeOut > 0);
+
+	auto blob = SPOK_Blob::New(pBytes.get(), sizeOut);
+	auto log = TcgLog::Parse(blob);
+
+	REQUIRE(log.Events.size() > 0);
+}
+
+TEST_CASE("SPC_AIKGetPlatformAttestation")
+{
+	std::unique_ptr<unsigned char[]> pBytes = nullptr;
+	size_t cbSize = 90000;
+
+	pBytes = std::make_unique<unsigned char[]>(cbSize);
+
+	std::wstring name = L"TestAIK2";
+	NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
+
+	bool exists = SPC_AIKExists(name.c_str(), flag);
+
+	if (!exists)
+	{
+		auto nonce = SPOK_Nonce::Zero();
+		SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
+	}
+
+	size_t sizeOut = 0;
+	auto nonce = SPOK_Nonce::Zero();
+	SPC_AIKGetPlatformAttestation(name.c_str(), flag, nonce.data(), nonce.size(), (PCR_13 | PCR_14), pBytes.get(), cbSize, sizeOut);
 
 	REQUIRE(sizeOut > 0);
 }

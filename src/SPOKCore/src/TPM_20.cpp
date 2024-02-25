@@ -114,7 +114,7 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	//Grab the tsb log
 	auto tsbLog = NCryptUtil::GetFilteredTbsLog(pcrsToInclude);
 
-	uint16_t algId = TPM_API_ALG_ID_SHA1;
+	uint16_t algId = TPM_API_ALG_ID_SHA256;
 
 	SPOK_Blob::Blob pcrProfile;
 	//count
@@ -131,14 +131,43 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	pcrProfile.push_back(0x03);
 
 	// platform PCRs mask
-	pcrProfile.push_back(SAFE_CAST_TO_UINT8(pcrsToInclude & 0x000000ff));
-	pcrProfile.push_back(SAFE_CAST_TO_UINT8((pcrsToInclude & 0x0000ff00) >> 8));
-	pcrProfile.push_back(SAFE_CAST_TO_UINT8((pcrsToInclude & 0x00ff0000) >> 16));
+	//pcrProfile.push_back(SAFE_CAST_TO_UINT8(pcrsToInclude & 0x000000ff));
+	//pcrProfile.push_back(SAFE_CAST_TO_UINT8((pcrsToInclude & 0x0000ff00) >> 8));
+	//pcrProfile.push_back(SAFE_CAST_TO_UINT8((pcrsToInclude & 0x00ff0000) >> 16));
+
+	pcrProfile.push_back(0x7f);
+	pcrProfile.push_back(0xf7);
+	pcrProfile.push_back(0x00);
 
 	PlatformAik aikKey(aik);
-	auto tsbHandle = aikKey.GetTsbHandle();
-	auto aikHandle = aikKey.GetProviderHandle();
-	auto aikSignatureSize = aikKey.GetSignatureSize();
+	//auto tsbHandle = aikKey.GetTsbHandle();
+
+	TBS_HCONTEXT hPlatformTbsHandle = 0;
+	NCRYPT_PROV_HANDLE hProv;
+	NCryptKeyHandle hKey(aik.Name, aik.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	DWORD handleSize = 0;
+	// Get the ID binding
+	HRESULT status4 = NCryptGetProperty(hKey, NCRYPT_PROVIDER_HANDLE_PROPERTY, reinterpret_cast<PBYTE>(&hProv), sizeof(hProv), &handleSize, aik.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	if (status4 != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PROVIDER_HANDLE_PROPERTY\" failed");
+	}
+	handleSize = 0;
+	// Get the ID binding
+	HRESULT status3 = NCryptGetProperty(hProv, NCRYPT_PCP_PLATFORMHANDLE_PROPERTY, reinterpret_cast<PBYTE>(&hPlatformTbsHandle), sizeof(hPlatformTbsHandle), &handleSize, 0);
+	if (status3 != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_PLATFORMHANDLE_PROPERTY\" failed");
+	}
+
+	//auto aikHandle = aikKey.GetPlatformHandle();
+	uint32_t hPlatformHandle = 0;
+	HRESULT status2 = NCryptGetProperty(hKey, NCRYPT_PCP_PLATFORMHANDLE_PROPERTY, reinterpret_cast<PBYTE>(&hPlatformHandle), sizeof(hPlatformHandle), &handleSize, 0);
+	if (status2 != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_PLATFORMHANDLE_PROPERTY\" failed");
+	}
+	//auto aikSignatureSize = aikKey.GetSignatureSize();
 
 	SPOK_Blob::Blob cmd;
 	cmd.resize(512);
@@ -154,16 +183,20 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	bw.BE_Write16(0x8002); // TPM_ST_SESSIONS
 	bw.BE_Write32(0x00000000); // parameterSize
 	bw.BE_Write32(0x00000158); // TPM_CC_Quote
-	bw.BE_Write32(aikHandle); // keyhandle
+	bw.BE_Write32(hPlatformHandle); // keyhandle
 	bw.BE_Write32(usageAuthSize); // size of the usage auth area
 	bw.BE_Write32(0x40000009); // TPM_RS_PW
 	bw.BE_Write16(0x0000); // nonce size
 	bw.Write(0x00); // session attributes
 	bw.BE_Write16(0x0000); // password size
-	bw.BE_Write16(SAFE_CAST_TO_UINT16(nonce.size())); // nonce size
-	bw.Write(nonce.data(), nonce.size()); // nonce
 
-	bw.BE_Write16(SAFE_CAST_TO_UINT16(pcrProfile.size())); // PCR profile size
+	bw.BE_Write16(0x0000); // nonce size
+	//bw.BE_Write16(SAFE_CAST_TO_UINT16(nonce.size())); // nonce size
+	//bw.Write(nonce.data(), nonce.size()); // nonce
+
+	bw.BE_Write16(0x0010);
+
+	//bw.BE_Write16(SAFE_CAST_TO_UINT16(pcrProfile.size())); // PCR profile size
 	bw.Write(pcrProfile); // PCR profile
 
 	uint32_t cmdSize = bw.Tell();
@@ -171,8 +204,8 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	bw.BE_Write32(cmdSize); // write the size of the command
 
 	// Send the command to the TPM
-	uint32_t rspSize = 0;
-	auto status = Tbsip_Submit_Command(tsbHandle, TBS_COMMAND_LOCALITY_ZERO, TBS_COMMAND_PRIORITY_NORMAL, cmd.data(), cmdSize, rsp.data(), &rspSize);
+	uint32_t rspSize = rsp.size();
+	auto status = Tbsip_Submit_Command(hPlatformTbsHandle, TBS_COMMAND_LOCALITY_ZERO, TBS_COMMAND_PRIORITY_NORMAL, cmd.data(), cmdSize, rsp.data(), &rspSize);
 	if (status != TBS_SUCCESS)
 	{
 		throw std::runtime_error("Tbsip_Submit_Command failed");

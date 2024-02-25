@@ -39,6 +39,16 @@ void SPC_AIKGetKeyAttestation(const wchar_t* aikName, const NCRYPT_MACHINE_KEY a
 	SPOK_Blob::Copy2CStylePtr(blob, pBytes, cbBytes, sizeOut);
 }
 
+void SPC_AIKGetPlatformAttestation(const wchar_t* aikName, const NCRYPT_MACHINE_KEY aikFlag, const uint8_t* nonce, const size_t cbNonce, const uint32_t pcrsToInclude, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)
+{
+	auto aik = SPOK_PlatformKey{ aikName, aikFlag };
+	auto spokNonce = SPOK_Nonce::Make(nonce, cbNonce);
+	SPOKClient client;
+	auto blob = client.AIKGetPlatformAttestation(aik, spokNonce, pcrsToInclude);
+	SPOK_Blob::Copy2CStylePtr(blob, pBytes, cbBytes, sizeOut);
+}
+
+
 void SPC_GetEndorsementPublicKey(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)
 {
 	SPOKClient client;
@@ -78,6 +88,13 @@ void SPC_GetBootLog(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)
 {
 	SPOKClient client;
 	auto blob = client.GetBootLog();
+	SPOK_Blob::Copy2CStylePtr(blob, pBytes, cbBytes, sizeOut);
+}
+
+void SPC_GetFilteredBootLog(const uint32_t pcrsToInclude, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)
+{
+	SPOKClient client;
+	auto blob = client.GetBootLog(pcrsToInclude);
 	SPOK_Blob::Copy2CStylePtr(blob, pBytes, cbBytes, sizeOut);
 }
 

@@ -25,6 +25,7 @@ public:
 	SPOK_Blob::Blob AIKGetChallengeBinding(const SPOK_PlatformKey& aik);
 	SPOK_Blob::Blob AIKActivateChallenge(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& challenge);
 	SPOK_Blob::Blob GetBootLog();
+	SPOK_Blob::Blob GetBootLog(const uint32_t pcrsToInclude);
 	SPOK_Blob::Blob GetPCRTable();
 	SPOK_Blob::Blob GetStorageRootKey();
 	void PlatformImportKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type);

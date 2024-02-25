@@ -3,7 +3,7 @@
 #include "SPOKBlob.h"
 #include "HasherUtil.h"
 
-TcgLogEventType TcgLogParser::GetEventType(uint32_t eventType)
+TcgLogEventType TcgLog::GetEventType(uint32_t eventType)
 {
 	switch (eventType)
 	{
@@ -70,7 +70,7 @@ TcgLogEventType TcgLogParser::GetEventType(uint32_t eventType)
 	}
 }
 
-TPM_ALG_ID TcgLogParser::GetTpmAlgId(uint16_t algId)
+TPM_ALG_ID TcgLog::GetTpmAlgId(uint16_t algId)
 {
 	switch (algId)
 	{
@@ -109,7 +109,7 @@ TPM_ALG_ID TcgLogParser::GetTpmAlgId(uint16_t algId)
 	}
 }
 
-uint32_t TcgLogParser::GetDigestSize(TPM_ALG_ID algId)
+uint32_t TcgLog::GetDigestSize(TPM_ALG_ID algId)
 {
 	switch (algId)
 	{
@@ -134,7 +134,7 @@ uint32_t TcgLogParser::GetDigestSize(TPM_ALG_ID algId)
 	}
 }
 
-TcgLog TcgLogParser::Parse(const std::vector<uint8_t>& tcgLogData)
+TcgLog TcgLog::Parse(const std::vector<uint8_t>& tcgLogData)
 {
 	TcgLog tcgLog;
 	uint32_t offset = 0;
@@ -169,7 +169,7 @@ TcgLog TcgLogParser::Parse(const std::vector<uint8_t>& tcgLogData)
 	auto eventSize = stream.LE_Read32();
 
 	auto signature = stream.Read(16);
-	if (signature != std::vector<uint8_t> { 'S', 'p', 'e', 'c', ' ', 'I', 'D', ' ', 'E', 'v', 'e', 'n', 't', '0', '3' })
+	if (signature != std::vector<uint8_t> { 'S', 'p', 'e', 'c', ' ', 'I', 'D', ' ', 'E', 'v', 'e', 'n', 't', '0', '3', '\0' })
 	{
 		throw std::runtime_error("Invalid TCG log signature");
 	}
@@ -196,6 +196,7 @@ TcgLog TcgLogParser::Parse(const std::vector<uint8_t>& tcgLogData)
 	//fill in the header
 	std::copy(signature.begin(), signature.end(), tcgLog.Header.Signature.begin());
 	tcgLog.Header.PlatformClass = platformClass;
+	tcgLog.Header.NumberOfAlgorithms = numberOfAlgorithms;
 	tcgLog.Header.SpecVersionMinor = specVersionMinor;
 	tcgLog.Header.SpecVersionMajor = specVersionMajor;
 	tcgLog.Header.SpecErrata = specErrata;
@@ -206,10 +207,9 @@ TcgLog TcgLogParser::Parse(const std::vector<uint8_t>& tcgLogData)
 	tcgLog.Header.DigestSizes = digestSizes;
 
 	// Parse the TCG log entries
-	while (stream.Tell() < tcgLogData.size())
+	while ((tcgLogData.size() - stream.Tell()) > 16) // 16 is the minimum size of an event
 	{
 		TcgLogEvent event;
-
 		event.PCRIndex = stream.LE_Read32();
 		event.Type = GetEventType(stream.LE_Read32());
 
@@ -228,7 +228,7 @@ TcgLog TcgLogParser::Parse(const std::vector<uint8_t>& tcgLogData)
 	return tcgLog;
 }
 
-TcgLog TcgLogParser::Filter(const TcgLog& tcgLog, uint32_t pcrMask)
+TcgLog TcgLog::Filter(const TcgLog& tcgLog, uint32_t pcrMask)
 {
 	TcgLog filteredTcgLog;
 	filteredTcgLog.Header = tcgLog.Header;
@@ -242,7 +242,7 @@ TcgLog TcgLogParser::Filter(const TcgLog& tcgLog, uint32_t pcrMask)
 	return filteredTcgLog;
 }
 
-std::vector<uint8_t> TcgLogParser::ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_ID algId)
+std::vector<uint8_t> TcgLog::ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_ID algId)
 {
 	HasherType hasherType;
 	if (algId == TPM_ALG_ID::TPM_ALG_SHA1)
@@ -301,7 +301,7 @@ std::vector<uint8_t> TcgLogParser::ComputeSoftPCRTable(const TcgLog& tcgLog, TPM
 	return softPCRTable;
 }
 
-std::vector<uint8_t> TcgLogParser::Serialize(const TcgLog& tcgLog)
+std::vector<uint8_t> TcgLog::Serialize(const TcgLog& tcgLog)
 {
 	//calculate the size needed for the blob
 	uint32_t size = 0;
@@ -324,7 +324,11 @@ std::vector<uint8_t> TcgLogParser::Serialize(const TcgLog& tcgLog)
 		size += 4; //PCRIndex
 		size += 4; //EventType
 		size += 4; //DigestCount
-		size += event.Digests.size() * 4; //Digests
+		for (const auto& digest : event.Digests)
+		{
+			size += 2;
+			size += digest.Digest.size();
+		}
 		size += 4; //DataSize
 		size += event.Data.size(); //Data
 	}
@@ -335,7 +339,7 @@ std::vector<uint8_t> TcgLogParser::Serialize(const TcgLog& tcgLog)
 	stream.LE_Write32(static_cast<uint32_t>(TcgLogEventType::EV_NO_ACTION));
 	stream.Write(std::vector<uint8_t>(20, 0));
 	stream.LE_Write32(0);
-	stream.Write(std::vector<uint8_t> { 'S', 'p', 'e', 'c', ' ', 'I', 'D', ' ', 'E', 'v', 'e', 'n', 't', '0', '3' });
+	stream.Write(std::vector<uint8_t> { 'S', 'p', 'e', 'c', ' ', 'I', 'D', ' ', 'E', 'v', 'e', 'n', 't', '0', '3', '\0' });
 	stream.LE_Write32(tcgLog.Header.PlatformClass);
 	stream.Write(tcgLog.Header.SpecVersionMinor);
 	stream.Write(tcgLog.Header.SpecVersionMajor);
@@ -358,7 +362,6 @@ std::vector<uint8_t> TcgLogParser::Serialize(const TcgLog& tcgLog)
 		for (const auto& digest : event.Digests)
 		{
 			stream.LE_Write16(static_cast<uint16_t>(digest.AlgorithmId));
-			stream.LE_Write16(static_cast<uint16_t>(digest.Digest.size()));
 			stream.Write(digest.Digest);
 		}
 		stream.LE_Write32(static_cast<uint32_t>(event.Data.size()));
