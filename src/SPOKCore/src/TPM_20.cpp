@@ -8,9 +8,10 @@
 SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest)
 {
 	PlatformAik aikKey(aik);
-	PlatformKey key(keyToAttest);
-
 	auto aikProvider = aikKey.GetProviderHandle();
+
+	PlatformKey key(keyToAttest, aikProvider);
+
 	auto keyProvider = key.GetProviderHandle();
 
 	if (aikProvider != keyProvider)
@@ -18,8 +19,8 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 		throw std::runtime_error("The AIK and the key to attest are not from the same provider");
 	}
 	auto tsbHandle = aikKey.GetTsbHandle();
-	auto aikHandle = aikKey.GetProviderHandle();
-	auto keyHandle = key.GetProviderHandle();
+	auto aikHandle = aikKey.GetPlatformHandle();
+	auto keyHandle = key.GetPlatformHandle();
 	auto aikSignatureSize = aikKey.GetSignatureSize();
 
 	SPOK_Blob::Blob cmd;
@@ -27,7 +28,7 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 	SPOK_Blob::Blob rsp;
 	rsp.resize(512);
 
-	uint32_t rspSize = 0;
+	uint32_t rspSize = rsp.size();
 	
 	auto bw = SPOK_BinaryStream(cmd);
 	uint32_t usageAuthSize = 2 * sizeof(UINT32) + // authHandle
@@ -75,8 +76,12 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 	auto tag = br.BE_Read16();
 	auto size = br.BE_Read32();
 	auto retCode = br.BE_Read32();
+	if (retCode != 0)
+	{
+		throw std::runtime_error("TPM2.0 Certify failed");
+	}
 	auto paramSize = br.BE_Read32();
-	auto certifyInfoSize = br.BE_Read32();
+	auto certifyInfoSize = br.BE_Read16();
 	auto certifyInfo = br.Read(certifyInfoSize);
 	auto sigAlg = br.BE_Read16();
 	if (sigAlg != 0x0014)
@@ -144,13 +149,9 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	pcrProfile.push_back(0x03);
 
 	// platform PCRs mask
-	//pcrProfile.push_back(SAFE_CAST_TO_UINT8(pcrsToInclude & 0x000000ff));
-	//pcrProfile.push_back(SAFE_CAST_TO_UINT8((pcrsToInclude & 0x0000ff00) >> 8));
-	//pcrProfile.push_back(SAFE_CAST_TO_UINT8((pcrsToInclude & 0x00ff0000) >> 16));
-
-	pcrProfile.push_back(0x7f);
-	pcrProfile.push_back(0xf7);
-	pcrProfile.push_back(0x00);
+	pcrProfile.push_back(SAFE_CAST_TO_UINT8(pcrsToInclude & 0x000000ff));
+	pcrProfile.push_back(SAFE_CAST_TO_UINT8((pcrsToInclude & 0x0000ff00) >> 8));
+	pcrProfile.push_back(SAFE_CAST_TO_UINT8((pcrsToInclude & 0x00ff0000) >> 16));
 
 	PlatformAik aikKey(aik);
 	auto tsbHandle = aikKey.GetTsbHandle();

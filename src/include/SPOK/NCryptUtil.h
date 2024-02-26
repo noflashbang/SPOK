@@ -32,6 +32,7 @@ class NCryptProvHandle
 {
 public:
 	NCryptProvHandle();
+	NCryptProvHandle(const NCRYPT_PROV_HANDLE& hProv);
 	~NCryptProvHandle();
 	operator NCRYPT_PROV_HANDLE() const;
 
@@ -44,6 +45,7 @@ class NCryptKeyHandle
 public:
 	NCryptKeyHandle(std::wstring name, long flags);
 	NCryptKeyHandle(const NCRYPT_KEY_HANDLE& hKey);
+	NCryptKeyHandle(std::wstring name, long flags, const NCRYPT_PROV_HANDLE& hProv);
 	~NCryptKeyHandle();
 	operator NCRYPT_KEY_HANDLE() const;
 
@@ -81,6 +83,7 @@ class PlatformKey
 {
 public:
 	PlatformKey(const SPOK_PlatformKey& aik);
+	PlatformKey(const SPOK_PlatformKey& aik, const NCRYPT_PROV_HANDLE& hProv);
 	~PlatformKey();
 
 	SPOK_Blob::Blob GetPublicKey();

@@ -16,6 +16,10 @@ NCryptProvHandle::NCryptProvHandle()
 	}
 }
 
+NCryptProvHandle::NCryptProvHandle(const NCRYPT_PROV_HANDLE& hProv) : m_hProv(hProv)
+{
+};
+
 NCryptProvHandle::~NCryptProvHandle()
 {
 	if (m_hProv != NULL)
@@ -48,6 +52,21 @@ NCryptKeyHandle::NCryptKeyHandle(std::wstring name, long flags)
 NCryptKeyHandle::NCryptKeyHandle(const NCRYPT_KEY_HANDLE& hKey) : m_hKey(hKey)
 {
 }
+
+NCryptKeyHandle::NCryptKeyHandle(std::wstring name, long flags, const NCRYPT_PROV_HANDLE& hProv) : m_hProv(hProv)
+{
+	NCRYPT_KEY_HANDLE hKey;
+	// Open the key
+	HRESULT status = NCryptOpenKey(m_hProv, &hKey, name.c_str(), 0, flags);
+	if (status != ERROR_SUCCESS)
+	{
+		m_hKey = NULL;
+	}
+	else
+	{
+		m_hKey = hKey;
+	}
+};
 
 NCryptKeyHandle::~NCryptKeyHandle()
 {
@@ -188,7 +207,12 @@ SPOK_Blob::Blob PlatformAik::ActiveChallenge(const SPOK_Blob::Blob& challenge)
 
 PlatformKey::PlatformKey(const SPOK_PlatformKey& aik) : m_key(aik.Name, aik.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0)
 {
-}
+};
+
+PlatformKey::PlatformKey(const SPOK_PlatformKey& aik, const NCRYPT_PROV_HANDLE& hProv) : m_key(aik.Name, aik.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0, hProv)
+{
+
+};
 
 PlatformKey::~PlatformKey()
 {

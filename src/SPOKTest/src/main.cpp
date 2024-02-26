@@ -299,7 +299,7 @@ TEST_CASE("SPC_AIKGetPlatformAttestation")
 
 	pBytes = std::make_unique<unsigned char[]>(cbSize);
 
-	std::wstring name = L"TestAIK2";
+	std::wstring name = L"TestAIK";
 	NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
 
 	bool exists = SPC_AIKExists(name.c_str(), flag);
@@ -313,6 +313,34 @@ TEST_CASE("SPC_AIKGetPlatformAttestation")
 	size_t sizeOut = 0;
 	auto nonce = SPOK_Nonce::Zero();
 	SPC_AIKGetPlatformAttestation(name.c_str(), flag, nonce.data(), nonce.size(), (PCR_13 | PCR_14), pBytes.get(), cbSize, sizeOut);
+
+	REQUIRE(sizeOut > 0);
+}
+
+TEST_CASE("SPC_AIKGetKeyAttestation")
+{
+	std::unique_ptr<unsigned char[]> pBytes = nullptr;
+	size_t cbSize = 90000;
+
+	pBytes = std::make_unique<unsigned char[]>(cbSize);
+
+	std::wstring name = L"TestAIK";
+	NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
+
+	std::wstring nameKey = L"TestKey";
+	NCRYPT_MACHINE_KEY flagKey = NCRYPT_MACHINE_KEY::NO;
+
+	bool exists = SPC_AIKExists(name.c_str(), flag);
+
+	if (!exists)
+	{
+		auto nonce = SPOK_Nonce::Zero();
+		SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
+	}
+
+	size_t sizeOut = 0;
+	auto nonce = SPOK_Nonce::Zero();
+	SPC_AIKGetKeyAttestation(name.c_str(), flag, nonce.data(), nonce.size(), nameKey.c_str(), flagKey, pBytes.get(), cbSize, sizeOut);
 
 	REQUIRE(sizeOut > 0);
 }
