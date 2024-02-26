@@ -61,13 +61,13 @@ extern "C"
 	SPOKSERVER_API void SPS_AIKRawVerifySignature();
 
 	//Basic Crypto Operations
-	SPOKSERVER_API void SPS_Decrypt();
-	SPOKSERVER_API void SPS_Encrypt();
-	SPOKSERVER_API void SPS_Sign();
-	SPOKSERVER_API void SPS_VerifySignature();
+	SPOKSERVER_API void SPS_Decrypt(const uint8_t* pKey, const size_t cbKey, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut);
+	SPOKSERVER_API void SPS_Encrypt(const uint8_t* pKey, const size_t cbKey, const uint8_t* pData, const size_t cbData, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
+	SPOKSERVER_API void SPS_Sign(const uint8_t* pKey, const size_t cbKey, const uint8_t* pHash, const size_t cbHash, uint8_t* pSignature, const size_t cbSignature, size_t& sizeOut);
+	SPOKSERVER_API bool SPS_VerifySignature(const uint8_t* pKey, const size_t cbKey, const uint8_t* pHash, const size_t cbHash, uint8_t* pSignature, const size_t cbSignature);
 
 	//Key Helpers
-	SPOKSERVER_API void SPS_GenerateRSA256KeyPair();
+	SPOKSERVER_API void SPS_GenerateRSAKeyPair(const uint16_t keySizeBits, uint8_t* pData, const size_t cbData, size_t& sizeOut);
 	SPOKSERVER_API void SPS_WrapKeyForPlatformImport();
 
 #ifdef __cplusplus

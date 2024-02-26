@@ -105,6 +105,56 @@ TEST_CASE("RSA Operations")
 	REQUIRE(ver_512);
 }
 
+TEST_CASE("Server RSA Operations")
+{
+	std::unique_ptr<unsigned char[]> pBytes = nullptr;
+	size_t cbSize = 512;
+
+	pBytes = std::make_unique<unsigned char[]>(cbSize);
+	size_t sizeOut = 0;
+	
+	SPS_GenerateRSAKeyPair(1024, pBytes.get(), cbSize, sizeOut);
+	auto key_128 = SPOK_Blob::New(pBytes.get(), sizeOut);
+	ZeroMemory(pBytes.get(), cbSize);
+	
+	SPS_GenerateRSAKeyPair(2048, pBytes.get(), cbSize, sizeOut);
+	auto key_256 = SPOK_Blob::New(pBytes.get(), sizeOut);
+	ZeroMemory(pBytes.get(), cbSize);
+
+	SPS_GenerateRSAKeyPair(4096, pBytes.get(), cbSize, sizeOut);
+	auto key_512 = SPOK_Blob::New(pBytes.get(), sizeOut);
+	ZeroMemory(pBytes.get(), cbSize);
+
+	auto secret = BCryptUtil::GetRandomBytes(32);
+
+	SPS_Encrypt(key_128.data(), key_128.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	auto enc_128 = SPOK_Blob::New(pBytes.get(), sizeOut);
+	ZeroMemory(pBytes.get(), cbSize);
+
+	SPS_Encrypt(key_256.data(), key_256.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	auto enc_256 = SPOK_Blob::New(pBytes.get(), sizeOut);
+	ZeroMemory(pBytes.get(), cbSize);
+
+	SPS_Encrypt(key_512.data(), key_512.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	auto enc_512 = SPOK_Blob::New(pBytes.get(), sizeOut);
+	ZeroMemory(pBytes.get(), cbSize);
+
+	SPS_Decrypt(key_128.data(), key_128.size(), enc_128.data(), enc_128.size(), pBytes.get(), cbSize, sizeOut);
+	auto dec_128 = SPOK_Blob::New(pBytes.get(), sizeOut);
+	ZeroMemory(pBytes.get(), cbSize);
+
+	SPS_Decrypt(key_256.data(), key_256.size(), enc_256.data(), enc_256.size(), pBytes.get(), cbSize, sizeOut);
+	auto dec_256 = SPOK_Blob::New(pBytes.get(), sizeOut);
+	ZeroMemory(pBytes.get(), cbSize);
+
+	SPS_Decrypt(key_512.data(), key_512.size(), enc_512.data(), enc_512.size(), pBytes.get(), cbSize, sizeOut);
+	auto dec_512 = SPOK_Blob::New(pBytes.get(), sizeOut);
+	ZeroMemory(pBytes.get(), cbSize);
+
+	REQUIRE(secret == dec_128);
+	REQUIRE(secret == dec_256);
+	REQUIRE(secret == dec_512);
+}
 
 TEST_CASE("Platform RSA Operations")
 {		

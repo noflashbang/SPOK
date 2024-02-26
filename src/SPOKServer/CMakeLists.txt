@@ -5,6 +5,7 @@ cmake_path(GET CMAKE_CURRENT_SOURCE_DIR PARENT_PATH PARENT_DIR)
 
 set( externHeaders 
     ${PARENT_DIR}/include/SPOKServer/SPOKServerApi.h
+    ${PARENT_DIR}/include/SPOKServer/SPOKServer.h
 )
 
 set( externHeadersCore 
@@ -18,6 +19,7 @@ set( libHeaders
 
 set( libSource
 	${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKServerApi.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKServer.cpp
 )
 
 add_library (SPOKServer SHARED ${libSource} ${libHeaders} ${externHeaders}) 
