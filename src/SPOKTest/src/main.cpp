@@ -108,7 +108,7 @@ TEST_CASE("RSA Operations")
 TEST_CASE("Server RSA Operations")
 {
 	std::unique_ptr<unsigned char[]> pBytes = nullptr;
-	size_t cbSize = 512;
+	size_t cbSize = 2048;
 
 	pBytes = std::make_unique<unsigned char[]>(cbSize);
 	size_t sizeOut = 0;
@@ -154,6 +154,26 @@ TEST_CASE("Server RSA Operations")
 	REQUIRE(secret == dec_128);
 	REQUIRE(secret == dec_256);
 	REQUIRE(secret == dec_512);
+
+	SPS_Sign(key_128.data(), key_128.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	auto sig_128 = SPOK_Blob::New(pBytes.get(), sizeOut);
+	ZeroMemory(pBytes.get(), cbSize);
+
+	SPS_Sign(key_256.data(), key_256.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	auto sig_256 = SPOK_Blob::New(pBytes.get(), sizeOut);
+	ZeroMemory(pBytes.get(), cbSize);
+
+	SPS_Sign(key_512.data(), key_512.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	auto sig_512 = SPOK_Blob::New(pBytes.get(), sizeOut);
+	ZeroMemory(pBytes.get(), cbSize);
+
+	auto ver_128 = SPS_VerifySignature(key_128.data(), key_128.size(), secret.data(), secret.size(), sig_128.data(), sig_128.size());
+	auto ver_256 = SPS_VerifySignature(key_256.data(), key_256.size(), secret.data(), secret.size(), sig_256.data(), sig_256.size());
+	auto ver_512 = SPS_VerifySignature(key_512.data(), key_512.size(), secret.data(), secret.size(), sig_512.data(), sig_512.size());
+
+	REQUIRE(ver_128);
+	REQUIRE(ver_256);
+	REQUIRE(ver_512);
 }
 
 TEST_CASE("Platform RSA Operations")
