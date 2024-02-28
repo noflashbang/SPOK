@@ -78,7 +78,7 @@ SPOK_Blob::Blob Hasher::PublicKeyHash(const SPOK_Blob::Blob& keyBlob)
 	memcpy(modulusV.data(), keyBlob.data() + sizeof(BCRYPT_RSAKEY_BLOB) + pBlob->cbPublicExp, pBlob->cbModulus);
 
 	SPOK_Blob::Blob encodedKey;
-	SPOK_BinaryStream bw(encodedKey);
+	SPOK_BinaryWriter bw(encodedKey);
 
 	std::vector<uint8_t> modulusTL;
 	std::vector<uint8_t> exponentTL;

@@ -121,7 +121,7 @@ SPOK_Blob::Blob SPOK_Blob::Base64ToBlob(const std::string& base64)
 	return blob;
 }
 
-uint8_t SPOK_BinaryStream::Read()
+uint8_t SPOK_BinaryReader::Read()
 {
 	if(CanRead(1) == false)
 	{
@@ -131,7 +131,7 @@ uint8_t SPOK_BinaryStream::Read()
 	m_cursor++;
 	return value;
 }
-uint16_t SPOK_BinaryStream::LE_Read16()
+uint16_t SPOK_BinaryReader::LE_Read16()
 {
 	if(CanRead(2) == false)
 	{
@@ -142,7 +142,7 @@ uint16_t SPOK_BinaryStream::LE_Read16()
 	return value;
 }
 
-uint32_t SPOK_BinaryStream::LE_Read32()
+uint32_t SPOK_BinaryReader::LE_Read32()
 {
 	if(CanRead(4) == false)
 	{
@@ -153,7 +153,7 @@ uint32_t SPOK_BinaryStream::LE_Read32()
 	return value;
 }
 
-uint64_t SPOK_BinaryStream::LE_Read64()
+uint64_t SPOK_BinaryReader::LE_Read64()
 {
 	if(CanRead(8) == false)
 	{
@@ -164,22 +164,22 @@ uint64_t SPOK_BinaryStream::LE_Read64()
 	return value;
 }
 
-uint16_t SPOK_BinaryStream::BE_Read16()
+uint16_t SPOK_BinaryReader::BE_Read16()
 {
 	return EndianSwap::Swap16(LE_Read16());
 }
 
-uint32_t SPOK_BinaryStream::BE_Read32()
+uint32_t SPOK_BinaryReader::BE_Read32()
 {
 	return EndianSwap::Swap32(LE_Read32());
 }
 
-uint64_t SPOK_BinaryStream::BE_Read64()
+uint64_t SPOK_BinaryReader::BE_Read64()
 {
 	return EndianSwap::Swap64(LE_Read64());
 }
 
-void SPOK_BinaryStream::Write(const uint8_t value)
+void SPOK_BinaryWriter::Write(const uint8_t value)
 {
 	if(CanWrite(1) == false)
 	{
@@ -189,7 +189,7 @@ void SPOK_BinaryStream::Write(const uint8_t value)
 	m_cursor++;
 }
 
-void SPOK_BinaryStream::LE_Write16(const uint16_t value)
+void SPOK_BinaryWriter::LE_Write16(const uint16_t value)
 {
 	if(CanWrite(2) == false)
 	{
@@ -199,7 +199,7 @@ void SPOK_BinaryStream::LE_Write16(const uint16_t value)
 	m_data[m_cursor + 1] = (value >> 8) & 0xFF;
 	m_cursor += 2;
 }
-void SPOK_BinaryStream::LE_Write32(const uint32_t value)
+void SPOK_BinaryWriter::LE_Write32(const uint32_t value)
 {
 	if(CanWrite(4) == false)
 	{
@@ -211,7 +211,7 @@ void SPOK_BinaryStream::LE_Write32(const uint32_t value)
 	m_data[m_cursor + 3] = (value >> 24) & 0xFF;
 	m_cursor += 4;
 }
-void SPOK_BinaryStream::LE_Write64(const uint64_t value)
+void SPOK_BinaryWriter::LE_Write64(const uint64_t value)
 {
 	if(CanWrite(8) == false)
 	{
@@ -228,20 +228,20 @@ void SPOK_BinaryStream::LE_Write64(const uint64_t value)
 	m_cursor += 8;
 }
 
-void SPOK_BinaryStream::BE_Write16(const uint16_t value)
+void SPOK_BinaryWriter::BE_Write16(const uint16_t value)
 {
 	LE_Write16(EndianSwap::Swap16(value));
 }
-void SPOK_BinaryStream::BE_Write32(const uint32_t value)
+void SPOK_BinaryWriter::BE_Write32(const uint32_t value)
 {
 	LE_Write32(EndianSwap::Swap32(value));
 }
-void SPOK_BinaryStream::BE_Write64(const uint64_t value)
+void SPOK_BinaryWriter::BE_Write64(const uint64_t value)
 {
 	LE_Write64(EndianSwap::Swap64(value));
 }
 
-void SPOK_BinaryStream::Read(uint8_t* dest, const size_t size)
+void SPOK_BinaryReader::Read(uint8_t* dest, const size_t size)
 {
 	if(CanRead(size) == false)
 	{
@@ -251,7 +251,7 @@ void SPOK_BinaryStream::Read(uint8_t* dest, const size_t size)
 	m_cursor += size;
 }
 
-SPOK_Blob::Blob SPOK_BinaryStream::Read(const size_t size)
+SPOK_Blob::Blob SPOK_BinaryReader::Read(const size_t size)
 {
 	if (CanRead(size) == false)
 	{
@@ -262,7 +262,7 @@ SPOK_Blob::Blob SPOK_BinaryStream::Read(const size_t size)
 	return blob;
 }
 
-void SPOK_BinaryStream::Write(const uint8_t* source, const size_t size)
+void SPOK_BinaryWriter::Write(const uint8_t* source, const size_t size)
 {
 	if(CanWrite(size) == false)
 	{
@@ -272,38 +272,50 @@ void SPOK_BinaryStream::Write(const uint8_t* source, const size_t size)
 	m_cursor += size;
 }
 
-void SPOK_BinaryStream::Write(const SPOK_Blob::Blob& source)
+void SPOK_BinaryWriter::Write(const SPOK_Blob::Blob& source)
 {
 	Write(source.data(), source.size());
 }
 
-void SPOK_BinaryStream::Seek(const size_t position)
+void SPOK_BinaryReader::Seek(const size_t position)
+{
+	if (position < m_data.size())
+	{
+		m_cursor = position;
+	}
+}
+
+void SPOK_BinaryWriter::Seek(const size_t position)
 {
 	if(position < m_data.size())
 	{
 		m_cursor = position;
 	}
 }
-size_t SPOK_BinaryStream::Tell() const
+size_t SPOK_BinaryReader::Tell() const
+{
+	return m_cursor;
+}
+size_t SPOK_BinaryWriter::Tell() const
 {
 	return m_cursor;
 }
 
-void SPOK_BinaryStream::Clear()
+void SPOK_BinaryWriter::Clear()
 {
 	m_data.clear();
 	m_cursor = 0;
 }
-void SPOK_BinaryStream::Resize(const size_t size)
+void SPOK_BinaryWriter::Resize(const size_t size)
 {
 	m_data.resize(size);
 }
 
-bool SPOK_BinaryStream::CanRead(const size_t size) const
+bool SPOK_BinaryReader::CanRead(const size_t size) const
 {
 	return m_cursor + size <= m_data.size();
 }
-bool SPOK_BinaryStream::CanWrite(const size_t size) const
+bool SPOK_BinaryWriter::CanWrite(const size_t size) const
 {
 	return m_cursor + size <= m_data.size();
 }

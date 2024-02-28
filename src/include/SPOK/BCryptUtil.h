@@ -12,13 +12,13 @@
 #include <bcrypt.h>
 
 
-enum class AlgId : uint32_t
+enum class AlgId : uint16_t
 {
 	RNG,
 	RSA,
-	SHA1,
-	SHA256,
-	SHA384,
+	SHA1   = 0x0004, //MATCH TPM_ALG_SHA1
+	SHA256 = 0x000B, //MATCH TPM_ALG_SHA256
+	SHA384 = 0x000C, //MATCH TPM_ALG_SHA384
 	SHA512
 };
 

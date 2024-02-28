@@ -5,23 +5,86 @@
 #include "SPOKBlob.h"
 
 #ifndef TPM_API_ALG_ID_SHA1
-#define TPM_API_ALG_ID_SHA1         ((UINT16)0x0004)
+#define TPM_API_ALG_ID_SHA1         ((uint16_t)0x0004)
 #endif
 #ifndef TPM_API_ALG_ID_SHA256
-#define TPM_API_ALG_ID_SHA256       ((UINT16)0x000B)
+#define TPM_API_ALG_ID_SHA256       ((uint16_t)0x000B)
 #endif
 #ifndef TPM_API_ALG_ID_SHA384
-#define TPM_API_ALG_ID_SHA384       ((UINT16)0x000C)
+#define TPM_API_ALG_ID_SHA384       ((uint16_t)0x000C)
 #endif
 #ifndef TPM_API_ALG_ID_NULL
-#define TPM_API_ALG_ID_NULL       ((UINT16)0x0010)
+#define TPM_API_ALG_ID_NULL       ((uint16_t)0x0010)
 #endif
+
+
+struct TPM2B_PUBLIC
+{
+	uint16_t Type;
+	uint16_t NameAlg;
+	uint32_t ObjectAttributes;
+	SPOK_Blob::Blob AuthPolicy;
+	uint16_t Symmetric;
+	uint16_t Scheme;
+	uint16_t SignHash;
+	uint16_t KeyBits;
+	uint32_t Exponent;
+	SPOK_Blob::Blob Modulus;
+
+	SPOK_Blob::Blob Raw;
+	static TPM2B_PUBLIC Decode(const SPOK_Blob::Blob& publicBlob);
+};
+
+struct TPM2B_CREATION_DATA
+{
+	uint16_t PublicNameAlg;
+	SPOK_Nonce::Nonce CreationNonce;
+
+	SPOK_Blob::Blob Raw;
+	static TPM2B_CREATION_DATA Decode(const SPOK_Blob::Blob& creationData);
+};
+
+struct TPM2B_ATTEST
+{
+	uint16_t Generated;
+	uint16_t Type;
+	SPOK_Nonce::Nonce CreationNonce;
+	SPOK_Blob::Blob CreationDigest;
+	SPOK_Blob::Blob Signature;
+
+	SPOK_Blob::Blob Raw;
+	static TPM2B_ATTEST Decode(const SPOK_Blob::Blob& attest);
+};
+
+struct TPMT_SIGNATURE
+{
+	uint16_t SigAlg;
+	uint16_t HashAlg;
+	SPOK_Blob::Blob Signature;
+
+	SPOK_Blob::Blob Raw;
+	static TPMT_SIGNATURE Decode(const SPOK_Blob::Blob& signature);
+};
+
+
+struct TPM2B_IDBINDING
+{
+	TPM2B_PUBLIC Public;
+	TPM2B_CREATION_DATA CreationData;
+	TPM2B_ATTEST Attest;
+	TPMT_SIGNATURE Signature;
+};
 
 class TPM_20
 {
 public:
 	static SPOK_Blob::Blob CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest);
 	static SPOK_Blob::Blob AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, uint32_t pcrsToInclude);
+
+	static TPM2B_IDBINDING DecodeIDBinding(const SPOK_Blob::Blob& idBinding);
+	static SPOK_Blob::Blob GenerateChallengeCredential(const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& secret);
+	static SPOK_Blob::Blob KDFa(const SPOK_Blob::Blob& key, const std::string& label, const SPOK_Blob::Blob& contextU, const SPOK_Blob::Blob& contextV, uint16_t bits);
+	static SPOK_Blob::Blob CFB(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& iv, const SPOK_Blob::Blob& data);
 
 private:
 

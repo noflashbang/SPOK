@@ -30,7 +30,7 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 
 	uint32_t rspSize = rsp.size();
 	
-	auto bw = SPOK_BinaryStream(cmd);
+	auto bw = SPOK_BinaryWriter(cmd);
 	uint32_t usageAuthSize = 2 * sizeof(UINT32) + // authHandle
 					2 * sizeof(UINT16) + // nonceNULL
 					2 * sizeof(BYTE) +   // sessionAttributes
@@ -72,7 +72,7 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 	}
 
 	// Check the response
-	auto br = SPOK_BinaryStream(rsp);
+	auto br = SPOK_BinaryReader(rsp);
 	auto tag = br.BE_Read16();
 	auto size = br.BE_Read32();
 	auto retCode = br.BE_Read32();
@@ -99,7 +99,7 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 	// calculate the quote length
 	auto required = sizeof(SPOK_KEY_ATT_BLOB) + certifyInfoSize + sigSize;
 	auto quote = SPOK_Blob::Blob(required);
-	auto bwQuote = SPOK_BinaryStream(quote);
+	auto bwQuote = SPOK_BinaryWriter(quote);
 
 	SPOK_KEY_ATT_BLOB keyAttBlob;
 	keyAttBlob.Magic = SPOK_KEY_ATT_MAGIC;
@@ -163,7 +163,7 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	SPOK_Blob::Blob rsp;
 	rsp.resize(512);
 
-	auto bw = SPOK_BinaryStream(cmd);
+	auto bw = SPOK_BinaryWriter(cmd);
 	uint32_t usageAuthSize = sizeof(UINT32) + // authHandle
 		sizeof(UINT16) + // nonceNULL
 		sizeof(BYTE) +   // sessionAttributes
@@ -198,7 +198,7 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	}
 
 	// Check the response
-	auto br = SPOK_BinaryStream(rsp);
+	auto br = SPOK_BinaryReader(rsp);
 	auto tag = br.BE_Read16();
 	auto size = br.BE_Read32();
 	auto retCode = br.BE_Read32();
@@ -228,7 +228,7 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	// calculate the quote length
 	auto required = sizeof(SPOK_PLATFORM_ATT_BLOB) + quoteSize + sigSize + tsbLog.size();
 	auto quoteBlob = SPOK_Blob::Blob(required);
-	auto bwQuote = SPOK_BinaryStream(quoteBlob);
+	auto bwQuote = SPOK_BinaryWriter(quoteBlob);
 
 	SPOK_PLATFORM_ATT_BLOB platAttBlob;
 	platAttBlob.Magic = SPOK_PLATFORM_ATT_MAGIC;
@@ -245,4 +245,120 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	bwQuote.Write(tsbLog);
 
 	return quoteBlob;
+}
+
+
+
+TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob::Blob& publicBlob)
+{
+	auto br = SPOK_BinaryReader(publicBlob);
+
+	auto type = br.BE_Read16();
+	auto nameAlg = br.BE_Read16();
+	auto objectAttributes = br.BE_Read32();
+	auto authPolicySize = br.BE_Read16();
+	auto authPolicy = br.Read(authPolicySize);
+	auto symmetric = br.BE_Read16();
+
+	if (symmetric == 0x0006)
+	{
+		auto keyBits = br.BE_Read16();
+		auto mode = br.BE_Read16();
+	}
+	else if (symmetric != 0x0010)
+	{
+		throw std::runtime_error("Invalid symmetric algorithm");
+	}
+	auto scheme = br.BE_Read16();
+
+	uint16_t signHashAlg = 0;
+	if (scheme == 0x0014)
+	{
+		signHashAlg = br.BE_Read16();
+	}
+	else if (scheme != 0x0010)
+	{
+		throw std::runtime_error("Invalid scheme");
+	}
+
+	auto keybits = br.BE_Read16();
+	auto exponent = br.BE_Read32();
+
+	auto modulusSize = br.BE_Read16();
+	auto modulus = br.Read(modulusSize);
+
+	return TPM2B_PUBLIC{ type, nameAlg, objectAttributes, authPolicy, symmetric, scheme, signHashAlg, keybits, exponent, modulus };
+}
+
+TPM2B_CREATION_DATA TPM2B_CREATION_DATA::Decode(const SPOK_Blob::Blob& creationBlob)
+{
+	auto br = SPOK_BinaryReader(creationBlob);
+
+	auto magic = br.BE_Read16();
+	auto type = br.BE_Read16();
+	auto qualifiedSignerSize = br.BE_Read16();
+	auto qualifiedSigner = br.Read(qualifiedSignerSize);
+	auto extraDataSize = br.BE_Read16();
+	auto extraData = br.Read(extraDataSize);
+	auto creationHashSize = br.BE_Read16();
+	auto creationHash = br.Read(creationHashSize);
+	auto creationTicketSize = br.BE_Read16();
+	auto creationTicket = br.Read(creationTicketSize);
+
+	return TPM2B_CREATION_DATA{ magic, type, qualifiedSigner, extraData, creationHash, creationTicket };
+}
+
+TPM2B_ATTEST TPM2B_ATTEST::Decode(const SPOK_Blob::Blob& attestBlob)
+{
+	auto br = SPOK_BinaryReader(attestBlob);
+
+	auto magic = br.BE_Read16();
+	auto type = br.BE_Read16();
+	auto qualifiedSignerSize = br.BE_Read16();
+	auto qualifiedSigner = br.Read(qualifiedSignerSize);
+	auto extraDataSize = br.BE_Read16();
+	auto extraData = br.Read(extraDataSize);
+	auto clockInfoSize = br.BE_Read16();
+	auto clockInfo = br.Read(clockInfoSize);
+	auto firmwareVersion = br.BE_Read32();
+	auto attestedSize = br.BE_Read16();
+	auto attested = br.Read(attestedSize);
+
+	return TPM2B_ATTEST{ magic, type, qualifiedSigner, extraData, clockInfo, firmwareVersion, attested };
+}
+
+TPMT_SIGNATURE TPMT_SIGNATURE::Decode(const SPOK_Blob::Blob& signatureBlob)
+{
+	auto br = SPOK_BinaryReader(signatureBlob);
+
+	auto sigAlg = br.BE_Read16();
+	auto sigHashAlg = br.BE_Read16();
+	auto signatureSize = br.BE_Read16();
+	auto signature = br.Read(signatureSize);
+
+	return TPMT_SIGNATURE{ sigAlg, sigHashAlg, signature };
+}
+
+TPM2B_IDBINDING TPM_20::DecodeIDBinding(const SPOK_Blob::Blob& idBinding)
+{
+	auto br = SPOK_BinaryReader(idBinding);
+
+	auto pubSize = br.BE_Read16();
+	auto pub = br.Read(pubSize);
+
+	auto creationSize = br.BE_Read16();
+	auto creation = br.Read(creationSize);
+
+	auto attSize = br.BE_Read16();
+	auto att = br.Read(attSize);
+
+	auto signatureSize = (idBinding.size() - br.Tell());
+	auto signature = br.Read(signatureSize);
+
+	auto pubStruct = TPM2B_PUBLIC::Decode(pub);
+	auto creationStruct = TPM2B_CREATION_DATA::Decode(creation);
+	auto attStruct = TPM2B_ATTEST::Decode(att);
+	auto sigStruct = TPMT_SIGNATURE::Decode(signature);
+
+	return TPM2B_IDBINDING{ pubStruct, creationStruct, attStruct, sigStruct };
 }

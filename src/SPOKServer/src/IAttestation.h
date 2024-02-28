@@ -29,7 +29,7 @@ public:
 		case AttestationType::AIKPlatformAttestation:
 			return SPOK_AIKPlatformAttestation();
 		case AttestationType::AIKTpmAttestation:
-			return SPOK_AIKTpmAttestation();
+			return SPOK_AIKTpmAttestation(blob);
 		case AttestationType::AIKKeyAttestation:
 			return SPOK_AIKKeyAttestation();
 		default:

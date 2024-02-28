@@ -29,7 +29,8 @@ SPOK_Handle AttestationManager::AddAttestation(IAttestation attestation)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	{
-		SPOK_Handle handle = m_handles.size();
+		std::chrono::nanoseconds ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch());
+		SPOK_Handle handle = ns.count();
 		m_handles[handle] = attestation;
 		return handle;
 	}

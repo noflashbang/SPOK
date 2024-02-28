@@ -106,21 +106,11 @@ public:
 	//}
 };
 
-class SPOK_BinaryStream
+class SPOK_BinaryWriter
 {
 public:
-	SPOK_BinaryStream(SPOK_Blob::Blob& data) : m_data(data) {}
-	~SPOK_BinaryStream() = default;
-
-	uint8_t  Read();
-
-	uint16_t LE_Read16();
-	uint32_t LE_Read32();
-	uint64_t LE_Read64();
-
-	uint16_t BE_Read16();
-	uint32_t BE_Read32();
-	uint64_t BE_Read64();
+	SPOK_BinaryWriter(SPOK_Blob::Blob& data) : m_data(data) {}
+	~SPOK_BinaryWriter() = default;
 
 	void Write(const uint8_t value);
 
@@ -131,9 +121,6 @@ public:
 	void BE_Write16(const uint16_t value);
 	void BE_Write32(const uint32_t value);
 	void BE_Write64(const uint64_t value);
-
-	void Read(uint8_t* dest, const size_t size);
-	SPOK_Blob::Blob Read(const size_t size);
 
 	void Write(const uint8_t* source, const size_t size);
 	void Write(const SPOK_Blob::Blob& source);
@@ -146,10 +133,37 @@ public:
 
 private:
 
-	bool CanRead(const size_t size) const;
 	bool CanWrite(const size_t size) const;
 
 	SPOK_Blob::Blob& m_data;
 	size_t m_cursor = 0;
 };
 
+class SPOK_BinaryReader
+{
+public:
+	SPOK_BinaryReader(const SPOK_Blob::Blob& data) : m_data(data) {}
+	~SPOK_BinaryReader() = default;
+
+	uint8_t  Read();
+
+	uint16_t LE_Read16();
+	uint32_t LE_Read32();
+	uint64_t LE_Read64();
+
+	uint16_t BE_Read16();
+	uint32_t BE_Read32();
+	uint64_t BE_Read64();
+
+	void Read(uint8_t* dest, const size_t size);
+	SPOK_Blob::Blob Read(const size_t size);
+
+	void Seek(const size_t position);
+	size_t Tell() const;
+private:
+
+	bool CanRead(const size_t size) const;
+
+	const SPOK_Blob::Blob& m_data;
+	size_t m_cursor = 0;
+};
