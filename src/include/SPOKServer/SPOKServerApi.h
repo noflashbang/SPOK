@@ -40,25 +40,26 @@ extern "C"
 {
 #endif
 
-	SPOKSERVER_API SPOK_Handle SPS_Create();
-	
-	//AIK Platform Attestation
-	SPOKSERVER_API void SPS_AIKAttestationDecode();
-	SPOKSERVER_API void	SPS_AIKAttestationGetPCR();
-	SPOKSERVER_API void SPS_AIKAttestationGetTcgLog();
-	SPOKSERVER_API void SPS_AIKAttestationVerify();
+	SPOKSERVER_API SPOK_Handle SPS_AttestationCreate(const uint8_t* pKey, const size_t cbKey);
+	SPOKSERVER_API void SPS_AttestationDestroy(SPOK_Handle hAttestationHandle);
 
-	//AIK Attestation
-	SPOKSERVER_API void SPS_AIKDecodeBinding();
-	SPOKSERVER_API void SPS_AIKFreeBinding();
-	SPOKSERVER_API void SPS_AIKGetChallenge();
+	//AIK Platform Attestation
+	SPOKSERVER_API void SPS_AIKPlatformAttest_Decode();
+	SPOKSERVER_API void	SPS_AIKPlatformAttest_GetPCR();
+	SPOKSERVER_API void SPS_AIKPlatformAttest_GetTcgLog();
+	SPOKSERVER_API void SPS_AIKPlatformAttest_Verify();
+
+	//AIK Tpm Attestation
+	SPOKSERVER_API void SPS_AIKTpmAttest_Decode();
+	SPOKSERVER_API void SPS_AIKTpmAttest_GetChallenge();
 	
 	//AIK Key Attestation
-	SPOKSERVER_API void SPS_AIKKeyAttestationDecode();
-	SPOKSERVER_API void SPS_AIKKeyAttestationVerify();
+	SPOKSERVER_API void SPS_AIKKeyAttest_Decode();
+	SPOKSERVER_API void SPS_AIKKeyAttest_Verify();
 
-	SPOKSERVER_API void SPS_AIKRawVerifyNonce();
-	SPOKSERVER_API void SPS_AIKRawVerifySignature();
+	//AIK Attestation Verifications
+	SPOKSERVER_API void SPS_AIKAttest_VerifyNonce();
+	SPOKSERVER_API void SPS_AIKAttest_VerifySignature();
 
 	//Basic Crypto Operations
 	SPOKSERVER_API void SPS_Decrypt(const uint8_t* pKey, const size_t cbKey, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut);

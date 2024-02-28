@@ -1,6 +1,20 @@
 #include "SPOKServerApi.h"
 #include "SPOKServer.h"
 #include "SPOKCore.h"
+#include "AttestationManager.h"
+
+
+SPOK_Handle SPS_AttestationCreate(uint32_t type, const uint8_t* pKey, const size_t cbKey)
+{
+	auto blob = SPOK_Blob::New(pKey, cbKey);
+	auto attestation = Attestation::Create(static_cast<AttestationType>(type), blob);
+	return AttestationManager::Add(attestation);
+}
+
+void SPS_AttestationDestroy(SPOK_Handle hAttestationHandle)
+{
+	AttestationManager::Destroy(hAttestationHandle);
+}
 
 //Basic Crypto Operations
 void SPS_Decrypt(const uint8_t* pKey, const size_t cbKey, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut)

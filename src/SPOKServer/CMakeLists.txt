@@ -15,11 +15,21 @@ set( externHeadersCore
 set( libHeaders 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/StandardLib.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Util.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOK_AIKPlatformAttestation.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOK_AIKTpmAttestation.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOK_AIKKeyAttestation.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/AttestationManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IAttestation.h
 )
 
 set( libSource
 	${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKServerApi.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKServer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOK_AIKPlatformAttestation.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOK_AIKTpmAttestation.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOK_AIKKeyAttestation.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/AttestationManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IAttestation.cpp
 )
 
 add_library (SPOKServer SHARED ${libSource} ${libHeaders} ${externHeaders}) 
