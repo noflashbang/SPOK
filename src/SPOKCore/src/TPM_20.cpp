@@ -3,7 +3,9 @@
 #include "SPOKBlob.h"
 #include "Util.h"
 #include "NCryptUtil.h"
+#include "BCryptUtil.h"
 #include "TcgLog.h"
+#include "HasherUtil.h"
 
 SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest)
 {
@@ -424,4 +426,128 @@ TPM2B_IDBINDING TPM_20::DecodeIDBinding(const SPOK_Blob::Blob& idBinding)
 	auto sigStruct = TPMT_SIGNATURE::Decode(signature);
 
 	return TPM2B_IDBINDING{ pubStruct, creationStruct, attStruct, sigStruct };
+}
+
+SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& aikName, const SPOK_Blob::Blob& secret)
+{
+	//AES key size
+	const uint16_t AES_KEY_SIZE = 16;
+
+	//validate the secret
+	if (secret.size() > SHA256_DIGEST_SIZE)
+	{
+		throw std::runtime_error("Secret is too large max is SHA256_DIGEST_SIZE");
+	}
+
+	//get the random seed
+	auto seed = BCryptUtil::GetRandomBytes(AES_KEY_SIZE);
+
+	//create the AES key from the seed
+	auto aesKey = KDFa(ekNameAlgId, seed, "STORAGE", aikName, SPOK_Blob::Blob(), AES_KEY_SIZE * 8);
+
+	//create the IV - zeros
+	auto iv = SPOK_Blob::Blob(AES_KEY_SIZE, 0x00);
+
+	//encrypt the secret
+	auto secretBlob = SPOK_Blob::New(secret.size() + sizeof(uint16_t));
+	auto bw = SPOK_BinaryWriter(secretBlob);
+	bw.BE_Write16(SAFE_CAST_TO_UINT16(secret.size()));
+	bw.Write(secret);
+
+	auto encryptedSecret = CFB(aesKey, iv, secretBlob);
+
+	//generate hmac key
+	auto hmacKey = KDFa(ekNameAlgId, seed, "INTEGRITY", SPOK_Blob::Blob(), SPOK_Blob::Blob(), SHA256_DIGEST_SIZE * 8);
+
+	//calculate the outer hmac
+	auto outerHmacHaser = Hasher::Create_HMAC(ekNameAlgId, hmacKey);
+	auto outerBlob = SPOK_Blob::New(encryptedSecret.size() + aikName.size());
+	auto outerBw = SPOK_BinaryWriter(outerBlob);
+	outerBw.Write(encryptedSecret);
+	outerBw.Write(aikName);
+	auto outerHmac = outerHmacHaser.OneShotHash(outerBlob);
+
+	//encrypt the seed
+	//get a key for the EK
+	auto ekKey = BCryptUtil::Open(ekPub);
+	if (ekKey.IsValid() == false)
+	{
+		throw std::runtime_error("Failed to open the EK key");
+	}
+	ekKey.SetSignHashAlg(ekNameAlgId);
+	auto encryptedSeed = ekKey.Encrypt(seed);
+
+	//create the challenge
+	uint16_t challengeSize = sizeof(uint16_t) +                      // TPM2B_ID_OBJECT.size
+							 sizeof(uint16_t) + SHA256_DIGEST_SIZE + // TPM2B_DIGEST outerHAMC
+							 sizeof(uint16_t) + SHA256_DIGEST_SIZE + // TPM2B_DIGEST credential value
+							 sizeof(uint16_t) + SHA256_DIGEST_SIZE;  // TPM2B_ENCRYPTED_SECRET protecting credential value
+								
+	auto challengeObject = SPOK_Blob::Blob(challengeSize);
+	auto bw = SPOK_BinaryWriter(challengeObject);
+
+	bw.BE_Write16(SAFE_CAST_TO_UINT16(challengeSize - sizeof(uint16_t) - sizeof(uint16_t) + SHA256_DIGEST_SIZE));
+	bw.BE_Write16(SAFE_CAST_TO_UINT16(outerHmac.size()));
+	bw.Write(outerHmac);
+	bw.BE_Write16(SAFE_CAST_TO_UINT16(encryptedSecret.size()));
+	bw.Write(encryptedSecret);
+	bw.BE_Write16(SAFE_CAST_TO_UINT16(encryptedSeed.size()));
+	bw.Write(encryptedSeed);
+
+	return challengeObject;
+}
+
+SPOK_Blob::Blob TPM_20::KDFa(const uint16_t nameAlgId, const SPOK_Blob::Blob& key, const std::string& label, const SPOK_Blob::Blob& contextU, const SPOK_Blob::Blob& contextV, uint16_t bits)
+{
+	uint32_t iteration = 0;
+	uint16_t outSize = bits / 8;
+	uint16_t counter = 0;
+	SPOK_Blob::Blob out;
+
+	//calculate the size of the buffer
+	auto bufferSize = sizeof(uint32_t) + label.size() + sizeof(UINT16) + contextU.size() + contextV.size() + sizeof(UINT16);
+	auto buffer = SPOK_Blob::Blob(bufferSize);
+
+	auto bw = SPOK_BinaryWriter(buffer);
+	bw.BE_Write32(iteration);
+	bw.Write((const uint8_t*)label.data(), label.size()); //we assume a null terminator
+
+	if (contextU.size() != 0)
+	{
+		bw.Write(contextU);
+	}
+
+	if (contextV.size() != 0)
+	{
+		bw.Write(contextV);
+	}
+
+	bw.BE_Write16(bits);
+
+	while (counter < outSize)
+	{
+		auto remaining = outSize - counter;
+		auto hasher = Hasher::Create_HMAC(nameAlgId, key);
+		iteration++;
+		bw.Seek(0);
+		bw.BE_Write32(iteration);
+		auto hash = hasher.OneShotHash(buffer);
+		if(hash.size() <= remaining)
+		{
+			out.insert(out.end(), hash.begin(), hash.end());
+			counter += hash.size();
+		}
+		else
+		{
+			out.insert(out.end(), hash.begin(), hash.begin() + remaining);
+			counter += remaining;
+		}
+	}
+	return out;
+}
+
+SPOK_Blob::Blob TPM_20::CFB(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& iv, const SPOK_Blob::Blob& data)
+{
+	auto cipher = BCryptUtil::CreateSymmetricCipher(key, BCRYPT_AES_ALGORITHM, BCRYPT_CHAIN_MODE_CFB, iv);
+	return cipher.Encrypt(data);
 }

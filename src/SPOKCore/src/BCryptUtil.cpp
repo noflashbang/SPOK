@@ -52,6 +52,45 @@ BCryptAlgHandle::BCryptAlgHandle(AlgId alg) : m_hAlg(NULL), m_algId(alg)
 	}
 }
 
+BCryptAlgHandle::BCryptAlgHandle(AlgId alg, bool hmacFlag) : m_hAlg(NULL), m_algId(alg)
+{
+	NTSTATUS status;
+	switch (alg)
+	{
+		case AlgId::SHA1:
+		{
+			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA1_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
+			break;
+		}
+		case AlgId::SHA256:
+		{
+			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA256_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
+			break;
+		}
+		case AlgId::SHA384:
+		{
+			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA384_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
+			break;
+		}
+		case AlgId::SHA512:
+		{
+			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA512_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
+			break;
+		}
+		default:
+		{
+			throw std::runtime_error("Invalid algorithm");
+		}
+	}
+
+	if (status != ERROR_SUCCESS)
+	{
+		auto name = Name();
+		auto fmtError = std::format("BCryptOpenAlgorithmProvider failed for algorithm {} with error {}", name, status);
+		throw std::runtime_error(fmtError);
+	}
+}
+
 BCryptAlgHandle::~BCryptAlgHandle()
 {
 	if (m_hAlg != NULL)
@@ -160,6 +199,18 @@ uint16_t BCryptKey::KeySize() const
 		throw std::runtime_error("BCryptGetProperty failed");
 	}
 	return keySize;
+}
+
+uint16_t BCryptKey::BlockLength() const
+{
+	DWORD blockLength = 0;
+	DWORD cbData = 0;
+	HRESULT status = BCryptGetProperty(m_hKey, BCRYPT_BLOCK_LENGTH, (PUCHAR)&blockLength, sizeof(blockLength), &cbData, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("BCryptGetProperty failed");
+	}
+	return blockLength;
 }
 
 uint16_t BCryptKey::MaxMessage() const
@@ -314,6 +365,84 @@ bool BCryptKey::Verify(const SPOK_Blob::Blob& hash, const SPOK_Blob::Blob& signa
 	return false;
 }
 
+SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob::Blob& iv): m_hAlg(AlgId::AES), m_hKey(NULL), m_iv(iv)
+{
+	if(alg != BCRYPT_AES_ALGORITHM)
+	{
+		throw std::runtime_error("Invalid algorithm");
+	}
+	if(mode != BCRYPT_CHAIN_MODE_CBC) //only supporting CBC mode for now
+	{
+		throw std::runtime_error("Invalid mode");
+	}
+
+	NTSTATUS status = BCryptGenerateSymmetricKey(m_hAlg, &m_hKey, NULL, 0, const_cast<uint8_t*>(key.data()), SAFE_CAST_TO_UINT32(key.size()), 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("BCryptGenerateSymmetricKey failed");
+	}
+
+	//set chaining mode
+	status = BCryptSetProperty(m_hKey, BCRYPT_CHAINING_MODE, (PUCHAR)mode.c_str(), SAFE_CAST_TO_UINT32(mode.size()), 0);
+	if(status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("BCryptSetProperty failed");
+	}
+
+	//set block length
+	DWORD blockLength = 16;
+	status = BCryptSetProperty(m_hKey, BCRYPT_BLOCK_LENGTH, (PUCHAR)&blockLength, sizeof(blockLength), 0);
+	if(status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("BCryptSetProperty failed");
+	}
+}
+SymmetricCipher::~SymmetricCipher()
+{
+
+}
+SymmetricCipher::operator BCRYPT_KEY_HANDLE() const
+{
+	return m_hKey;
+}
+
+SPOK_Blob::Blob SymmetricCipher::Encrypt(const SPOK_Blob::Blob& data)
+{
+	DWORD dataSize = 0;
+	NTSTATUS status = BCryptEncrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), NULL, 0, &dataSize, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("BCryptEncrypt failed");
+	}
+
+	auto encryptedData = SPOK_Blob::New(dataSize);
+	status = BCryptEncrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), encryptedData.data(), SAFE_CAST_TO_UINT32(encryptedData.size()), &dataSize, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("BCryptEncrypt failed");
+	}
+
+	return encryptedData;
+}
+SPOK_Blob::Blob SymmetricCipher::Decrypt(const SPOK_Blob::Blob& data)
+{
+DWORD dataSize = 0;
+	NTSTATUS status = BCryptDecrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), NULL, 0, &dataSize, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("BCryptDecrypt failed");
+	}
+
+	auto decryptedData = SPOK_Blob::New(dataSize);
+	status = BCryptDecrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), decryptedData.data(), SAFE_CAST_TO_UINT32(decryptedData.size()), &dataSize, 0);
+	if (status != ERROR_SUCCESS)
+	{
+		throw std::runtime_error("BCryptDecrypt failed");
+	}
+
+	return decryptedData;
+}
+
 std::wstring BCryptUtil::RsaKeyType(const SPOK_Blob::Blob& keyBlob)
 {
 	const BCRYPT_RSAKEY_BLOB* pBlob = (const BCRYPT_RSAKEY_BLOB*)keyBlob.data();
@@ -331,12 +460,12 @@ std::wstring BCryptUtil::RsaKeyType(const SPOK_Blob::Blob& keyBlob)
 	}
 }
 
-BCryptKey BCryptUtil::Open(SPOK_Blob::Blob& keyBlob)
+BCryptKey BCryptUtil::Open(const SPOK_Blob::Blob& keyBlob)
 {
 	return BCryptKey(keyBlob);
 }
 
-SPOK_Blob::Blob BCryptUtil::GenerateRsaKeyPair(KeySize keySize)
+SPOK_Blob::Blob BCryptUtil::GenerateRsaKeyPair(const KeySize keySize)
 {
 	BCryptAlgHandle hAlg(AlgId::RSA);
 	BCRYPT_KEY_HANDLE hKey;
@@ -371,7 +500,7 @@ SPOK_Blob::Blob BCryptUtil::GenerateRsaKeyPair(KeySize keySize)
 	return keyBlob;
 }
 
-SPOK_Blob::Blob BCryptUtil::GetRandomBytes(uint32_t size)
+SPOK_Blob::Blob BCryptUtil::GetRandomBytes(const uint32_t size)
 {
 	BCryptAlgHandle hAlg(AlgId::RNG);
 	auto randomBytes = SPOK_Blob::New(size);
@@ -386,4 +515,9 @@ SPOK_Blob::Blob BCryptUtil::GetRandomBytes(uint32_t size)
 SPOK_Nonce::Nonce BCryptUtil::GetRandomNonce()
 {
 	return SPOK_Nonce::Make(GetRandomBytes(20));
+}
+
+SymmetricCipher BCryptUtil::CreateSymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob::Blob& iv)
+{
+	return SymmetricCipher(key, alg, mode, iv);
 }

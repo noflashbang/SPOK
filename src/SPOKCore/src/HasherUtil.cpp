@@ -11,6 +11,16 @@ BCryptHashHandle::BCryptHashHandle(BCryptAlgHandle hAlg)
 	}
 }
 
+BCryptHashHandle::BCryptHashHandle(BCryptAlgHandle hAlg, SPOK_Blob::Blob secret)
+{
+	m_Secret = secret;
+	NTSTATUS status = BCryptCreateHash(hAlg, &m_hHash, nullptr, 0, secret.data(), secret.size(), 0);
+	if (!SUCCEEDED(status))
+	{
+		throw std::runtime_error("BCryptCreateHash failed");
+	}
+}
+
 BCryptHashHandle::~BCryptHashHandle()
 {
 	if (m_hHash)
@@ -26,6 +36,10 @@ BCryptHashHandle::operator BCRYPT_HASH_HANDLE() const
 
 
 HasherUtil::HasherUtil(HasherType type) : m_hAlg((AlgId)type), m_hHash(m_hAlg)
+{
+}
+
+HasherUtil::HasherUtil(HasherType type, SPOK_Blob::Blob secret) : m_hAlg((AlgId)type, true), m_hHash(m_hAlg, secret)
 {
 }
 
@@ -202,6 +216,30 @@ HasherUtil Hasher::Create(uint16_t algId)
 	else if (algId == 0x000D)
 	{
 		return HasherUtil(HasherType::SHA512);
+	}
+	else
+	{
+		throw std::runtime_error("Unsupported hash algorithm");
+	}
+}
+
+HasherUtil Hasher::Create_HMAC(uint16_t algId, SPOK_Blob::Blob secret) 
+{
+	if (algId == 0x0004)
+	{
+		return HasherUtil(HasherType::SHA1, secret);
+	}
+	else if (algId == 0x000B)
+	{
+		return HasherUtil(HasherType::SHA256, secret);
+	}
+	else if (algId == 0x000C)
+	{
+		return HasherUtil(HasherType::SHA384, secret);
+	}
+	else if (algId == 0x000D)
+	{
+		return HasherUtil(HasherType::SHA512, secret);
 	}
 	else
 	{
