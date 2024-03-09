@@ -12,7 +12,7 @@ void AttestationManager::Destroy(SPOK_Handle handle)
 	Instance()->DestroyAttestation(handle);
 }
 
-IAttestation AttestationManager::Get(SPOK_Handle handle)
+std::optional<IAttestation> AttestationManager::Get(SPOK_Handle handle)
 {
 	return Instance()->GetAttestation(handle);
 }
@@ -44,11 +44,18 @@ void AttestationManager::DestroyAttestation(SPOK_Handle handle)
 	}
 }
 
-IAttestation AttestationManager::GetAttestation(SPOK_Handle handle)
+std::optional<IAttestation> AttestationManager::GetAttestation(SPOK_Handle handle)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	{
-		return m_handles[handle];
+		if (m_handles.find(handle) == m_handles.end())
+		{
+			return std::nullopt;
+		}
+		else
+		{
+			return m_handles[handle];
+		}
 	}
 }
 

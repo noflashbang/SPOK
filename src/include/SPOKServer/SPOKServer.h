@@ -8,6 +8,8 @@
 #include "SPOKBlob.h"
 #include "SPOKPcrs.h"
 
+#include "IAttestation.h"
+
 class SPOKServer
 {
 public:
@@ -21,16 +23,17 @@ public:
 	void AIKAttestationGetTcgLog();
 	void AIKAttestationVerify();
 
-	//AIK Attestation
-	void AIKDecodeBinding();
-	void AIKFreeBinding();
-	void AIKGetChallenge();
+	//AIK TPM Attestation
+	SPOK_AIKTpmAttestation AIKTpmAttestationDecode(const SPOK_Blob::Blob& idBinding);
+	void AIKGetTpmAttestationChallenge();
 
 	//AIK Key Attestation
 	void AIKKeyAttestationDecode();
 	void AIKKeyAttestationVerify();
-	void AIKRawVerifyNonce();
-	void AIKRawVerifySignature();
+
+	bool AttestationVerify(IAttestation& attestation, const SPOK_Nonce::Nonce& nonce);
+	bool AttestationVerifyNonce(IAttestation& attestation, const SPOK_Nonce::Nonce& nonce);
+	bool AttestationVerifySignature(IAttestation& attestation);
 
 	//Basic Crypto Operations
 	SPOK_Blob::Blob Decrypt(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data);

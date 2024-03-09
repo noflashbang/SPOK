@@ -40,7 +40,7 @@ extern "C"
 {
 #endif
 
-	SPOKSERVER_API SPOK_Handle SPS_AttestationCreate(const uint8_t* pKey, const size_t cbKey);
+	//SPOKSERVER_API SPOK_Handle SPS_AttestationCreate(const uint8_t* pBlob, const size_t cbBlob);
 	SPOKSERVER_API void SPS_AttestationDestroy(SPOK_Handle hAttestationHandle);
 
 	//AIK Platform Attestation
@@ -50,7 +50,7 @@ extern "C"
 	SPOKSERVER_API void SPS_AIKPlatformAttest_Verify();
 
 	//AIK Tpm Attestation
-	SPOKSERVER_API void SPS_AIKTpmAttest_Decode();
+	SPOKSERVER_API SPOK_Handle SPS_AIKTpmAttest_Decode(const uint8_t* pBlob, const size_t cbBlob);
 	SPOKSERVER_API void SPS_AIKTpmAttest_GetChallenge();
 	
 	//AIK Key Attestation
@@ -58,8 +58,9 @@ extern "C"
 	SPOKSERVER_API void SPS_AIKKeyAttest_Verify();
 
 	//AIK Attestation Verifications
-	SPOKSERVER_API void SPS_AIKAttest_VerifyNonce();
-	SPOKSERVER_API void SPS_AIKAttest_VerifySignature();
+	SPOKSERVER_API bool SPS_AIKAttest_Verify(SPOK_Handle hAttest, const uint8_t* nonce, const size_t cbNonce);
+	SPOKSERVER_API bool SPS_AIKAttest_VerifyNonce(SPOK_Handle hAttest, const uint8_t* nonce, const size_t cbNonce);
+	SPOKSERVER_API bool SPS_AIKAttest_VerifySignature(SPOK_Handle hAttest);
 
 	//Basic Crypto Operations
 	SPOKSERVER_API void SPS_Decrypt(const uint8_t* pKey, const size_t cbKey, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut);

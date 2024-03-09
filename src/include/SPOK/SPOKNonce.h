@@ -27,6 +27,7 @@
 
 #include "SPOKApiTypes.h"
 #include "SPOKCore.h"
+#include "SPOKBlob.h"
 
 
 class SPOK_Nonce
@@ -48,6 +49,27 @@ public:
 		auto min = std::min(size, nonce.max_size());
 		memcpy(nonce.data(), data, min);
 		return nonce;
+	};
+
+	static Nonce Make(const SPOK_Blob::Blob& data)
+	{
+		auto nonce = Zero();
+		auto min = std::min(data.size(), nonce.max_size());
+		std::copy(data.begin(), data.begin() + min, nonce.begin());
+		return nonce;
+	};
+
+	static bool Equal(const Nonce& a, const Nonce& b)
+	{
+		//it is important to do a constant time comparison
+		//to avoid timing attacks
+
+		bool equal = true;
+		for (size_t i = 0; i < a.size(); i++)
+		{
+			equal &= (a[i] == b[i]);
+		}
+		return equal;
 	};
 };
 

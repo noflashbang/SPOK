@@ -34,7 +34,7 @@ public:
 
 	static SPOK_Handle Add(IAttestation attestation);
 	static void Destroy(SPOK_Handle handle);
-	static IAttestation Get(SPOK_Handle handle);
+	static std::optional<IAttestation> Get(SPOK_Handle handle);
 
 protected:
 	AttestationManager();
@@ -50,5 +50,5 @@ private:
 
 	SPOK_Handle AddAttestation(IAttestation attestation);
 	void DestroyAttestation(SPOK_Handle handle);
-	IAttestation GetAttestation(SPOK_Handle handle);
+	std::optional<IAttestation> GetAttestation(SPOK_Handle handle);
 };

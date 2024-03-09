@@ -4,16 +4,50 @@
 #include "AttestationManager.h"
 
 
-SPOK_Handle SPS_AttestationCreate(uint32_t type, const uint8_t* pKey, const size_t cbKey)
-{
-	auto blob = SPOK_Blob::New(pKey, cbKey);
-	auto attestation = Attestation::Create(static_cast<AttestationType>(type), blob);
-	return AttestationManager::Add(attestation);
-}
-
 void SPS_AttestationDestroy(SPOK_Handle hAttestationHandle)
 {
 	AttestationManager::Destroy(hAttestationHandle);
+}
+
+SPOK_Handle SPS_AIKTpmAttest_Decode(const uint8_t* pBlob, const size_t cbBlob)
+{
+	auto blob = SPOK_Blob::New(pBlob, cbBlob);
+	auto server = SPOKServer();
+	auto attestation = server.AIKTpmAttestationDecode(blob);
+	return AttestationManager::Add(attestation);
+}
+
+bool SPS_AIKAttest_Verify(SPOK_Handle hAttest, const uint8_t* nonce, const size_t cbNonce)
+{
+	auto attestation = AttestationManager::Get(hAttest);
+	if(!attestation.has_value())
+	{
+		return false;
+	}
+	auto server = SPOKServer();
+	auto blob = SPOK_Nonce::Make(nonce, cbNonce);
+	return server.AttestationVerify(attestation.value(), blob);
+}
+bool SPS_AIKAttest_VerifyNonce(SPOK_Handle hAttest, const uint8_t* nonce, const size_t cbNonce)
+{
+	auto attestation = AttestationManager::Get(hAttest);
+	if (!attestation.has_value())
+	{
+		return false;
+	}
+	auto server = SPOKServer();
+	auto blob = SPOK_Nonce::Make(nonce, cbNonce);
+	return server.AttestationVerifyNonce(attestation.value(), blob);
+}
+bool SPS_AIKAttest_VerifySignature(SPOK_Handle hAttest)
+{
+	auto attestation = AttestationManager::Get(hAttest);
+	if (!attestation.has_value())
+	{
+		return false;
+	}
+	auto server = SPOKServer();
+	return server.AttestationVerifySignature(attestation.value());
 }
 
 //Basic Crypto Operations

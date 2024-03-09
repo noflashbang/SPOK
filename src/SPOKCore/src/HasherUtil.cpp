@@ -177,3 +177,27 @@ SPOK_Blob::Blob Hasher::PublicKeyHash(const SPOK_Blob::Blob& keyBlob)
 	HasherUtil hasher(HasherType::SHA256);
 	return hasher.OneShotHash(encodedKey);
 }
+
+HasherUtil Hasher::Create(uint16_t algId)
+{
+	if(algId == 0x0004)
+	{
+		return HasherUtil(HasherType::SHA1);
+	}
+	else if (algId == 0x000B)
+	{
+		return HasherUtil(HasherType::SHA256);
+	}
+	else if (algId == 0x000C)
+	{
+		return HasherUtil(HasherType::SHA384);
+	}
+	else if (algId == 0x000D)
+	{
+		return HasherUtil(HasherType::SHA512);
+	}
+	else
+	{
+		throw std::runtime_error("Unsupported hash algorithm");
+	}
+}

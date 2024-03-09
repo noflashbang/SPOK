@@ -247,8 +247,6 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	return quoteBlob;
 }
 
-
-
 TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob::Blob& publicBlob)
 {
 	auto br = SPOK_BinaryReader(publicBlob);
@@ -284,47 +282,107 @@ TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob::Blob& publicBlob)
 	auto keybits = br.BE_Read16();
 	auto exponent = br.BE_Read32();
 
+	auto exponentBlob = SPOK_Blob::Blob();
+
+	auto exponentArray = std::array<uint8_t, 4> 
+	{
+		static_cast<uint8_t>((exponent >> 24) & 0xFF),
+		static_cast<uint8_t>((exponent >> 16) & 0xFF),
+		static_cast<uint8_t>((exponent >> 8) & 0xFF),
+		static_cast<uint8_t>(exponent & 0xFF)
+	};
+
+	if (exponentArray[0] == 0x00)
+	{
+		//use default
+		exponentArray[0] = 0x01;
+		exponentArray[1] = 0x00;
+		exponentArray[2] = 0x01;
+		exponentArray[3] = 0x00;
+	}
+	
+	exponentBlob.insert(exponentBlob.end(), exponentArray.begin(), exponentArray.end());
+
+	//remove any trailing 0s
+	while (exponentBlob.back() == 0x00)
+	{
+		exponentBlob.pop_back();
+	}
+
 	auto modulusSize = br.BE_Read16();
 	auto modulus = br.Read(modulusSize);
 
-	return TPM2B_PUBLIC{ type, nameAlg, objectAttributes, authPolicy, symmetric, scheme, signHashAlg, keybits, exponent, modulus };
+	return TPM2B_PUBLIC{ type, nameAlg, objectAttributes, authPolicy, symmetric, scheme, signHashAlg, keybits, exponentBlob, modulus, publicBlob };
 }
 
 TPM2B_CREATION_DATA TPM2B_CREATION_DATA::Decode(const SPOK_Blob::Blob& creationBlob)
 {
 	auto br = SPOK_BinaryReader(creationBlob);
 
-	auto magic = br.BE_Read16();
-	auto type = br.BE_Read16();
-	auto qualifiedSignerSize = br.BE_Read16();
-	auto qualifiedSigner = br.Read(qualifiedSignerSize);
-	auto extraDataSize = br.BE_Read16();
-	auto extraData = br.Read(extraDataSize);
-	auto creationHashSize = br.BE_Read16();
-	auto creationHash = br.Read(creationHashSize);
-	auto creationTicketSize = br.BE_Read16();
-	auto creationTicket = br.Read(creationTicketSize);
+	auto prcSelection = std::vector<TPM2B_PCR_SELECTION>();
+	auto pcrSelectionSize = br.BE_Read16();
+	for (auto i = 0; i < pcrSelectionSize; i++)
+	{
+		auto algId = br.BE_Read16();
+		auto bitmapSize = br.BE_Read16();
+		auto bitmap = br.Read(bitmapSize);
 
-	return TPM2B_CREATION_DATA{ magic, type, qualifiedSigner, extraData, creationHash, creationTicket };
+		prcSelection.push_back(TPM2B_PCR_SELECTION{ algId, bitmap });
+	}
+
+	auto digestSize = br.BE_Read16();
+	auto digest = br.Read(digestSize);
+
+	auto locality = br.Read();
+
+	auto parentNameAlg = br.BE_Read16();
+
+	auto parentNameSize = br.BE_Read16();
+	auto parentName = br.Read(parentNameSize);
+
+	auto parentQualifiedNameSize = br.BE_Read16();
+	auto parentQualifiedName = br.Read(parentQualifiedNameSize);
+
+	auto creationNonceSize = br.BE_Read16();
+	auto creationNonceBlob = br.Read(creationNonceSize);
+	auto creationNonce = SPOK_Nonce::Make(creationNonceBlob);
+
+	return TPM2B_CREATION_DATA{ prcSelection, digest, locality, parentNameAlg, parentName, parentQualifiedName, creationNonce, creationBlob };
 }
 
 TPM2B_ATTEST TPM2B_ATTEST::Decode(const SPOK_Blob::Blob& attestBlob)
 {
 	auto br = SPOK_BinaryReader(attestBlob);
 
-	auto magic = br.BE_Read16();
+	auto generated = br.BE_Read16();
 	auto type = br.BE_Read16();
+	if (type != 0x801A) //TPM_ST_ATTEST_CREATION
+	{
+		throw std::runtime_error("Invalid attestation type");
+	}
+
 	auto qualifiedSignerSize = br.BE_Read16();
 	auto qualifiedSigner = br.Read(qualifiedSignerSize);
-	auto extraDataSize = br.BE_Read16();
-	auto extraData = br.Read(extraDataSize);
-	auto clockInfoSize = br.BE_Read16();
-	auto clockInfo = br.Read(clockInfoSize);
-	auto firmwareVersion = br.BE_Read32();
-	auto attestedSize = br.BE_Read16();
-	auto attested = br.Read(attestedSize);
 
-	return TPM2B_ATTEST{ magic, type, qualifiedSigner, extraData, clockInfo, firmwareVersion, attested };
+	auto creationNonceSize = br.BE_Read16();
+	auto creationNonceBlob = br.Read(creationNonceSize);
+	auto creationNonce = SPOK_Nonce::Make(creationNonceBlob);
+
+	auto clock_clock = br.BE_Read64();
+	auto clock_resetCount = br.BE_Read32();
+	auto clock_restartCount = br.BE_Read32();
+	auto clock_safe = br.Read();
+	auto clockInfo = TPMS_CLOCK_INFO{ clock_clock, clock_resetCount, clock_restartCount, clock_safe };
+
+	auto firmwareVersion = br.BE_Read64();
+
+	auto objectNameSize = br.BE_Read16();
+	auto objectName = br.Read(objectNameSize);
+
+	auto creationHashSize = br.BE_Read16();
+	auto creationHash = br.Read(creationHashSize);
+
+	return TPM2B_ATTEST{ generated, type, qualifiedSigner, creationNonce, clockInfo, firmwareVersion, objectName, creationHash, attestBlob };
 }
 
 TPMT_SIGNATURE TPMT_SIGNATURE::Decode(const SPOK_Blob::Blob& signatureBlob)

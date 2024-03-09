@@ -17,6 +17,19 @@
 #define TPM_API_ALG_ID_NULL       ((uint16_t)0x0010)
 #endif
 
+struct TPM2B_PCR_SELECTION
+{
+	uint16_t AlgId;
+	SPOK_Blob::Blob Bitmap;
+};
+
+struct TPMS_CLOCK_INFO
+{
+	uint64_t Clock;
+	uint32_t ResetCount;
+	uint32_t RestartCount;
+	uint8_t Safe;
+};
 
 struct TPM2B_PUBLIC
 {
@@ -28,7 +41,7 @@ struct TPM2B_PUBLIC
 	uint16_t Scheme;
 	uint16_t SignHash;
 	uint16_t KeyBits;
-	uint32_t Exponent;
+	SPOK_Blob::Blob Exponent;
 	SPOK_Blob::Blob Modulus;
 
 	SPOK_Blob::Blob Raw;
@@ -37,7 +50,12 @@ struct TPM2B_PUBLIC
 
 struct TPM2B_CREATION_DATA
 {
-	uint16_t PublicNameAlg;
+	std::vector<TPM2B_PCR_SELECTION> PcrSelection;
+	SPOK_Blob::Blob Digest;
+	uint8_t Locality;
+	uint16_t ParentNameAlg;
+	SPOK_Blob::Blob ParentName;
+	SPOK_Blob::Blob ParentQualifiedName;
 	SPOK_Nonce::Nonce CreationNonce;
 
 	SPOK_Blob::Blob Raw;
@@ -48,10 +66,13 @@ struct TPM2B_ATTEST
 {
 	uint16_t Generated;
 	uint16_t Type;
+	SPOK_Blob::Blob QualifiedSigner;
 	SPOK_Nonce::Nonce CreationNonce;
-	SPOK_Blob::Blob CreationDigest;
-	SPOK_Blob::Blob Signature;
-
+	TPMS_CLOCK_INFO ClockInfo;
+	uint64_t FirmwareVersion;
+	SPOK_Blob::Blob ObjectName;
+	SPOK_Blob::Blob CreationHash;
+	
 	SPOK_Blob::Blob Raw;
 	static TPM2B_ATTEST Decode(const SPOK_Blob::Blob& attest);
 };

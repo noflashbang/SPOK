@@ -15,13 +15,17 @@ public:
 	TPM2B_IDBINDING GetData() const;
 
 	SPOK_Blob::Blob GetPublicRSABlob() const;
-	SPOK_Blob::Blob GetCreationDigest(uint16_t algId) const;
-	SPOK_Blob::Blob GetAttestationDigest(uint16_t algId) const;
+	SPOK_Blob::Blob GetPublicName() const;
+	SPOK_Blob::Blob GetCreationDigest() const;
 
+	bool VerifyName() const;
+	bool VerifyCreation() const;
 	bool VerifyNonce(const SPOK_Nonce::Nonce& nonce) const;
-	bool VerifySignature(const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature) const;
+	bool VerifySignature() const;
 
+	bool Verify(const SPOK_Nonce::Nonce& nonce) const;
+	
 private:
-	SPOK_Blob::Blob m_idBinding;
+	TPM2B_IDBINDING m_idBinding;
 };
 
