@@ -15,36 +15,36 @@
 //DONT NEED TO DO THESE ALL THE TIME
 //TEST_CASE("SPC_AIKCreate")
 //{
-//	std::wstring name = L"TestAIK";
+//	const std::wstring name = L"TestAIK";
 //	NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
-//	bool exists = SPC_AIKExists(name, flag);
+//	bool exists = SPC_AIKExists(name.c_str(), flag);
 //	
 //	if (exists)
 //	{
-//		SPC_AIKDelete(name, flag);
+//		SPC_AIKDelete(name.c_str(), flag);
 //	}
 //
-//	SPOK_Nonce nonce = { 0 };
-//	SPC_AIKCreate(name, flag, nonce);
+//	auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestNonce"));
+//	SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
 //}
-//
+
 //TEST_CASE("SPC_AIKDelete")
 //{
-//	std::wstring name = L"TestAIK";
+//	const std::wstring name = L"TestAIK";
 //	NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
-//	bool exists = SPC_AIKExists(name, flag);
+//	bool exists = SPC_AIKExists(name.c_str(), flag);
 //
 //	if (exists)
 //	{
-//		SPC_AIKDelete(name, flag);
+//		SPC_AIKDelete(name.c_str(), flag);
 //	}
 //}
-//
+
 //TEST_CASE("SPC_AIKExists")
 //{
-//	std::wstring name = L"TestAIK";
+//	const std::wstring name = L"TestAIK";
 //	NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
-//	bool exists = SPC_AIKExists(name, flag);
+//	bool exists = SPC_AIKExists(name.c_str(), flag);
 //	REQUIRE(exists == false);
 //}
 
@@ -228,7 +228,7 @@ TEST_CASE("SPC_AIKGetPublicKey")
 
 	if (!exists)
 	{
-		auto nonce = SPOK_Nonce::Zero();
+		auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestNonce"));
 		SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
 	}
 
@@ -294,20 +294,34 @@ TEST_CASE("SPC_AIKGetChallengeBinding")
 
 	size_t sizeOut = 0;
 
-	std::wstring name = L"TestAIK";
-	NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
-
-	bool exists = SPC_AIKExists(name.c_str(), flag);
-
-	if (!exists)
 	{
-		auto nonce = SPOK_Nonce::Zero();
-		SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
+		std::wstring name = L"TestAIK";
+		NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
+
+		bool exists = SPC_AIKExists(name.c_str(), flag);
+
+		if (!exists)
+		{
+			auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestNonce"));
+			SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
+		}
+
+		SPC_AIKGetChallengeBinding(name.c_str(), flag, pBytes.get(), cbSize, sizeOut);
+
+		REQUIRE(sizeOut > 0);
 	}
+	{
+		auto handle = SPS_AIKTpmAttest_Decode(pBytes.get(), sizeOut);
 
-	SPC_AIKGetChallengeBinding(name.c_str(), flag, pBytes.get(), cbSize, sizeOut);
+		REQUIRE((void*)handle != nullptr);
 
-	REQUIRE(sizeOut > 0);
+		auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestNonce"));
+		auto valid = SPS_AIKAttest_Verify(handle, nonce.data(), nonce.size());
+
+		REQUIRE(valid);
+
+		SPS_AttestationDestroy(handle);
+	}
 }
 
 TEST_CASE("SPC_GetPCRTable")
@@ -376,12 +390,12 @@ TEST_CASE("SPC_AIKGetPlatformAttestation")
 
 	if (!exists)
 	{
-		auto nonce = SPOK_Nonce::Zero();
+		auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestNonce"));
 		SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
 	}
 
 	size_t sizeOut = 0;
-	auto nonce = SPOK_Nonce::Zero();
+	auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestPlatformNonce"));
 	SPC_AIKGetPlatformAttestation(name.c_str(), flag, nonce.data(), nonce.size(), (PCR_13 | PCR_14), pBytes.get(), cbSize, sizeOut);
 
 	REQUIRE(sizeOut > 0);
@@ -404,12 +418,12 @@ TEST_CASE("SPC_AIKGetKeyAttestation")
 
 	if (!exists)
 	{
-		auto nonce = SPOK_Nonce::Zero();
+		auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestNonce"));
 		SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
 	}
 
 	size_t sizeOut = 0;
-	auto nonce = SPOK_Nonce::Zero();
+	auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestKeyNonce"));
 	SPC_AIKGetKeyAttestation(name.c_str(), flag, nonce.data(), nonce.size(), nameKey.c_str(), flagKey, pBytes.get(), cbSize, sizeOut);
 
 	REQUIRE(sizeOut > 0);

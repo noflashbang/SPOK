@@ -228,16 +228,42 @@ SPOK_Blob::Blob BCryptKey::Decrypt(const SPOK_Blob::Blob& data)
 	return decryptedData;
 
 }
+
+void  BCryptKey::SetSignHashAlg(uint16_t algId)
+{
+	m_signHashAlg = algId;
+}
+
 SPOK_Blob::Blob BCryptKey::Sign(const SPOK_Blob::Blob& hash)
 {
 	if (hash.size() > MaxMessage())
 	{
 		throw std::runtime_error(std::format("Data too large to sign -> Max {} bytes, got {} bytes", MaxMessage(), hash.size()));
 	}
+	
 	BCRYPT_PKCS1_PADDING_INFO padInfo;
-	padInfo.pszAlgId = NCRYPT_SHA256_ALGORITHM;
-	DWORD signatureSize = 0;
+	if (m_signHashAlg == 0x0004)
+	{
+		padInfo.pszAlgId = BCRYPT_SHA1_ALGORITHM;
+	}
+	else if (m_signHashAlg == 0x000B)
+	{
+		padInfo.pszAlgId = BCRYPT_SHA256_ALGORITHM;
+	}
+	else if (m_signHashAlg == 0x000C)
+	{
+		padInfo.pszAlgId = BCRYPT_SHA384_ALGORITHM;
+	}
+	else if (m_signHashAlg == 0x000D)
+	{
+		padInfo.pszAlgId = BCRYPT_SHA512_ALGORITHM;
+	}
+	else
+	{
+		throw std::runtime_error("Invalid hash algorithm");
+	}
 
+	DWORD signatureSize = 0;
 	HRESULT status = BCryptSignHash(m_hKey, &padInfo, const_cast<uint8_t*>(hash.data()), SAFE_CAST_TO_UINT32(hash.size()), NULL, 0, &signatureSize, BCRYPT_PAD_PKCS1);
 	if (status != ERROR_SUCCESS)
 	{
@@ -258,7 +284,26 @@ SPOK_Blob::Blob BCryptKey::Sign(const SPOK_Blob::Blob& hash)
 bool BCryptKey::Verify(const SPOK_Blob::Blob& hash, const SPOK_Blob::Blob& signature)
 {
 	BCRYPT_PKCS1_PADDING_INFO padInfo;
-	padInfo.pszAlgId = NCRYPT_SHA256_ALGORITHM;
+	if (m_signHashAlg == 0x0004)
+	{
+		padInfo.pszAlgId = BCRYPT_SHA1_ALGORITHM;
+	}
+	else if (m_signHashAlg == 0x000B)
+	{
+		padInfo.pszAlgId = BCRYPT_SHA256_ALGORITHM;
+	}
+	else if (m_signHashAlg == 0x000C)
+	{
+		padInfo.pszAlgId = BCRYPT_SHA384_ALGORITHM;
+	}
+	else if (m_signHashAlg == 0x000D)
+	{
+		padInfo.pszAlgId = BCRYPT_SHA512_ALGORITHM;
+	}
+	else
+	{
+		throw std::runtime_error("Invalid hash algorithm");
+	}
 
 	HRESULT status = BCryptVerifySignature(m_hKey, &padInfo, const_cast<uint8_t*>(hash.data()), SAFE_CAST_TO_UINT32(hash.size()), const_cast<uint8_t*>(signature.data()), SAFE_CAST_TO_UINT32(signature.size()), BCRYPT_PAD_PKCS1);
 	if (status != NTE_BAD_SIGNATURE && SUCCEEDED(status))
@@ -336,4 +381,9 @@ SPOK_Blob::Blob BCryptUtil::GetRandomBytes(uint32_t size)
 		throw std::runtime_error("BCryptGenRandom failed");
 	}
 	return randomBytes;
+}
+
+SPOK_Nonce::Nonce BCryptUtil::GetRandomNonce()
+{
+	return SPOK_Nonce::Make(GetRandomBytes(20));
 }

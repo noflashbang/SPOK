@@ -64,7 +64,7 @@ struct TPM2B_CREATION_DATA
 
 struct TPM2B_ATTEST
 {
-	uint16_t Generated;
+	uint32_t Generated;
 	uint16_t Type;
 	SPOK_Blob::Blob QualifiedSigner;
 	SPOK_Nonce::Nonce CreationNonce;

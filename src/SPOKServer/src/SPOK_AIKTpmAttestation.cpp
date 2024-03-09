@@ -27,6 +27,9 @@ SPOK_Blob::Blob SPOK_AIKTpmAttestation::GetPublicRSABlob() const
 	bw.LE_Write32(m_idBinding.Public.KeyBits); //bitlen
 	bw.LE_Write32(m_idBinding.Public.Exponent.size()); //exponent size
 	bw.LE_Write32(m_idBinding.Public.Modulus.size()); //modulus size
+	bw.LE_Write32(0); //Prime1 size
+	bw.LE_Write32(0); //Prime2 size
+
 	bw.Write(m_idBinding.Public.Exponent);
 	bw.Write(m_idBinding.Public.Modulus);
 
@@ -73,11 +76,13 @@ bool SPOK_AIKTpmAttestation::VerifyNonce(const SPOK_Nonce::Nonce& nonce) const
 }
 bool SPOK_AIKTpmAttestation::VerifySignature() const
 {
-	auto hasher = Hasher::Create(m_idBinding.Signature.SigAlg);
+	auto hasher = Hasher::Create(m_idBinding.Public.SignHash);
 	auto digest = hasher.OneShotHash(m_idBinding.Attest.Raw);
 	auto rsaBlob = GetPublicRSABlob();
 
 	auto key = BCryptUtil::Open(rsaBlob);
+	key.SetSignHashAlg(m_idBinding.Public.SignHash); //set the correct hash algorithm for padding
+
 	auto verified = key.Verify(digest, m_idBinding.Signature.Signature);
 	return verified;
 }

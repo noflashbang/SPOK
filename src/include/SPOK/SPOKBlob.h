@@ -43,6 +43,8 @@ public:
 
 	static std::string BlobToBase64(const Blob& blob);
 	static Blob Base64ToBlob(const std::string& base64);
+
+	static Blob FromString(const std::string& str);
 };
 
 class EndianSwap

@@ -56,10 +56,13 @@ public:
 
 	SPOK_Blob::Blob Encrypt(const SPOK_Blob::Blob& data);
 	SPOK_Blob::Blob Decrypt(const SPOK_Blob::Blob& data);
+
+	void SetSignHashAlg(uint16_t algId);
 	SPOK_Blob::Blob Sign(const SPOK_Blob::Blob& data);
 	bool Verify(const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature);
 
 private:
+	uint16_t m_signHashAlg = 0x000B; //TPM_ALG_SHA256
 	BCryptAlgHandle m_hAlg;
 	BCRYPT_KEY_HANDLE m_hKey;
 };
@@ -79,4 +82,5 @@ public:
 	static BCryptKey Open(SPOK_Blob::Blob& keyBlob);
 	static SPOK_Blob::Blob GenerateRsaKeyPair(KeySize keySize);
 	static SPOK_Blob::Blob GetRandomBytes(uint32_t size);
+	static SPOK_Nonce::Nonce GetRandomNonce();
 };

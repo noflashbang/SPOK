@@ -46,6 +46,7 @@ class Hasher
 {
 public:
 	static SPOK_Blob::Blob PublicKeyHash(const SPOK_Blob::Blob& keyBlob);
+	static SPOK_Nonce::Nonce Blob2Nonce(const SPOK_Blob::Blob& blob);
 
 	static HasherUtil Create(uint16_t algId);
 };

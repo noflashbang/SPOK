@@ -320,7 +320,7 @@ TPM2B_CREATION_DATA TPM2B_CREATION_DATA::Decode(const SPOK_Blob::Blob& creationB
 	auto br = SPOK_BinaryReader(creationBlob);
 
 	auto prcSelection = std::vector<TPM2B_PCR_SELECTION>();
-	auto pcrSelectionSize = br.BE_Read16();
+	auto pcrSelectionSize = br.BE_Read32();
 	for (auto i = 0; i < pcrSelectionSize; i++)
 	{
 		auto algId = br.BE_Read16();
@@ -354,7 +354,12 @@ TPM2B_ATTEST TPM2B_ATTEST::Decode(const SPOK_Blob::Blob& attestBlob)
 {
 	auto br = SPOK_BinaryReader(attestBlob);
 
-	auto generated = br.BE_Read16();
+	auto generated = br.BE_Read32();
+	if (generated != 0xff544347) // TPM_GENERATED
+	{
+		throw std::runtime_error("Invalid attestation generation");
+	}
+
 	auto type = br.BE_Read16();
 	if (type != 0x801A) //TPM_ST_ATTEST_CREATION
 	{
@@ -394,7 +399,7 @@ TPMT_SIGNATURE TPMT_SIGNATURE::Decode(const SPOK_Blob::Blob& signatureBlob)
 	auto signatureSize = br.BE_Read16();
 	auto signature = br.Read(signatureSize);
 
-	return TPMT_SIGNATURE{ sigAlg, sigHashAlg, signature };
+	return TPMT_SIGNATURE{ sigAlg, sigHashAlg, signature, signatureBlob };
 }
 
 TPM2B_IDBINDING TPM_20::DecodeIDBinding(const SPOK_Blob::Blob& idBinding)

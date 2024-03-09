@@ -178,6 +178,13 @@ SPOK_Blob::Blob Hasher::PublicKeyHash(const SPOK_Blob::Blob& keyBlob)
 	return hasher.OneShotHash(encodedKey);
 }
 
+SPOK_Nonce::Nonce Hasher::Blob2Nonce(const SPOK_Blob::Blob& blob)
+{
+	HasherUtil hasher(HasherType::SHA1);
+	auto hash = hasher.OneShotHash(blob);
+	return SPOK_Nonce::Make(hash.data(), hash.size());
+}
+
 HasherUtil Hasher::Create(uint16_t algId)
 {
 	if(algId == 0x0004)
