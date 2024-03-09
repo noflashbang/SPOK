@@ -19,6 +19,7 @@ SPOK_Handle SPS_AIKTpmAttest_Decode(const uint8_t* pBlob, const size_t cbBlob)
 
 bool SPS_AIKAttest_Verify(SPOK_Handle hAttest, const uint8_t* nonce, const size_t cbNonce)
 {
+
 	auto attestation = AttestationManager::Get(hAttest);
 	if(!attestation.has_value())
 	{
