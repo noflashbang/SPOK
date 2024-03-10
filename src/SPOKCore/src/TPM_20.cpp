@@ -6,6 +6,7 @@
 #include "BCryptUtil.h"
 #include "TcgLog.h"
 #include "HasherUtil.h"
+#include <iostream>
 
 SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest)
 {
@@ -455,6 +456,8 @@ SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, 
 	bw.Write(secret);
 
 	auto encryptedSecret = CFB(aesKey, iv, secretBlob);
+	//trim to the first 16 bytes
+	encryptedSecret.resize(secretBlob.size());
 
 	//generate hmac key
 	auto hmacKey = KDFa(ekNameAlgId, seed, "INTEGRITY", SPOK_Blob::Blob(), SPOK_Blob::Blob(), SHA256_DIGEST_SIZE * 8);
@@ -474,21 +477,22 @@ SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, 
 	{
 		throw std::runtime_error("Failed to open the EK key");
 	}
-	auto encryptedSeed = ekKey.Encrypt(seed);
+	auto encryptedSeed = ekKey.Encrypt(seed, true);
+	auto ekBlockLength = ekKey.BlockLength();
 
 	//create the challenge
 	uint16_t challengeSize = sizeof(uint16_t) +                      // TPM2B_ID_OBJECT.size
 							 sizeof(uint16_t) + SHA256_DIGEST_SIZE + // TPM2B_DIGEST outerHAMC
-							 sizeof(uint16_t) + SHA256_DIGEST_SIZE + // TPM2B_DIGEST credential value
-							 sizeof(uint16_t) + SHA256_DIGEST_SIZE;  // TPM2B_ENCRYPTED_SECRET protecting credential value
+							 encryptedSecret.size()                + // TPM2B_DIGEST credential value
+							 sizeof(uint16_t) + ekBlockLength;       // TPM2B_ENCRYPTED_SECRET protecting credential value
 								
 	auto challengeObject = SPOK_Blob::Blob(challengeSize);
 	auto challengeBw = SPOK_BinaryWriter(challengeObject);
 
-	challengeBw.BE_Write16(SAFE_CAST_TO_UINT16(challengeSize - sizeof(uint16_t) - sizeof(uint16_t) + SHA256_DIGEST_SIZE));
+	challengeBw.BE_Write16(SAFE_CAST_TO_UINT16(challengeSize - sizeof(uint16_t) - sizeof(uint16_t) - ekBlockLength));
 	challengeBw.BE_Write16(SAFE_CAST_TO_UINT16(outerHmac.size()));
 	challengeBw.Write(outerHmac);
-	challengeBw.BE_Write16(SAFE_CAST_TO_UINT16(encryptedSecret.size()));
+	//challengeBw.BE_Write16(SAFE_CAST_TO_UINT16(encryptedSecret.size()));
 	challengeBw.Write(encryptedSecret);
 	challengeBw.BE_Write16(SAFE_CAST_TO_UINT16(encryptedSeed.size()));
 	challengeBw.Write(encryptedSeed);
@@ -504,12 +508,13 @@ SPOK_Blob::Blob TPM_20::KDFa(const uint16_t nameAlgId, const SPOK_Blob::Blob& ke
 	SPOK_Blob::Blob out;
 
 	//calculate the size of the buffer
-	auto bufferSize = sizeof(uint32_t) + label.size() + sizeof(UINT16) + contextU.size() + contextV.size() + sizeof(UINT16);
+	auto bufferSize = sizeof(uint32_t) + label.size() + sizeof(uint8_t) + sizeof(UINT16) + contextU.size() + contextV.size() + sizeof(UINT16);
 	auto buffer = SPOK_Blob::Blob(bufferSize);
 
 	auto bw = SPOK_BinaryWriter(buffer);
 	bw.BE_Write32(iteration);
-	bw.Write((const uint8_t*)label.data(), label.size()); //we assume a null terminator
+	bw.Write((const uint8_t*)label.data(), label.size());
+	bw.Write(0x00); //null terminator
 
 	if (contextU.size() != 0)
 	{
@@ -521,7 +526,7 @@ SPOK_Blob::Blob TPM_20::KDFa(const uint16_t nameAlgId, const SPOK_Blob::Blob& ke
 		bw.Write(contextV);
 	}
 
-	bw.BE_Write16(bits);
+	bw.BE_Write32(bits);
 
 	while (counter < outSize)
 	{
@@ -530,6 +535,9 @@ SPOK_Blob::Blob TPM_20::KDFa(const uint16_t nameAlgId, const SPOK_Blob::Blob& ke
 		iteration++;
 		bw.Seek(0);
 		bw.BE_Write32(iteration);
+
+		//std::cout << "KDFa Input: " << SPOK_Blob::BlobToBase64(buffer) << std::endl;
+
 		auto hash = hasher.OneShotHash(buffer);
 		if(hash.size() <= remaining)
 		{

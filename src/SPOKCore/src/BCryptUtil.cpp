@@ -225,7 +225,7 @@ uint16_t BCryptKey::MaxMessage() const
 	return maxMessage;
 }
 
-SPOK_Blob::Blob BCryptKey::Encrypt(const SPOK_Blob::Blob& data)
+SPOK_Blob::Blob BCryptKey::Encrypt(const SPOK_Blob::Blob& data, bool useIdentity)
 {
 	if (data.size() > MaxMessage())
 	{
@@ -237,6 +237,12 @@ SPOK_Blob::Blob BCryptKey::Encrypt(const SPOK_Blob::Blob& data)
 	//OAEP padding
 	uint8_t* szLabel = (uint8_t*)"DUPLICATE";
 	DWORD cbLabel = 10;
+
+	if(useIdentity)
+	{
+		szLabel = (uint8_t*)"IDENTITY";
+		cbLabel = 9;
+	}
 
 	auto paddingInfo = BCRYPT_OAEP_PADDING_INFO{ BCRYPT_SHA256_ALGORITHM, szLabel, cbLabel };
 

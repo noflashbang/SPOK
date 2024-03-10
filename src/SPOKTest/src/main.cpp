@@ -80,9 +80,9 @@ TEST_CASE("RSA Operations")
 
 	auto secret = BCryptUtil::GetRandomBytes(32);
 
-	auto enc_128 = BCryptKey_128.Encrypt(secret);
-	auto enc_256 = BCryptKey_256.Encrypt(secret);
-	auto enc_512 = BCryptKey_512.Encrypt(secret);
+	auto enc_128 = BCryptKey_128.Encrypt(secret, false);
+	auto enc_256 = BCryptKey_256.Encrypt(secret, false);
+	auto enc_512 = BCryptKey_512.Encrypt(secret, false);
 
 	auto dec_128 = BCryptKey_128.Decrypt(enc_128);
 	auto dec_256 = BCryptKey_256.Decrypt(enc_256);
@@ -341,6 +341,16 @@ TEST_CASE("SPC_AIKGetChallengeBinding")
 		bool validSecret = secret == response;
 		REQUIRE(validSecret);
 	}
+}
+
+TEST_CASE("BASE64")
+{
+	uint8_t data[] = { 0x00, 0x01, 0x02, 0x03, 0x04 };
+	auto blob = SPOK_Blob::New(data, sizeof(data));
+	auto b64 = SPOK_Blob::BlobToBase64(blob);
+	auto blob2 = SPOK_Blob::Base64ToBlob(b64);
+
+	REQUIRE(blob == blob2);
 }
 
 TEST_CASE("SPC_GetPCRTable")

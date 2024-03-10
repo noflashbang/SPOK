@@ -17,14 +17,17 @@ enum class HasherType
 class BCryptHashHandle
 {
 public:
-	BCryptHashHandle(BCryptAlgHandle hAlg);
-	BCryptHashHandle(BCryptAlgHandle hAlg, SPOK_Blob::Blob secret);
+	BCryptHashHandle(const BCryptAlgHandle& hAlg);
+	BCryptHashHandle(const BCryptAlgHandle& hAlg, SPOK_Blob::Blob secret);
 	~BCryptHashHandle();
 	operator BCRYPT_HASH_HANDLE() const;
+
+	uint32_t GetHashSize() const;
 
 private:
 	BCRYPT_HASH_HANDLE m_hHash;
 	SPOK_Blob::Blob m_Secret; //HMAC secret
+	uint32_t m_HashSize;
 };
 
 class HasherUtil

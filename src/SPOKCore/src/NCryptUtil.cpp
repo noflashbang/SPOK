@@ -5,11 +5,11 @@
 #include <TBS.h>
 #include <wbcl.h>
 #include "Util.h"
-
+#include <iostream>
 
 NCryptProvHandle::NCryptProvHandle()
 {
-	NTSTATUS status = NCryptOpenStorageProvider(&m_hProv, MS_PLATFORM_KEY_STORAGE_PROVIDER, 0);
+	NTSTATUS status = NCryptOpenStorageProvider(&m_hProv, MS_PLATFORM_CRYPTO_PROVIDER, 0);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptOpenStorageProvider failed");
@@ -193,15 +193,15 @@ SPOK_Blob::Blob PlatformAik::ActiveChallenge(const SPOK_Blob::Blob& challenge)
 	{
 		throw std::runtime_error("NCryptSetProperty \"NCRYPT_PCP_TPM12_IDACTIVATION_PROPERTY\" failed");
 	}
-
+	
 	// Get the secret
-	auto response = SPOK_Blob::New(AIK_CHALLENGE_SECRET_SIZE);
+	auto response = SPOK_Blob::New(256);
 	status = NCryptGetProperty(m_key, NCRYPT_PCP_TPM12_IDACTIVATION_PROPERTY, response.data(), SAFE_CAST_TO_INT32(response.size()), &responseSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("NCryptSetProperty \"NCRYPT_PCP_TPM12_IDACTIVATION_PROPERTY\" failed");
+		throw std::runtime_error("NCryptGetProperty \"NCRYPT_PCP_TPM12_IDACTIVATION_PROPERTY\" failed");
 	}
-
+	response.resize(responseSize);
 	return response;
 }
 

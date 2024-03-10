@@ -58,7 +58,7 @@ public:
 	uint16_t BlockLength() const;
 	uint16_t MaxMessage() const;
 
-	SPOK_Blob::Blob Encrypt(const SPOK_Blob::Blob& data);
+	SPOK_Blob::Blob Encrypt(const SPOK_Blob::Blob& data, bool useIdentity); //TODO: remove useIdentity
 	SPOK_Blob::Blob Decrypt(const SPOK_Blob::Blob& data);
 
 	void SetSignHashAlg(uint16_t algId);

@@ -2,22 +2,36 @@
 #include "Util.h"
 
 
-BCryptHashHandle::BCryptHashHandle(BCryptAlgHandle hAlg)
+BCryptHashHandle::BCryptHashHandle(const BCryptAlgHandle& hAlg)
 {
 	NTSTATUS status = BCryptCreateHash(hAlg, &m_hHash, nullptr, 0, nullptr, 0, 0);
 	if (!SUCCEEDED(status))
 	{
 		throw std::runtime_error("BCryptCreateHash failed");
 	}
+
+	ULONG cbOut = 0;
+	status = BCryptGetProperty(hAlg, BCRYPT_HASH_LENGTH, (PUCHAR)&m_HashSize, sizeof(uint32_t), &cbOut, 0);
+	if (!SUCCEEDED(status))
+	{
+		throw std::runtime_error("BCryptGetProperty failed");
+	}
 }
 
-BCryptHashHandle::BCryptHashHandle(BCryptAlgHandle hAlg, SPOK_Blob::Blob secret)
+BCryptHashHandle::BCryptHashHandle(const BCryptAlgHandle& hAlg, SPOK_Blob::Blob secret)
 {
 	m_Secret = secret;
 	NTSTATUS status = BCryptCreateHash(hAlg, &m_hHash, nullptr, 0, secret.data(), secret.size(), 0);
 	if (!SUCCEEDED(status))
 	{
 		throw std::runtime_error("BCryptCreateHash failed");
+	}
+
+	ULONG cbOut = 0;
+	status = BCryptGetProperty(hAlg, BCRYPT_HASH_LENGTH, (PUCHAR)&m_HashSize, sizeof(uint32_t), &cbOut, 0);
+	if (!SUCCEEDED(status))
+	{
+		throw std::runtime_error("BCryptGetProperty failed");
 	}
 }
 
@@ -32,6 +46,11 @@ BCryptHashHandle::~BCryptHashHandle()
 BCryptHashHandle::operator BCRYPT_HASH_HANDLE() const
 {
 	return m_hHash;
+}
+
+uint32_t BCryptHashHandle::GetHashSize() const
+{
+	return m_HashSize;
 }
 
 
@@ -63,16 +82,9 @@ void HasherUtil::HashData(const SPOK_Blob::Blob& data)
 }
 SPOK_Blob::Blob HasherUtil::FinishHash()
 {
-	ULONG cbOut = 0;
-	ULONG hashSize = 0;
-	NTSTATUS status = BCryptGetProperty(m_hAlg, BCRYPT_HASH_LENGTH, (PUCHAR)&hashSize, sizeof(hashSize), &cbOut, 0);
-	if (!SUCCEEDED(status))
-	{
-		throw std::runtime_error("BCryptGetProperty failed");
-	}
-
+	uint32_t hashSize = m_hHash.GetHashSize();
 	auto hash = SPOK_Blob::New(hashSize);
-	status = BCryptFinishHash(m_hHash, hash.data(), SAFE_CAST_TO_UINT32(hash.size()), 0);
+	NTSTATUS status = BCryptFinishHash(m_hHash, hash.data(), SAFE_CAST_TO_UINT32(hash.size()), 0);
 	if (!SUCCEEDED(status))
 	{
 		throw std::runtime_error("BCryptFinishHash failed");

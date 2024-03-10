@@ -111,7 +111,7 @@ SPOK_Blob::Blob SPOKServer::Decrypt(const SPOK_Blob::Blob& key, const SPOK_Blob:
 SPOK_Blob::Blob SPOKServer::Encrypt(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data)
 {
 	BCryptKey keyHandle(key);
-	return keyHandle.Encrypt(data);
+	return keyHandle.Encrypt(data, false);
 }
 SPOK_Blob::Blob SPOKServer::Sign(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data)
 {
