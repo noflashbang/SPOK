@@ -17,6 +17,27 @@ SPOK_Handle SPS_AIKTpmAttest_Decode(const uint8_t* pBlob, const size_t cbBlob)
 	return AttestationManager::Add(attestation);
 }
 
+void SPS_AIKTpmAttest_GetChallenge(SPOK_Handle hAttest, const uint16_t ekNameAlgId, const uint8_t* pEkPub, const size_t cbEkPub, const uint8_t* pSecret, const size_t cbSecret, uint8_t* pChallenge, const size_t cbChallenge, size_t& sizeOut)
+{
+	auto attestation = AttestationManager::Get(hAttest);
+	if (!attestation.has_value())
+	{
+		throw std::runtime_error("Attestation not found");
+	}
+	if (!std::holds_alternative<SPOK_AIKTpmAttestation>(attestation.value()))
+	{
+		throw std::runtime_error("Attestation is not an AIK TPM Attestation");
+	}
+
+	auto tpmAttest = std::get<SPOK_AIKTpmAttestation>(attestation.value());
+	auto aikName = tpmAttest.GetPublicName();
+	auto ekPub = SPOK_Blob::New(pEkPub, cbEkPub);
+	auto secret = SPOK_Blob::New(pSecret, cbSecret);
+	auto server = SPOKServer();
+	auto challenge = server.AIKGetTpmAttestationChallenge(ekNameAlgId, ekPub, aikName, secret);
+	SPOK_Blob::Copy2CStylePtr(challenge, pChallenge, cbChallenge, sizeOut);
+}
+
 bool SPS_AIKAttest_Verify(SPOK_Handle hAttest, const uint8_t* nonce, const size_t cbNonce)
 {
 	auto attestation = AttestationManager::Get(hAttest);

@@ -38,6 +38,11 @@ BCryptAlgHandle::BCryptAlgHandle(AlgId alg) : m_hAlg(NULL), m_algId(alg)
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA512_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
 			break;
 		}
+		case AlgId::AES:
+		{
+			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_AES_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
+			break;
+		}
 		default:
 		{
 			throw std::runtime_error("Invalid algorithm");
@@ -371,7 +376,7 @@ SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring&
 	{
 		throw std::runtime_error("Invalid algorithm");
 	}
-	if(mode != BCRYPT_CHAIN_MODE_CBC) //only supporting CBC mode for now
+	if(mode != BCRYPT_CHAIN_MODE_CFB) //only supporting CBC mode for now
 	{
 		throw std::runtime_error("Invalid mode");
 	}
@@ -391,7 +396,7 @@ SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring&
 
 	//set block length
 	DWORD blockLength = 16;
-	status = BCryptSetProperty(m_hKey, BCRYPT_BLOCK_LENGTH, (PUCHAR)&blockLength, sizeof(blockLength), 0);
+	status = BCryptSetProperty(m_hKey, BCRYPT_MESSAGE_BLOCK_LENGTH, (PUCHAR)&blockLength, sizeof(blockLength), 0);
 	if(status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("BCryptSetProperty failed");
@@ -409,14 +414,14 @@ SymmetricCipher::operator BCRYPT_KEY_HANDLE() const
 SPOK_Blob::Blob SymmetricCipher::Encrypt(const SPOK_Blob::Blob& data)
 {
 	DWORD dataSize = 0;
-	NTSTATUS status = BCryptEncrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), NULL, 0, &dataSize, 0);
+	NTSTATUS status = BCryptEncrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), NULL, 0, &dataSize, BCRYPT_BLOCK_PADDING);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("BCryptEncrypt failed");
 	}
 
 	auto encryptedData = SPOK_Blob::New(dataSize);
-	status = BCryptEncrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), encryptedData.data(), SAFE_CAST_TO_UINT32(encryptedData.size()), &dataSize, 0);
+	status = BCryptEncrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), encryptedData.data(), SAFE_CAST_TO_UINT32(encryptedData.size()), &dataSize, BCRYPT_BLOCK_PADDING);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("BCryptEncrypt failed");

@@ -474,7 +474,6 @@ SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, 
 	{
 		throw std::runtime_error("Failed to open the EK key");
 	}
-	ekKey.SetSignHashAlg(ekNameAlgId);
 	auto encryptedSeed = ekKey.Encrypt(seed);
 
 	//create the challenge
@@ -484,15 +483,15 @@ SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, 
 							 sizeof(uint16_t) + SHA256_DIGEST_SIZE;  // TPM2B_ENCRYPTED_SECRET protecting credential value
 								
 	auto challengeObject = SPOK_Blob::Blob(challengeSize);
-	auto bw = SPOK_BinaryWriter(challengeObject);
+	auto challengeBw = SPOK_BinaryWriter(challengeObject);
 
-	bw.BE_Write16(SAFE_CAST_TO_UINT16(challengeSize - sizeof(uint16_t) - sizeof(uint16_t) + SHA256_DIGEST_SIZE));
-	bw.BE_Write16(SAFE_CAST_TO_UINT16(outerHmac.size()));
-	bw.Write(outerHmac);
-	bw.BE_Write16(SAFE_CAST_TO_UINT16(encryptedSecret.size()));
-	bw.Write(encryptedSecret);
-	bw.BE_Write16(SAFE_CAST_TO_UINT16(encryptedSeed.size()));
-	bw.Write(encryptedSeed);
+	challengeBw.BE_Write16(SAFE_CAST_TO_UINT16(challengeSize - sizeof(uint16_t) - sizeof(uint16_t) + SHA256_DIGEST_SIZE));
+	challengeBw.BE_Write16(SAFE_CAST_TO_UINT16(outerHmac.size()));
+	challengeBw.Write(outerHmac);
+	challengeBw.BE_Write16(SAFE_CAST_TO_UINT16(encryptedSecret.size()));
+	challengeBw.Write(encryptedSecret);
+	challengeBw.BE_Write16(SAFE_CAST_TO_UINT16(encryptedSeed.size()));
+	challengeBw.Write(encryptedSeed);
 
 	return challengeObject;
 }

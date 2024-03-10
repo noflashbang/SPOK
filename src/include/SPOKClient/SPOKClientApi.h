@@ -57,7 +57,7 @@ extern "C"
 
 	//AIK Challenge
 	SPOKCLIENT_API void SPC_AIKGetChallengeBinding(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
-	SPOKCLIENT_API void SPC_AIKActivateChallenge(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pChallenge, const size_t cbChallenge, uint8_t pSecretOut[32]);
+	SPOKCLIENT_API void SPC_AIKActivateChallenge(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pChallenge, const size_t cbChallenge, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 
 	//AIK Quote and Verify
 	SPOKCLIENT_API void SPC_GetBootLog(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);

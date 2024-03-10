@@ -51,7 +51,7 @@ extern "C"
 
 	//AIK Tpm Attestation
 	SPOKSERVER_API SPOK_Handle SPS_AIKTpmAttest_Decode(const uint8_t* pBlob, const size_t cbBlob);
-	SPOKSERVER_API void SPS_AIKTpmAttest_GetChallenge();
+	SPOKSERVER_API void SPS_AIKTpmAttest_GetChallenge(SPOK_Handle hAttest, const uint16_t ekNameAlgId, const uint8_t* pEkPub, const size_t cbEkPub, const uint8_t* pSecret, const size_t cbSecret, uint8_t* pChallenge, const size_t cbChallenge, size_t& sizeOut);
 	
 	//AIK Key Attestation
 	SPOKSERVER_API void SPS_AIKKeyAttest_Decode();

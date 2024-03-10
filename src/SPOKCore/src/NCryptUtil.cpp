@@ -199,7 +199,7 @@ SPOK_Blob::Blob PlatformAik::ActiveChallenge(const SPOK_Blob::Blob& challenge)
 	status = NCryptGetProperty(m_key, NCRYPT_PCP_TPM12_IDACTIVATION_PROPERTY, response.data(), SAFE_CAST_TO_INT32(response.size()), &responseSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("NCryptSignHash failed");
+		throw std::runtime_error("NCryptSetProperty \"NCRYPT_PCP_TPM12_IDACTIVATION_PROPERTY\" failed");
 	}
 
 	return response;

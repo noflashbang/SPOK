@@ -1,4 +1,5 @@
 #include "SPOKServer.h"
+#include "TPM_20.h"
 
 SPOKServer::SPOKServer()
 {
@@ -12,6 +13,12 @@ SPOK_AIKTpmAttestation SPOKServer::AIKTpmAttestationDecode(const SPOK_Blob::Blob
 {
 	return SPOK_AIKTpmAttestation(idBinding);
 }
+
+SPOK_Blob::Blob SPOKServer::AIKGetTpmAttestationChallenge(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& aikName, const SPOK_Blob::Blob& secret)
+{
+	auto challenge = TPM_20::GenerateChallengeCredential(ekNameAlgId, ekPub, aikName, secret);
+	return challenge;
+};
 
 bool SPOKServer::AttestationVerify(IAttestation& attestation, const SPOK_Nonce::Nonce& nonce)
 {

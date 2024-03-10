@@ -105,7 +105,7 @@ public:
 	static SPOK_Blob::Blob AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, uint32_t pcrsToInclude);
 
 	static TPM2B_IDBINDING DecodeIDBinding(const SPOK_Blob::Blob& idBinding);
-	static SPOK_Blob::Blob GenerateChallengeCredential(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& secret);
+	static SPOK_Blob::Blob GenerateChallengeCredential(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& aikName, const SPOK_Blob::Blob& secret);
 	static SPOK_Blob::Blob KDFa(const uint16_t nameAlgId, const SPOK_Blob::Blob& key, const std::string& label, const SPOK_Blob::Blob& contextU, const SPOK_Blob::Blob& contextV, uint16_t bits);
 	static SPOK_Blob::Blob CFB(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& iv, const SPOK_Blob::Blob& data);
 

@@ -73,15 +73,13 @@ void SPC_AIKGetChallengeBinding(const wchar_t* name, const NCRYPT_MACHINE_KEY fl
 
 	SPOK_Blob::Copy2CStylePtr(blob, pBytes, cbBytes, sizeOut);
 }
-void SPC_AIKActivateChallenge(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pChallenge, const size_t cbChallenge, uint8_t pSecretOut[32])
+void SPC_AIKActivateChallenge(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pChallenge, const size_t cbChallenge, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)
 {
 	auto key = SPOK_PlatformKey{ name, flag };
 	auto challenge = SPOK_Blob::New(pChallenge, cbChallenge);
 	SPOKClient client;
 	auto secret = client.AIKActivateChallenge(key, challenge);
-
-	size_t copySize = std::min(32ULL, secret.size());
-	memcpy(pSecretOut, secret.data(), copySize);
+	SPOK_Blob::Copy2CStylePtr(secret, pBytes, cbBytes, sizeOut);
 }
 
 void SPC_GetBootLog(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)

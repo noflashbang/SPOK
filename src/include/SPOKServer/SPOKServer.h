@@ -25,7 +25,7 @@ public:
 
 	//AIK TPM Attestation
 	SPOK_AIKTpmAttestation AIKTpmAttestationDecode(const SPOK_Blob::Blob& idBinding);
-	void AIKGetTpmAttestationChallenge();
+	SPOK_Blob::Blob AIKGetTpmAttestationChallenge(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& aikName, const SPOK_Blob::Blob& secret);
 
 	//AIK Key Attestation
 	void AIKKeyAttestationDecode();

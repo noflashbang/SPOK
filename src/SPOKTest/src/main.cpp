@@ -293,11 +293,11 @@ TEST_CASE("SPC_AIKGetChallengeBinding")
 	pBytes = std::make_unique<unsigned char[]>(cbSize);
 
 	size_t sizeOut = 0;
+	
+	std::wstring name = L"TestAIK";
+	NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
 
 	{
-		std::wstring name = L"TestAIK";
-		NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
-
 		bool exists = SPC_AIKExists(name.c_str(), flag);
 
 		if (!exists)
@@ -320,7 +320,26 @@ TEST_CASE("SPC_AIKGetChallengeBinding")
 
 		REQUIRE(valid);
 
+		SPC_GetEndorsementPublicKey(pBytes.get(), cbSize, sizeOut);
+		auto ekPub = SPOK_Blob::New(pBytes.get(), sizeOut);
+
+		auto secret = BCryptUtil::GetRandomBytes(32);
+
+		SPS_AIKTpmAttest_GetChallenge(handle, ((uint16_t)0x000B), ekPub.data(), ekPub.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+
 		SPS_AttestationDestroy(handle);
+
+		REQUIRE(sizeOut > 0);
+		auto challenge = SPOK_Blob::New(pBytes.get(), sizeOut);
+
+		SPC_AIKActivateChallenge(name.c_str(), flag, challenge.data(), challenge.size(), pBytes.get(), cbSize, sizeOut);
+
+		REQUIRE(sizeOut > 0);
+
+		auto response = SPOK_Blob::New(pBytes.get(), sizeOut);
+
+		bool validSecret = secret == response;
+		REQUIRE(validSecret);
 	}
 }
 
@@ -427,4 +446,5 @@ TEST_CASE("SPC_AIKGetKeyAttestation")
 	SPC_AIKGetKeyAttestation(name.c_str(), flag, nonce.data(), nonce.size(), nameKey.c_str(), flagKey, pBytes.get(), cbSize, sizeOut);
 
 	REQUIRE(sizeOut > 0);
+
 }
