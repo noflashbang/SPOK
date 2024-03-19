@@ -8,6 +8,23 @@
 #include "HasherUtil.h"
 #include <iostream>
 
+
+uint32_t TPM2B_PCR_SELECTION::GetMask() const
+{
+	if (Bitmap.size() != 3)
+	{
+		throw std::invalid_argument("Invalid PcrSelection");
+	}
+
+	//read the selected PCRs
+	uint32_t pcrsToInclude = 0;
+	pcrsToInclude = (Bitmap[0]);
+	pcrsToInclude += (Bitmap[1] << 8);
+	pcrsToInclude += (Bitmap[2] << 16);
+
+	return pcrsToInclude;
+}
+
 SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest)
 {
 	PlatformAik aikKey(aik);
@@ -228,8 +245,12 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	auto sigSize = br.BE_Read16();
 	auto sig = br.Read(sigSize);
 
+	//get the pcrTable
+	auto pcrs = NCryptUtil::GetPcrTable();
+	auto pcrsSize = pcrs.size();
+
 	// calculate the quote length
-	auto required = sizeof(SPOK_PLATFORM_ATT_BLOB) + quoteSize + sigSize + tsbLog.size();
+	auto required = sizeof(SPOK_PLATFORM_ATT_BLOB) + pcrsSize + quoteSize + sigSize + tsbLog.size();
 	auto quoteBlob = SPOK_Blob::Blob(required);
 	auto bwQuote = SPOK_BinaryWriter(quoteBlob);
 
@@ -237,12 +258,13 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	platAttBlob.Magic = SPOK_PLATFORM_ATT_MAGIC;
 	platAttBlob.TpmVersion = TPM_VERSION_20;
 	platAttBlob.HeaderSize = sizeof(SPOK_PLATFORM_ATT_BLOB);
-	platAttBlob.PcrMask = pcrsToInclude;
+	platAttBlob.PcrValuesSize = pcrsSize;
 	platAttBlob.QuoteSize = quoteSize;
 	platAttBlob.SignatureSize = sigSize;
 	platAttBlob.TsbSize = tsbLog.size();
 
 	bwQuote.Write((uint8_t*)&platAttBlob, sizeof(SPOK_PLATFORM_ATT_BLOB));
+	bwQuote.Write(pcrs);
 	bwQuote.Write(quote);
 	bwQuote.Write(sig);
 	bwQuote.Write(tsbLog);
@@ -353,7 +375,55 @@ TPM2B_CREATION_DATA TPM2B_CREATION_DATA::Decode(const SPOK_Blob::Blob& creationB
 	return TPM2B_CREATION_DATA{ prcSelection, digest, locality, parentNameAlg, parentName, parentQualifiedName, creationNonce, creationBlob };
 }
 
-TPM2B_ATTEST TPM2B_ATTEST::Decode(const SPOK_Blob::Blob& attestBlob)
+TPM2B_ATTEST_QUOTE TPM2B_ATTEST_QUOTE::Decode(const SPOK_Blob::Blob& attestBlob)
+{
+	auto br = SPOK_BinaryReader(attestBlob);
+
+	auto generated = br.BE_Read32();
+	if (generated != 0xff544347) // TPM_GENERATED
+	{
+		throw std::runtime_error("Invalid attestation generation");
+	}
+
+	auto type = br.BE_Read16();
+	if (type != 0x8018) //TPM_ST_ATTEST_QUOTE
+	{
+		throw std::runtime_error("Invalid attestation type");
+	}
+
+	auto qualifiedSignerSize = br.BE_Read16();
+	auto qualifiedSigner = br.Read(qualifiedSignerSize);
+
+	auto creationNonceSize = br.BE_Read16();
+	auto creationNonceBlob = br.Read(creationNonceSize);
+	auto creationNonce = SPOK_Nonce::Make(creationNonceBlob);
+
+	auto clock_clock = br.BE_Read64();
+	auto clock_resetCount = br.BE_Read32();
+	auto clock_restartCount = br.BE_Read32();
+	auto clock_safe = br.Read();
+	auto clockInfo = TPMS_CLOCK_INFO{ clock_clock, clock_resetCount, clock_restartCount, clock_safe };
+
+	auto firmwareVersion = br.BE_Read64();
+
+	auto prcSelection = std::vector<TPM2B_PCR_SELECTION>();
+	auto pcrSelectionSize = br.BE_Read32();
+	for (auto i = 0; i < pcrSelectionSize; i++)
+	{
+		auto algId = br.BE_Read16();
+		auto bitmapSize = br.BE_Read16();
+		auto bitmap = br.Read(bitmapSize);
+
+		prcSelection.push_back(TPM2B_PCR_SELECTION{ algId, bitmap });
+	}
+
+	auto digestSize = br.BE_Read16();
+	auto pcrDigest = br.Read(digestSize);
+
+	return TPM2B_ATTEST_QUOTE{ generated, type, qualifiedSigner, creationNonce, clockInfo, firmwareVersion, prcSelection, pcrDigest, attestBlob };
+}
+
+TPM2B_ATTEST_CREATION TPM2B_ATTEST_CREATION::Decode(const SPOK_Blob::Blob& attestBlob)
 {
 	auto br = SPOK_BinaryReader(attestBlob);
 
@@ -390,7 +460,7 @@ TPM2B_ATTEST TPM2B_ATTEST::Decode(const SPOK_Blob::Blob& attestBlob)
 	auto creationHashSize = br.BE_Read16();
 	auto creationHash = br.Read(creationHashSize);
 
-	return TPM2B_ATTEST{ generated, type, qualifiedSigner, creationNonce, clockInfo, firmwareVersion, objectName, creationHash, attestBlob };
+	return TPM2B_ATTEST_CREATION{ generated, type, qualifiedSigner, creationNonce, clockInfo, firmwareVersion, objectName, creationHash, attestBlob };
 }
 
 TPMT_SIGNATURE TPMT_SIGNATURE::Decode(const SPOK_Blob::Blob& signatureBlob)
@@ -423,7 +493,7 @@ TPM2B_IDBINDING TPM_20::DecodeIDBinding(const SPOK_Blob::Blob& idBinding)
 
 	auto pubStruct = TPM2B_PUBLIC::Decode(pub);
 	auto creationStruct = TPM2B_CREATION_DATA::Decode(creation);
-	auto attStruct = TPM2B_ATTEST::Decode(att);
+	auto attStruct = TPM2B_ATTEST_CREATION::Decode(att);
 	auto sigStruct = TPMT_SIGNATURE::Decode(signature);
 
 	return TPM2B_IDBINDING{ pubStruct, creationStruct, attStruct, sigStruct };

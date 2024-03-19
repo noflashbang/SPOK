@@ -88,7 +88,7 @@ struct SPOK_PLATFORM_ATT_BLOB
     uint32_t Magic;
     uint32_t TpmVersion;
     uint32_t HeaderSize;
-    uint32_t PcrMask;
+    uint32_t PcrValuesSize;
     uint32_t QuoteSize;
     uint32_t SignatureSize;
     uint32_t TsbSize;

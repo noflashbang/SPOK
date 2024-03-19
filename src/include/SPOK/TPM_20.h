@@ -24,6 +24,8 @@ struct TPM2B_PCR_SELECTION
 {
 	uint16_t AlgId;
 	SPOK_Blob::Blob Bitmap;
+
+	uint32_t GetMask() const;
 };
 
 struct TPMS_CLOCK_INFO
@@ -65,7 +67,23 @@ struct TPM2B_CREATION_DATA
 	static TPM2B_CREATION_DATA Decode(const SPOK_Blob::Blob& creationData);
 };
 
-struct TPM2B_ATTEST
+struct TPM2B_ATTEST_QUOTE
+{
+	uint32_t Generated;
+	uint16_t Type;
+	SPOK_Blob::Blob QualifiedSigner;
+	SPOK_Nonce::Nonce CreationNonce;
+	TPMS_CLOCK_INFO ClockInfo;
+	uint64_t FirmwareVersion;
+	
+	std::vector<TPM2B_PCR_SELECTION> PcrSelection;
+	SPOK_Blob::Blob PcrDigest;
+	
+	SPOK_Blob::Blob Raw;
+	static TPM2B_ATTEST_QUOTE Decode(const SPOK_Blob::Blob& attest);
+};
+
+struct TPM2B_ATTEST_CREATION
 {
 	uint32_t Generated;
 	uint16_t Type;
@@ -75,9 +93,9 @@ struct TPM2B_ATTEST
 	uint64_t FirmwareVersion;
 	SPOK_Blob::Blob ObjectName;
 	SPOK_Blob::Blob CreationHash;
-	
+
 	SPOK_Blob::Blob Raw;
-	static TPM2B_ATTEST Decode(const SPOK_Blob::Blob& attest);
+	static TPM2B_ATTEST_CREATION Decode(const SPOK_Blob::Blob& attest);
 };
 
 struct TPMT_SIGNATURE
@@ -94,7 +112,7 @@ struct TPM2B_IDBINDING
 {
 	TPM2B_PUBLIC Public;
 	TPM2B_CREATION_DATA CreationData;
-	TPM2B_ATTEST Attest;
+	TPM2B_ATTEST_CREATION Attest;
 	TPMT_SIGNATURE Signature;
 };
 
