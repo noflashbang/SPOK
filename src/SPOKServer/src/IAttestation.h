@@ -19,7 +19,6 @@ enum class AttestationType : uint32_t
 
 using IAttestation = std::variant<SPOK_AIKPlatformAttestation, SPOK_AIKTpmAttestation, SPOK_AIKKeyAttestation>;
 
-
 class Attestation
 {
 public:
@@ -37,4 +36,30 @@ public:
 			throw std::invalid_argument("Invalid AttestationType");
 		}
 	};
+};
+
+struct IAttestationVerifyVisitor
+{
+public:
+	IAttestationVerifyVisitor(const SPOK_AttestationVerify& verify) : _verifyData(verify) {}
+
+	SPOK_VerifyResult operator()(SPOK_AIKPlatformAttestation& attestation) const
+	{
+		auto verify = std::get<SPOK_AIKPlatformVerify>(_verifyData);
+		return attestation.Verify(verify);
+	}
+
+	SPOK_VerifyResult operator()(SPOK_AIKTpmAttestation& attestation) const
+	{
+		auto verify = std::get<SPOK_AIKTpmVerify>(_verifyData);
+		return attestation.Verify(verify);
+	}
+
+	SPOK_VerifyResult operator()(SPOK_AIKKeyAttestation& attestation) const
+	{
+		return SPOK_AIKKeyVerifyResult();
+	}
+
+private:
+	SPOK_AttestationVerify _verifyData;
 };

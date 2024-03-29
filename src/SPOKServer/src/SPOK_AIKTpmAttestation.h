@@ -2,6 +2,7 @@
 
 #include "SPOKCore.h"
 #include "StandardLib.h"
+#include "AttestationVariants.h"
 #include "SPOKBlob.h"
 #include "SPOKNonce.h"
 #include "TPM_20.h"
@@ -23,7 +24,7 @@ public:
 	bool VerifyNonce(const SPOK_Nonce::Nonce& nonce) const;
 	bool VerifySignature() const;
 
-	bool Verify(const SPOK_Nonce::Nonce& nonce) const;
+	SPOK_VerifyResult Verify(const SPOK_AIKTpmVerify& verify) const;
 	
 private:
 	TPM2B_IDBINDING m_idBinding;

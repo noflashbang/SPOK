@@ -7,6 +7,7 @@
 
 #include <HasherUtil.h>
 #include <SPOKBlob.h>
+#include <SPOKPcrs.h>
 
 #include <TcgLog.h>
 
@@ -409,25 +410,58 @@ TEST_CASE("SPC_AIKGetPlatformAttestation")
 {
 	std::unique_ptr<unsigned char[]> pBytes = nullptr;
 	size_t cbSize = 90000;
-
+	size_t sizeOut = 0;
 	pBytes = std::make_unique<unsigned char[]>(cbSize);
 
-	std::wstring name = L"TestAIK";
-	NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
+	SPOK_Blob::Blob aikPub;
 
-	bool exists = SPC_AIKExists(name.c_str(), flag);
-
-	if (!exists)
 	{
-		auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestNonce"));
-		SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
+		std::wstring name = L"TestAIK";
+		NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
+
+		bool exists = SPC_AIKExists(name.c_str(), flag);
+
+		if (!exists)
+		{
+			auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestNonce"));
+			SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
+		}
+
+		SPC_AIKGetPublicKey(name.c_str(), flag, pBytes.get(), cbSize, sizeOut);
+		aikPub = SPOK_Blob::New(pBytes.get(), sizeOut);
+		
+		auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestPlatformNonce"));
+		SPC_AIKGetPlatformAttestation(name.c_str(), flag, nonce.data(), nonce.size(), (PCR_13 | PCR_14), pBytes.get(), cbSize, sizeOut);
+
+		REQUIRE(sizeOut > 0);
+
 	}
+	{
+		auto handle = SPS_AIKPlatformAttest_Decode(pBytes.get(), sizeOut);
 
-	size_t sizeOut = 0;
-	auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestPlatformNonce"));
-	SPC_AIKGetPlatformAttestation(name.c_str(), flag, nonce.data(), nonce.size(), (PCR_13 | PCR_14), pBytes.get(), cbSize, sizeOut);
+		REQUIRE((void*)handle != nullptr);
 
-	REQUIRE(sizeOut > 0);
+		auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestPlatformNonce"));
+
+		auto valid = SPS_AIKPlatformAttest_Verify(handle, nonce.data(), nonce.size(), aikPub.data(), aikPub.size());
+
+		REQUIRE(valid);
+
+		uint8_t hashSize;
+		SPS_AIKPlatformAttest_GetPCR(handle, pBytes.get(), cbSize, sizeOut, hashSize);
+
+		SPOK_Pcrs pcrs = SPOK_Pcrs(SPOK_Blob::New(pBytes.get(), sizeOut));
+
+		REQUIRE(pcrs.GetDigestSize() == hashSize);
+		REQUIRE(pcrs.GetBlob().size() > 0);
+
+		SPS_AIKPlatformAttest_GetTcgLog(handle, pBytes.get(), cbSize, sizeOut);
+
+		auto log = TcgLog::Parse(SPOK_Blob::New(pBytes.get(), sizeOut));
+		REQUIRE(log.Events.size() > 0);
+
+		SPS_AttestationDestroy(handle);
+	}
 }
 
 TEST_CASE("SPC_AIKGetKeyAttestation")

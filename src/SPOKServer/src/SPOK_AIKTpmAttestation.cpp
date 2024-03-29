@@ -87,13 +87,13 @@ bool SPOK_AIKTpmAttestation::VerifySignature() const
 	return verified;
 }
 
-bool SPOK_AIKTpmAttestation::Verify(const SPOK_Nonce::Nonce& nonce) const
+SPOK_VerifyResult SPOK_AIKTpmAttestation::Verify(const SPOK_AIKTpmVerify& verify) const
 {
 	auto creation = VerifyCreation();
 	auto name = VerifyName();
-	auto nonceCheck = VerifyNonce(nonce);
+	auto nonceCheck = VerifyNonce(verify.Nonce);
 	auto signature = VerifySignature();
-	return creation && name && nonceCheck && signature;
+	return SPOK_TpmVerifyResult {creation, name, nonceCheck, signature };
 }
 
 

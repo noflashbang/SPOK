@@ -2,6 +2,7 @@
 
 #include "SPOKCore.h"
 #include "StandardLib.h"
+#include "AttestationVariants.h"
 #include "SPOKBlob.h"
 #include "SPOKNonce.h"
 #include "TPM_20.h"
@@ -20,7 +21,7 @@ public:
 	bool VerifySignature(SPOK_Blob::Blob aikPubBlob) const;
 	bool VerifyPcrs() const;
 
-	bool Verify(const SPOK_Nonce::Nonce& nonce, SPOK_Blob::Blob aikPubBlob) const;
+	SPOK_VerifyResult Verify(const SPOK_AIKPlatformVerify& verify) const;
 
 private:
 	SPOK_PLATFORM_ATT_BLOB m_AttBlobHeader;

@@ -1,5 +1,6 @@
 #include "SPOKPcrs.h"
 #include "Util.h"
+#include <TPM_20.h>
 
 
 SPOK_Pcrs::SPOK_Pcrs(uint8_t digestSize) : _digestSize(digestSize)
@@ -70,6 +71,15 @@ void SPOK_Pcrs::SetPcrTable(const std::array<uint8_t, TPM_PCR_TABLE_MAXSIZE>& pc
 uint8_t SPOK_Pcrs::GetDigestSize() const
 {
 	return _digestSize;
+}
+
+uint16_t SPOK_Pcrs::GetAlgId() const
+{
+	if (_digestSize == SHA256_DIGEST_SIZE)
+	{
+		return TPM_API_ALG_ID_SHA256;
+	}
+	return TPM_API_ALG_ID_SHA1;
 }
 
 SPOK_Pcrs SPOK_Pcrs::GetFiltered(uint32_t mask) const

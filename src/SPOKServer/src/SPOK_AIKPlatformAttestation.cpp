@@ -112,14 +112,39 @@ bool SPOK_AIKPlatformAttestation::VerifyPcrs() const
 			equal &= (pcr[i] == trustedPcr[i]);
 		}
 	}
+
+	//exit early if the pcrs don't match, no need to compute the log
+	if (!equal)
+	{
+		return false;
+	}
+
+	//check that the tcg log pcrs match the quoted pcrs
+	auto log = TcgLog::Parse(m_tsbLog);
+	auto logPcrs = SPOK_Pcrs(TcgLog::ComputeSoftPCRTable(log, table.GetAlgId() == TPM_API_ALG_ID_SHA1 ? TPM_ALG_ID::TPM_ALG_SHA1 : TPM_ALG_ID::TPM_ALG_SHA256));
+
+	for (int i = 0; i < TPM_PCRS_CNT; i++)
+	{
+		auto pcr = table.GetPcr(i);
+		auto trustedPcr = logPcrs.GetPcr(i);
+
+		//check the pcrs match to hash size, check them all and do it in constant time
+		//to avoid timing attacks
+		for (size_t i = 0; i < hashSize; i++)
+		{
+			equal &= (pcr[i] == trustedPcr[i]);
+		}
+	}
+
+	//if this is true then the quoted pcrs and the related events in the log are valid and trustworthy
 	return equal;
 }
-bool SPOK_AIKPlatformAttestation::Verify(const SPOK_Nonce::Nonce& nonce, SPOK_Blob::Blob aikPubBlob) const
+SPOK_VerifyResult SPOK_AIKPlatformAttestation::Verify(const SPOK_AIKPlatformVerify& verify) const
 {
-	auto nonceVerify = VerifyNonce(nonce);
-	auto sigVerify = VerifySignature(aikPubBlob);
+	auto nonceVerify = VerifyNonce(verify.Nonce);
+	auto sigVerify = VerifySignature(verify.AIKBlob);
 	auto pcrsVerify = VerifyPcrs();
-	return nonceVerify && sigVerify && pcrsVerify;
+	return SPOK_AIKPlatformVerifyResult { nonceVerify, sigVerify, pcrsVerify };
 }
 
 

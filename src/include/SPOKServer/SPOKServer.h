@@ -18,10 +18,9 @@ public:
 
 
 	//AIK Platform Attestation
-	void AIKAttestationDecode();
-	void AIKAttestationGetPCR();
-	void AIKAttestationGetTcgLog();
-	void AIKAttestationVerify();
+	SPOK_AIKPlatformAttestation AIKAttestationDecode(const SPOK_Blob::Blob& attQuote);
+	SPOK_Pcrs AIKAttestationGetPCR(IAttestation& attestation);
+	SPOK_Blob::Blob AIKAttestationGetTcgLog(IAttestation& attestation);
 
 	//AIK TPM Attestation
 	SPOK_AIKTpmAttestation AIKTpmAttestationDecode(const SPOK_Blob::Blob& idBinding);
@@ -31,9 +30,7 @@ public:
 	void AIKKeyAttestationDecode();
 	void AIKKeyAttestationVerify();
 
-	bool AttestationVerify(IAttestation& attestation, const SPOK_Nonce::Nonce& nonce);
-	bool AttestationVerifyNonce(IAttestation& attestation, const SPOK_Nonce::Nonce& nonce);
-	bool AttestationVerifySignature(IAttestation& attestation);
+	SPOK_VerifyResult AttestationVerify(IAttestation& attestation, const SPOK_AttestationVerify& verify);
 
 	//Basic Crypto Operations
 	SPOK_Blob::Blob Decrypt(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data);

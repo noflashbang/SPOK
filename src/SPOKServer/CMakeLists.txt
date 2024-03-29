@@ -20,6 +20,7 @@ set( libHeaders
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOK_AIKKeyAttestation.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/AttestationManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/IAttestation.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/AttestationVariants.h
 )
 
 set( libSource

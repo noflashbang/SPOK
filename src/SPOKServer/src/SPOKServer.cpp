@@ -9,6 +9,31 @@ SPOKServer::~SPOKServer()
 {
 }
 
+SPOK_AIKPlatformAttestation SPOKServer::AIKAttestationDecode(const SPOK_Blob::Blob& attQuote)
+{
+	return SPOK_AIKPlatformAttestation(attQuote);
+}
+SPOK_Pcrs SPOKServer::AIKAttestationGetPCR(IAttestation& attestation)
+{
+	if (!std::holds_alternative<SPOK_AIKPlatformAttestation>(attestation))
+	{
+		throw std::runtime_error("Attestation is not an AIK Platform Attestation");
+	}
+
+	auto aikPlatformAttestation = std::get<SPOK_AIKPlatformAttestation>(attestation);
+	return aikPlatformAttestation.GetTrustedPcrs();
+}
+SPOK_Blob::Blob SPOKServer::AIKAttestationGetTcgLog(IAttestation& attestation)
+{
+	if (!std::holds_alternative<SPOK_AIKPlatformAttestation>(attestation))
+	{
+		throw std::runtime_error("Attestation is not an AIK Platform Attestation");
+	}
+
+	auto aikPlatformAttestation = std::get<SPOK_AIKPlatformAttestation>(attestation);
+	return aikPlatformAttestation.GetTrustedTsbLog();
+}
+
 SPOK_AIKTpmAttestation SPOKServer::AIKTpmAttestationDecode(const SPOK_Blob::Blob& idBinding)
 {
 	return SPOK_AIKTpmAttestation(idBinding);
@@ -20,86 +45,11 @@ SPOK_Blob::Blob SPOKServer::AIKGetTpmAttestationChallenge(const uint16_t ekNameA
 	return challenge;
 };
 
-bool SPOKServer::AttestationVerify(IAttestation& attestation, const SPOK_Nonce::Nonce& nonce)
+SPOK_VerifyResult SPOKServer::AttestationVerify(IAttestation& attestation, const SPOK_AttestationVerify& verify)
 {
-	struct VerifyVisitor 
-	{
-		SPOK_Nonce::Nonce nonce;
-
-		VerifyVisitor(const SPOK_Nonce::Nonce& nonce) : nonce(nonce) {}
-
-		bool operator()(SPOK_AIKPlatformAttestation& attestation) const
-		{			
-			return false;
-		}
-
-		bool operator()(SPOK_AIKTpmAttestation& attestation) const 
-		{
-			return attestation.Verify(nonce);
-		}
-
-		bool operator()(SPOK_AIKKeyAttestation& attestation) const
-		{
-			return false;
-		}
-	};
-
 	// Use the visitor on a variant
-	return std::visit(VerifyVisitor(nonce), attestation);
+	return std::visit(IAttestationVerifyVisitor(verify), attestation);
 }
-
-bool SPOKServer::AttestationVerifyNonce(IAttestation& attestation, const SPOK_Nonce::Nonce& nonce)
-{
-	struct VerifyVisitor
-	{
-		SPOK_Nonce::Nonce nonce;
-
-		VerifyVisitor(const SPOK_Nonce::Nonce& nonce) : nonce(nonce) {}
-
-		bool operator()(SPOK_AIKPlatformAttestation& attestation) const
-		{
-			return false;
-		}
-
-		bool operator()(SPOK_AIKTpmAttestation& attestation) const
-		{
-			return attestation.VerifyNonce(nonce);
-		}
-
-		bool operator()(SPOK_AIKKeyAttestation& attestation) const
-		{
-			return false;
-		}
-	};
-
-	// Use the visitor on a variant
-	return std::visit(VerifyVisitor(nonce), attestation);
-}
-
-bool SPOKServer::AttestationVerifySignature(IAttestation& attestation)
-{
-	struct VerifyVisitor
-	{
-		bool operator()(SPOK_AIKPlatformAttestation& attestation) const
-		{
-			return false;
-		}
-
-		bool operator()(SPOK_AIKTpmAttestation& attestation) const
-		{
-			return attestation.VerifySignature();
-		}
-
-		bool operator()(SPOK_AIKKeyAttestation& attestation) const
-		{
-			return false;
-		}
-	};
-
-	// Use the visitor on a variant
-	return std::visit(VerifyVisitor(), attestation);
-}
-
 
 //Basic Crypto Operations
 SPOK_Blob::Blob SPOKServer::Decrypt(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data)

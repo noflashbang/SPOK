@@ -9,6 +9,56 @@ void SPS_AttestationDestroy(SPOK_Handle hAttestationHandle)
 	AttestationManager::Destroy(hAttestationHandle);
 }
 
+SPOK_Handle SPS_AIKPlatformAttest_Decode(const uint8_t* pBlob, const size_t cbBlob)
+{
+	auto blob = SPOK_Blob::New(pBlob, cbBlob);
+	auto server = SPOKServer();
+	auto attestation = server.AIKAttestationDecode(blob);
+	return AttestationManager::Add(attestation);
+}
+void SPS_AIKPlatformAttest_GetPCR(SPOK_Handle hAttest, uint8_t* pPcrTable, const size_t cbPcrTable, size_t& sizeOut, uint8_t& hashSizeOut)
+{
+	auto attestation = AttestationManager::Get(hAttest);
+	if (!attestation.has_value())
+	{
+		throw std::runtime_error("Attestation not found");
+	}
+
+	auto server = SPOKServer();
+	auto pcrs = server.AIKAttestationGetPCR(attestation.value());
+	auto blob = pcrs.GetBlob();
+	SPOK_Blob::Copy2CStylePtr(blob, pPcrTable, cbPcrTable, sizeOut);
+	hashSizeOut = pcrs.GetDigestSize();
+}
+
+void SPS_AIKPlatformAttest_GetTcgLog(SPOK_Handle hAttest, uint8_t* pLog, const size_t cbLog, size_t& sizeOut)
+{
+	auto attestation = AttestationManager::Get(hAttest);
+	if (!attestation.has_value())
+	{
+		throw std::runtime_error("Attestation not found");
+	}
+
+	auto server = SPOKServer();
+	auto log = server.AIKAttestationGetTcgLog(attestation.value());
+	SPOK_Blob::Copy2CStylePtr(log, pLog, cbLog, sizeOut);
+}
+
+bool SPS_AIKPlatformAttest_Verify(SPOK_Handle hAttest, const uint8_t* pNonce, const size_t cbNonce, const uint8_t* pAikPub, const size_t cbAikPub)
+{
+	auto attestation = AttestationManager::Get(hAttest);
+	if (!attestation.has_value())
+	{
+		throw std::runtime_error("Attestation not found");
+	}
+	auto nonce = SPOK_Nonce::Make(pNonce, cbNonce);
+	auto aikPub = SPOK_Blob::New(pAikPub, cbAikPub);
+	auto server = SPOKServer();
+	auto verify = SPOK_AIKPlatformVerify { nonce, aikPub };
+	auto result = server.AttestationVerify(attestation.value(), verify);
+	return std::get<SPOK_TpmVerifyResult>(result).Result();
+}
+
 SPOK_Handle SPS_AIKTpmAttest_Decode(const uint8_t* pBlob, const size_t cbBlob)
 {
 	auto blob = SPOK_Blob::New(pBlob, cbBlob);
@@ -47,28 +97,9 @@ bool SPS_AIKAttest_Verify(SPOK_Handle hAttest, const uint8_t* nonce, const size_
 	}
 	auto server = SPOKServer();
 	auto blob = SPOK_Nonce::Make(nonce, cbNonce);
-	return server.AttestationVerify(attestation.value(), blob);
-}
-bool SPS_AIKAttest_VerifyNonce(SPOK_Handle hAttest, const uint8_t* nonce, const size_t cbNonce)
-{
-	auto attestation = AttestationManager::Get(hAttest);
-	if (!attestation.has_value())
-	{
-		return false;
-	}
-	auto server = SPOKServer();
-	auto blob = SPOK_Nonce::Make(nonce, cbNonce);
-	return server.AttestationVerifyNonce(attestation.value(), blob);
-}
-bool SPS_AIKAttest_VerifySignature(SPOK_Handle hAttest)
-{
-	auto attestation = AttestationManager::Get(hAttest);
-	if (!attestation.has_value())
-	{
-		return false;
-	}
-	auto server = SPOKServer();
-	return server.AttestationVerifySignature(attestation.value());
+	auto verify = SPOK_AIKTpmVerify{ blob };
+	auto result = server.AttestationVerify(attestation.value(), verify);
+	return std::get<SPOK_TpmVerifyResult>(result).Result();
 }
 
 //Basic Crypto Operations

@@ -44,10 +44,10 @@ extern "C"
 	SPOKSERVER_API void SPS_AttestationDestroy(SPOK_Handle hAttestationHandle);
 
 	//AIK Platform Attestation
-	SPOKSERVER_API void SPS_AIKPlatformAttest_Decode();
-	SPOKSERVER_API void	SPS_AIKPlatformAttest_GetPCR();
-	SPOKSERVER_API void SPS_AIKPlatformAttest_GetTcgLog();
-	SPOKSERVER_API void SPS_AIKPlatformAttest_Verify();
+	SPOKSERVER_API SPOK_Handle SPS_AIKPlatformAttest_Decode(const uint8_t* pBlob, const size_t cbBlob);
+	SPOKSERVER_API void	SPS_AIKPlatformAttest_GetPCR(SPOK_Handle hAttest, uint8_t* pPcrTable, const size_t cbPcrTable, size_t& sizeOut, uint8_t& hashSizeOut);
+	SPOKSERVER_API void SPS_AIKPlatformAttest_GetTcgLog(SPOK_Handle hAttest, uint8_t* pLog, const size_t cbLog, size_t& sizeOut);
+	SPOKSERVER_API bool SPS_AIKPlatformAttest_Verify(SPOK_Handle hAttest, const uint8_t* pNonce, const size_t cbNonce, const uint8_t* pAikPub, const size_t cbAikPub);
 
 	//AIK Tpm Attestation
 	SPOKSERVER_API SPOK_Handle SPS_AIKTpmAttest_Decode(const uint8_t* pBlob, const size_t cbBlob);
@@ -59,8 +59,7 @@ extern "C"
 
 	//AIK Attestation Verifications
 	SPOKSERVER_API bool SPS_AIKAttest_Verify(SPOK_Handle hAttest, const uint8_t* nonce, const size_t cbNonce);
-	SPOKSERVER_API bool SPS_AIKAttest_VerifyNonce(SPOK_Handle hAttest, const uint8_t* nonce, const size_t cbNonce);
-	SPOKSERVER_API bool SPS_AIKAttest_VerifySignature(SPOK_Handle hAttest);
+
 
 	//Basic Crypto Operations
 	SPOKSERVER_API void SPS_Decrypt(const uint8_t* pKey, const size_t cbKey, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut);

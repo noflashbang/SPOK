@@ -54,6 +54,7 @@ public:
 	void SetPcrTable(const std::array<uint8_t, TPM_PCR_TABLE_MAXSIZE>& pcrTable);
 
 	uint8_t GetDigestSize() const;
+	uint16_t GetAlgId() const;
 
 	SPOK_Pcrs GetFiltered(uint32_t mask) const;
 
