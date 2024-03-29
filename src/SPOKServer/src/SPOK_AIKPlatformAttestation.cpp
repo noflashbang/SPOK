@@ -58,7 +58,7 @@ SPOK_Blob::Blob SPOK_AIKPlatformAttestation::GetTrustedPcrs() const
 
 	auto mask = m_Quote.PcrSelection[0].GetMask();
 	auto trustedPcrs = table.GetFiltered(mask);
-	return trustedPcrs;
+	return trustedPcrs.GetBlob();
 }
 SPOK_Blob::Blob SPOK_AIKPlatformAttestation::GetTrustedTsbLog() const
 {
@@ -75,15 +75,44 @@ SPOK_Blob::Blob SPOK_AIKPlatformAttestation::GetTrustedTsbLog() const
 
 bool SPOK_AIKPlatformAttestation::VerifyNonce(const SPOK_Nonce::Nonce& nonce) const
 {
-
+	auto quoteNonce = m_Quote.CreationNonce;
+	return SPOK_Nonce::Equal(quoteNonce, nonce);
 }
 bool SPOK_AIKPlatformAttestation::VerifySignature(SPOK_Blob::Blob aikPubBlob) const
 {
+	auto hasher = Hasher::Create(TPM_API_ALG_ID_SHA1);
+	auto digest = hasher.OneShotHash(m_Quote.Raw);
 
+	auto key = BCryptUtil::Open(aikPubBlob);
+	key.SetSignHashAlg(TPM_API_ALG_ID_SHA1); //set the correct hash algorithm for padding
+
+	auto verified = key.Verify(digest, m_Signature);
+	return verified;
 }
 bool SPOK_AIKPlatformAttestation::VerifyPcrs() const
 {
+	auto table = SPOK_Pcrs(m_pcrs);
+	auto trustedPcrs = SPOK_Pcrs(GetTrustedPcrs());
+	
+	if (table.GetDigestSize() != trustedPcrs.GetDigestSize())
+	{
+		return false;
+	}
+	auto hashSize = table.GetDigestSize();
+	bool equal = true;
+	for (int i = 0; i < TPM_PCRS_CNT; i++)
+	{
+		auto pcr = table.GetPcr(i);
+		auto trustedPcr = trustedPcrs.GetPcr(i);
 
+		//check the pcrs match to hash size, check them all and do it in constant time
+		//to avoid timing attacks
+		for (size_t i = 0; i < hashSize; i++)
+		{
+			equal &= (pcr[i] == trustedPcr[i]);
+		}
+	}
+	return equal;
 }
 bool SPOK_AIKPlatformAttestation::Verify(const SPOK_Nonce::Nonce& nonce, SPOK_Blob::Blob aikPubBlob) const
 {

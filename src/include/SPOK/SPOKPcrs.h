@@ -43,6 +43,8 @@ public:
 	SPOK_Pcrs(SPOK_Blob::Blob blob);
 	~SPOK_Pcrs() = default;
 
+	void FillDefaultPcrs();
+
 	SPOK_Blob::Blob GetBlob() const;
 
 	std::array<uint8_t, TPM_PCRS_MAXSIZE> GetPcr(const uint8_t pcrRegister) const;
@@ -52,6 +54,8 @@ public:
 	void SetPcrTable(const std::array<uint8_t, TPM_PCR_TABLE_MAXSIZE>& pcrTable);
 
 	uint8_t GetDigestSize() const;
+
+	SPOK_Pcrs GetFiltered(uint32_t mask) const;
 
 private:
 	std::array<uint8_t, TPM_PCR_TABLE_MAXSIZE> _pcrTable;

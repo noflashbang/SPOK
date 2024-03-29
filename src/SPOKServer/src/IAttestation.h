@@ -19,6 +19,7 @@ enum class AttestationType : uint32_t
 
 using IAttestation = std::variant<SPOK_AIKPlatformAttestation, SPOK_AIKTpmAttestation, SPOK_AIKKeyAttestation>;
 
+
 class Attestation
 {
 public:
@@ -27,7 +28,7 @@ public:
 		switch (type)
 		{
 		case AttestationType::AIKPlatformAttestation:
-			return SPOK_AIKPlatformAttestation();
+			return SPOK_AIKPlatformAttestation(blob);
 		case AttestationType::AIKTpmAttestation:
 			return SPOK_AIKTpmAttestation(blob);
 		case AttestationType::AIKKeyAttestation:

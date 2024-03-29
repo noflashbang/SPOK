@@ -8,6 +8,7 @@
 
 class SPOK_AIKPlatformAttestation
 {
+public:
 	SPOK_AIKPlatformAttestation(SPOK_Blob::Blob attQuote);
 	~SPOK_AIKPlatformAttestation();
 

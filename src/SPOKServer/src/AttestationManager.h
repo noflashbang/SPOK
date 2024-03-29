@@ -40,7 +40,6 @@ protected:
 	AttestationManager();
 	~AttestationManager();
 	
-
 private:
 
 	static AttestationManager* m_instance;

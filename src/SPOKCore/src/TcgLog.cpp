@@ -243,6 +243,7 @@ TcgLog TcgLog::Filter(const TcgLog& tcgLog, uint32_t pcrMask)
 
 std::vector<uint8_t> TcgLog::ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_ID algId)
 {
+	uint32_t hashSize = TcgLog::GetDigestSize(algId);
 	HasherType hasherType;
 	if (algId == TPM_ALG_ID::TPM_ALG_SHA1)
 	{
@@ -269,7 +270,7 @@ std::vector<uint8_t> TcgLog::ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_I
 	//foreach pcr compute the hash of all the events
 	for (uint32_t pcrIndex = 0; pcrIndex < 24; pcrIndex++)
 	{
-		std::vector<uint8_t> pcrValue;
+		std::vector<uint8_t> pcrValue(hashSize);
 		auto fillValue = (pcrIndex <= 15 || pcrIndex >= 24) ? 0x00 : 0xFF;
 		std::fill(pcrValue.begin(), pcrValue.end(), fillValue);
 		for (const auto& event : tcgLog.Events)
