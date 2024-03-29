@@ -31,7 +31,7 @@ SPOK_Handle AttestationManager::AddAttestation(IAttestation attestation)
 	{
 		std::chrono::nanoseconds ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch());
 		SPOK_Handle handle = ns.count();
-		m_handles[handle] = attestation;
+		m_handles.emplace(handle, attestation);
 		return handle;
 	}
 }
@@ -48,13 +48,14 @@ std::optional<IAttestation> AttestationManager::GetAttestation(SPOK_Handle handl
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	{
-		if (m_handles.find(handle) == m_handles.end())
+		auto at = m_handles.find(handle);
+		if (at == m_handles.end())
 		{
 			return std::nullopt;
 		}
 		else
 		{
-			return m_handles[handle];
+			return at->second;
 		}
 	}
 }
