@@ -15,7 +15,7 @@ SPOK_AIKPlatformAttestation::SPOK_AIKPlatformAttestation(SPOK_Blob::Blob attQuot
 	}
 
 	m_AttBlobHeader.TpmVersion = attQuoteReader.LE_Read32();
-	if (m_AttBlobHeader.TpmVersion != TPM_VERSION_20)
+	if (m_AttBlobHeader.TpmVersion != SPOK_TPM_VERSION_20)
 	{
 		throw std::invalid_argument("Invalid TPM Version");
 	}

@@ -56,7 +56,7 @@ bool SPS_AIKPlatformAttest_Verify(SPOK_Handle hAttest, const uint8_t* pNonce, co
 	auto server = SPOKServer();
 	auto verify = SPOK_AIKPlatformVerify { nonce, aikPub };
 	auto result = server.AttestationVerify(attestation.value(), verify);
-	return std::get<SPOK_TpmVerifyResult>(result).Result();
+	return std::get<SPOK_AIKPlatformVerifyResult>(result).Result();
 }
 
 SPOK_Handle SPS_AIKTpmAttest_Decode(const uint8_t* pBlob, const size_t cbBlob)

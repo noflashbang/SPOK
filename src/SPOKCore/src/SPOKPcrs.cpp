@@ -29,6 +29,7 @@ void SPOK_Pcrs::FillDefaultPcrs()
 		std::vector<uint8_t> pcrValue(_digestSize);
 		auto fillValue = (pcrIndex <= 15 || pcrIndex >= TPM_PCRS_CNT) ? 0x00 : 0xFF;
 		std::fill(pcrValue.begin(), pcrValue.end(), fillValue);
+		std::copy(pcrValue.begin(), pcrValue.end(), _pcrTable.begin() + (pcrIndex * _digestSize));
 	}
 }
 

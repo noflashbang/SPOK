@@ -123,7 +123,7 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 
 	SPOK_KEY_ATT_BLOB keyAttBlob;
 	keyAttBlob.Magic = SPOK_KEY_ATT_MAGIC;
-	keyAttBlob.TpmVersion = TPM_VERSION_20;
+	keyAttBlob.TpmVersion = SPOK_TPM_VERSION_20;
 	keyAttBlob.HeaderSize = sizeof(SPOK_KEY_ATT_BLOB);
 	keyAttBlob.KeyAttestSize = certifyInfoSize;
 	keyAttBlob.SignatureSize = sigSize;
@@ -256,7 +256,7 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 
 	SPOK_PLATFORM_ATT_BLOB platAttBlob;
 	platAttBlob.Magic = SPOK_PLATFORM_ATT_MAGIC;
-	platAttBlob.TpmVersion = TPM_VERSION_20;
+	platAttBlob.TpmVersion = SPOK_TPM_VERSION_20;
 	platAttBlob.HeaderSize = sizeof(SPOK_PLATFORM_ATT_BLOB);
 	platAttBlob.PcrValuesSize = pcrsSize;
 	platAttBlob.QuoteSize = quoteSize;
@@ -411,7 +411,7 @@ TPM2B_ATTEST_QUOTE TPM2B_ATTEST_QUOTE::Decode(const SPOK_Blob::Blob& attestBlob)
 	for (auto i = 0; i < pcrSelectionSize; i++)
 	{
 		auto algId = br.BE_Read16();
-		auto bitmapSize = br.BE_Read16();
+		auto bitmapSize = br.Read();
 		auto bitmap = br.Read(bitmapSize);
 
 		prcSelection.push_back(TPM2B_PCR_SELECTION{ algId, bitmap });
