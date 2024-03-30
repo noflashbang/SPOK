@@ -452,6 +452,7 @@ TEST_CASE("SPC_AIKGetPlatformAttestation")
 
 		SPOK_Pcrs pcrs = SPOK_Pcrs(SPOK_Blob::New(pBytes.get(), sizeOut));
 
+		REQUIRE(pcrs.GetMask() == (PCR_13 | PCR_14));
 		REQUIRE(pcrs.GetDigestSize() == hashSize);
 		REQUIRE(pcrs.GetBlob().size() > 0);
 

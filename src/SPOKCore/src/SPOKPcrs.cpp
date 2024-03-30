@@ -27,9 +27,14 @@ void SPOK_Pcrs::FillDefaultPcrs()
 	for (uint32_t pcrIndex = 0; pcrIndex < TPM_PCRS_CNT; pcrIndex++)
 	{
 		std::vector<uint8_t> pcrValue(_digestSize);
-		auto fillValue = (pcrIndex <= 15 || pcrIndex >= TPM_PCRS_CNT) ? 0x00 : 0xFF;
-		std::fill(pcrValue.begin(), pcrValue.end(), fillValue);
-		std::copy(pcrValue.begin(), pcrValue.end(), _pcrTable.begin() + (pcrIndex * _digestSize));
+		if (pcrIndex <= 15 || pcrIndex >= TPM_PCRS_CNT)
+		{
+			std::copy(_ZERO_PCR.begin(), _ZERO_PCR.begin() + _digestSize, _pcrTable.begin() + (pcrIndex * _digestSize));
+		}
+		else
+		{
+			std::copy(_ONE_PCR.begin(), _ONE_PCR.begin() + _digestSize, _pcrTable.begin() + (pcrIndex * _digestSize));
+		}
 	}
 }
 
@@ -81,6 +86,30 @@ uint16_t SPOK_Pcrs::GetAlgId() const
 		return TPM_API_ALG_ID_SHA256;
 	}
 	return TPM_API_ALG_ID_SHA1;
+}
+
+uint32_t SPOK_Pcrs::GetMask() const
+{
+	uint32_t mask = 0;
+	for (uint32_t pcrIndex = 0; pcrIndex < TPM_PCRS_CNT; pcrIndex++)
+	{
+		auto pcrValue = GetPcr(pcrIndex);
+		if ((pcrIndex <= 15 || pcrIndex >= TPM_PCRS_CNT))
+		{
+			if (!std::all_of(pcrValue.begin(), pcrValue.end(), [](uint8_t i) { return i == 0x00; }))
+			{
+				mask |= (1 << pcrIndex);
+			}
+		}
+		else
+		{
+			if (!std::all_of(pcrValue.begin(), pcrValue.end(), [](uint8_t i) { return i == 0xFF; }))
+			{
+				mask |= (1 << pcrIndex);
+			}
+		}
+	}
+	return mask;
 }
 
 SPOK_Pcrs SPOK_Pcrs::GetFiltered(uint32_t mask) const

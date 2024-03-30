@@ -105,6 +105,7 @@ struct TcgLog
     static TcgLog Parse(const std::vector<uint8_t>& tcgLogData);
     static TcgLog Filter(const TcgLog& tcgLog, uint32_t pcrMask);
     static std::vector<uint8_t> ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_ID algId);
+    static bool VerifyLogIntegrity(const TcgLog& tcgLog);
     static std::vector<uint8_t> Serialize(const TcgLog& tcgLog);
 };
 

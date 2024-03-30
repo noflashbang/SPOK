@@ -93,22 +93,30 @@ bool SPOK_AIKPlatformAttestation::VerifyPcrs() const
 {
 	auto trustedPcrs = SPOK_Pcrs(GetTrustedPcrs());
 	auto hashSize = trustedPcrs.GetDigestSize();
-
+	auto pcrMask = trustedPcrs.GetMask();
 	auto pcrBuffer = SPOK_Blob::Blob();
 	
 	bool equal = true;
 	for (int i = 0; i < TPM_PCRS_CNT; i++)
 	{
-		//TODO: filter to only the pcrs that are selected in the quote
+		if (!(pcrMask & (1 << i)))
+		{
+			continue;
+		}
 		auto pcr = trustedPcrs.GetPcr(i);
 		std::copy(pcr.begin(), pcr.end(), std::back_inserter(pcrBuffer));
 	}
 
-	auto hasher = Hasher::Create(trustedPcrs.GetAlgId());
+	auto hasher = Hasher::Create(TPM_API_ALG_ID_SHA1);
 	auto pcrsDigest = hasher.OneShotHash(pcrBuffer);
 
+	if (pcrsDigest.size() != m_Quote.PcrDigest.size())
+	{
+		return false;
+	}
+
 	//compare the pcrs digest to the quote digest
-	for (size_t i = 0; i < hashSize; i++)
+	for (size_t i = 0; i < pcrsDigest.size(); i++)
 	{
 		equal &= (pcrsDigest[i] == m_Quote.PcrDigest[i]);
 	}
@@ -121,6 +129,15 @@ bool SPOK_AIKPlatformAttestation::VerifyPcrs() const
 
 	//check that the tcg log pcrs match the quoted pcrs
 	auto log = TcgLog::Parse(m_tsbLog);
+
+	//check that the log is valid
+	auto validLog = TcgLog::VerifyLogIntegrity(log);
+	if (!validLog)
+	{
+		return false;
+	}
+
+	//compute the pcrs from the log - this is trustable as we just verified the log
 	auto logPcrs = SPOK_Pcrs(TcgLog::ComputeSoftPCRTable(log, trustedPcrs.GetAlgId() == TPM_API_ALG_ID_SHA1 ? TPM_ALG_ID::TPM_ALG_SHA1 : TPM_ALG_ID::TPM_ALG_SHA256));
 
 	if (trustedPcrs.GetDigestSize() != logPcrs.GetDigestSize())
@@ -128,6 +145,7 @@ bool SPOK_AIKPlatformAttestation::VerifyPcrs() const
 		return false;
 	}
 
+	//compare the pcrs from the log to the trusted pcrs
 	for (int i = 0; i < TPM_PCRS_CNT; i++)
 	{
 		auto pcr = trustedPcrs.GetPcr(i);

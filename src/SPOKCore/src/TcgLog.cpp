@@ -303,6 +303,33 @@ std::vector<uint8_t> TcgLog::ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_I
 	return softPCRTable;
 }
 
+bool TcgLog::VerifyLogIntegrity(const TcgLog& tcgLog)
+{
+	bool valid = true;
+	
+	//check the event digest against the data
+	for (const auto& event : tcgLog.Events)
+	{
+		for (const auto& digest : event.Digests)
+		{
+			HasherType hasherType = HasherType::SHA256;
+			if (digest.AlgorithmId == TPM_ALG_ID::TPM_ALG_SHA1)
+			{
+				hasherType = HasherType::SHA1;
+			}
+			HasherUtil hasher(hasherType);
+			auto computedDigest = hasher.OneShotHash(event.Data);
+			if (digest.Digest != computedDigest)
+			{
+				valid = false;
+				break;
+			}
+		}
+	}
+
+	return valid;
+}
+
 std::vector<uint8_t> TcgLog::Serialize(const TcgLog& tcgLog)
 {
 	//calculate the size needed for the blob
