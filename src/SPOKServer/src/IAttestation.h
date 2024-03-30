@@ -31,7 +31,7 @@ public:
 		case AttestationType::AIKTpmAttestation:
 			return SPOK_AIKTpmAttestation(blob);
 		case AttestationType::AIKKeyAttestation:
-			return SPOK_AIKKeyAttestation();
+			return SPOK_AIKKeyAttestation(blob);
 		default:
 			throw std::invalid_argument("Invalid AttestationType");
 		}

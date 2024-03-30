@@ -83,6 +83,22 @@ struct TPM2B_ATTEST_QUOTE
 	static TPM2B_ATTEST_QUOTE Decode(const SPOK_Blob::Blob& attest);
 };
 
+struct TPM2B_ATTEST_CERTIFY
+{
+	uint32_t Generated;
+	uint16_t Type;
+	SPOK_Blob::Blob QualifiedSigner;
+	SPOK_Nonce::Nonce CreationNonce;
+	TPMS_CLOCK_INFO ClockInfo;
+	uint64_t FirmwareVersion;
+
+	SPOK_Blob::Blob Name;
+	SPOK_Blob::Blob QualifiedName;
+
+	SPOK_Blob::Blob Raw;
+	static TPM2B_ATTEST_CERTIFY Decode(const SPOK_Blob::Blob& attest);
+};
+
 struct TPM2B_ATTEST_CREATION
 {
 	uint32_t Generated;
@@ -91,6 +107,7 @@ struct TPM2B_ATTEST_CREATION
 	SPOK_Nonce::Nonce CreationNonce;
 	TPMS_CLOCK_INFO ClockInfo;
 	uint64_t FirmwareVersion;
+
 	SPOK_Blob::Blob ObjectName;
 	SPOK_Blob::Blob CreationHash;
 

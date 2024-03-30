@@ -426,6 +426,46 @@ TPM2B_ATTEST_QUOTE TPM2B_ATTEST_QUOTE::Decode(const SPOK_Blob::Blob& attestBlob)
 	return TPM2B_ATTEST_QUOTE{ generated, type, qualifiedSigner, creationNonce, clockInfo, firmwareVersion, prcSelection, pcrDigest, attestBlob };
 }
 
+TPM2B_ATTEST_CERTIFY TPM2B_ATTEST_CERTIFY::Decode(const SPOK_Blob::Blob& certifyBlob)
+{
+	auto br = SPOK_BinaryReader(certifyBlob);
+
+	auto generated = br.BE_Read32();
+	if (generated != 0xff544347) // TPM_GENERATED
+	{
+		throw std::runtime_error("Invalid attestation generation");
+	}
+
+	auto type = br.BE_Read16();
+	if (type != 0x8017) //TPM_ST_ATTEST_CERTIFY
+	{
+		throw std::runtime_error("Invalid attestation type");
+	}
+
+	auto qualifiedSignerSize = br.BE_Read16();
+	auto qualifiedSigner = br.Read(qualifiedSignerSize);
+
+	auto creationNonceSize = br.BE_Read16();
+	auto creationNonceBlob = br.Read(creationNonceSize);
+	auto creationNonce = SPOK_Nonce::Make(creationNonceBlob);
+
+	auto clock_clock = br.BE_Read64();
+	auto clock_resetCount = br.BE_Read32();
+	auto clock_restartCount = br.BE_Read32();
+	auto clock_safe = br.Read();
+	auto clockInfo = TPMS_CLOCK_INFO{ clock_clock, clock_resetCount, clock_restartCount, clock_safe };
+
+	auto firmwareVersion = br.BE_Read64();
+
+	auto nameSize = br.BE_Read16();
+	auto name = br.Read(nameSize);
+
+	auto qualifiedNameSize = br.BE_Read16();
+	auto qualifiedName = br.Read(qualifiedNameSize);
+	
+	return TPM2B_ATTEST_CERTIFY{ generated, type, qualifiedSigner, creationNonce, clockInfo, firmwareVersion, name, qualifiedName, certifyBlob };
+}
+
 TPM2B_ATTEST_CREATION TPM2B_ATTEST_CREATION::Decode(const SPOK_Blob::Blob& attestBlob)
 {
 	auto br = SPOK_BinaryReader(attestBlob);

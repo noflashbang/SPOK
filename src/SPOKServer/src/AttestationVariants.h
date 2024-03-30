@@ -15,7 +15,9 @@ struct SPOK_AIKTpmVerify
 
 struct SPOK_AIKKeyVerify
 {
-	SPOK_Blob::Blob Key;
+	SPOK_Nonce::Nonce Nonce;
+	SPOK_Blob::Blob AikBlob;
+	SPOK_Blob::Blob Name;
 };
 
 struct SPOK_AIKPlatformVerify
@@ -45,7 +47,11 @@ struct SPOK_AIKPlatformVerifyResult
 
 struct SPOK_AIKKeyVerifyResult
 {
-	inline bool Result() const { return false; };
+	inline bool Result() const { return NonceVerified && NameVerified && SignatureVerified; };
+
+	bool NonceVerified;
+	bool NameVerified;
+	bool SignatureVerified;
 };
 
 using SPOK_VerifyResult = std::variant<SPOK_AIKPlatformVerifyResult, SPOK_TpmVerifyResult, SPOK_AIKKeyVerifyResult>;
