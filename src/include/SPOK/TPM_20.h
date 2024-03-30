@@ -7,6 +7,7 @@
 #ifndef TPM_API_ALG_ID_SHA1
 #define TPM_API_ALG_ID_SHA1         ((uint16_t)0x0004)
 #endif
+#include <SPOKPcrs.h>
 #ifndef TPM_API_ALG_ID_SHA256
 #define TPM_API_ALG_ID_SHA256       ((uint16_t)0x000B)
 #endif
@@ -133,11 +134,31 @@ struct TPM2B_IDBINDING
 	TPMT_SIGNATURE Signature;
 };
 
+// Storage structure for 2.0 keys - 
+struct PCP_20_KEY_BLOB 
+{
+	uint32_t   magic;
+	uint32_t   cbHeader;
+	uint32_t   pcpType;
+	uint32_t   flags;
+	uint32_t   cbPublic;
+	uint32_t   cbPrivate;
+	uint32_t   cbMigrationPublic;
+	uint32_t   cbMigrationPrivate;
+	uint32_t   cbPolicyDigestList;
+	uint32_t   cbPCRBinding;
+	uint32_t   cbPCRDigest;
+	uint32_t   cbEncryptedSecret;
+	uint32_t   cbTpm12HostageBlob;
+	uint16_t  pcrAlgId;
+};
+
 class TPM_20
 {
 public:
 	static SPOK_Blob::Blob CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest);
 	static SPOK_Blob::Blob AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, uint32_t pcrsToInclude);
+	static SPOK_Blob::Blob WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& srk, const SPOK_Pcrs& boundPcrs);
 
 	static TPM2B_IDBINDING DecodeIDBinding(const SPOK_Blob::Blob& idBinding);
 	static SPOK_Blob::Blob GenerateChallengeCredential(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& aikName, const SPOK_Blob::Blob& secret);

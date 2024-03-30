@@ -275,6 +275,12 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	return quoteBlob;
 }
 
+SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& srk, const SPOK_Pcrs& boundPcrs)
+{
+	PPCP_20_KEY_BLOB keyBlob;
+
+}
+
 TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob::Blob& publicBlob)
 {
 	auto br = SPOK_BinaryReader(publicBlob);
