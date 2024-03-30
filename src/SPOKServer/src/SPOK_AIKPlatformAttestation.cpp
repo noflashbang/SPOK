@@ -91,26 +91,26 @@ bool SPOK_AIKPlatformAttestation::VerifySignature(SPOK_Blob::Blob aikPubBlob) co
 }
 bool SPOK_AIKPlatformAttestation::VerifyPcrs() const
 {
-	auto table = SPOK_Pcrs(m_pcrs);
 	auto trustedPcrs = SPOK_Pcrs(GetTrustedPcrs());
+	auto hashSize = trustedPcrs.GetDigestSize();
+
+	auto pcrBuffer = SPOK_Blob::Blob();
 	
-	if (table.GetDigestSize() != trustedPcrs.GetDigestSize())
-	{
-		return false;
-	}
-	auto hashSize = table.GetDigestSize();
 	bool equal = true;
 	for (int i = 0; i < TPM_PCRS_CNT; i++)
 	{
-		auto pcr = table.GetPcr(i);
-		auto trustedPcr = trustedPcrs.GetPcr(i);
+		//TODO: filter to only the pcrs that are selected in the quote
+		auto pcr = trustedPcrs.GetPcr(i);
+		std::copy(pcr.begin(), pcr.end(), std::back_inserter(pcrBuffer));
+	}
 
-		//check the pcrs match to hash size, check them all and do it in constant time
-		//to avoid timing attacks
-		for (size_t i = 0; i < hashSize; i++)
-		{
-			equal &= (pcr[i] == trustedPcr[i]);
-		}
+	auto hasher = Hasher::Create(trustedPcrs.GetAlgId());
+	auto pcrsDigest = hasher.OneShotHash(pcrBuffer);
+
+	//compare the pcrs digest to the quote digest
+	for (size_t i = 0; i < hashSize; i++)
+	{
+		equal &= (pcrsDigest[i] == m_Quote.PcrDigest[i]);
 	}
 
 	//exit early if the pcrs don't match, no need to compute the log
@@ -121,18 +121,23 @@ bool SPOK_AIKPlatformAttestation::VerifyPcrs() const
 
 	//check that the tcg log pcrs match the quoted pcrs
 	auto log = TcgLog::Parse(m_tsbLog);
-	auto logPcrs = SPOK_Pcrs(TcgLog::ComputeSoftPCRTable(log, table.GetAlgId() == TPM_API_ALG_ID_SHA1 ? TPM_ALG_ID::TPM_ALG_SHA1 : TPM_ALG_ID::TPM_ALG_SHA256));
+	auto logPcrs = SPOK_Pcrs(TcgLog::ComputeSoftPCRTable(log, trustedPcrs.GetAlgId() == TPM_API_ALG_ID_SHA1 ? TPM_ALG_ID::TPM_ALG_SHA1 : TPM_ALG_ID::TPM_ALG_SHA256));
+
+	if (trustedPcrs.GetDigestSize() != logPcrs.GetDigestSize())
+	{
+		return false;
+	}
 
 	for (int i = 0; i < TPM_PCRS_CNT; i++)
 	{
-		auto pcr = table.GetPcr(i);
+		auto pcr = trustedPcrs.GetPcr(i);
 		auto trustedPcr = logPcrs.GetPcr(i);
 
 		//check the pcrs match to hash size, check them all and do it in constant time
 		//to avoid timing attacks
-		for (size_t i = 0; i < hashSize; i++)
+		for (size_t ii = 0; ii < hashSize; ii++)
 		{
-			equal &= (pcr[i] == trustedPcr[i]);
+			equal &= (pcr[ii] == trustedPcr[ii]);
 		}
 	}
 

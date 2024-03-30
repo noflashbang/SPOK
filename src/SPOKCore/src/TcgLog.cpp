@@ -281,20 +281,22 @@ std::vector<uint8_t> TcgLog::ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_I
 			}
 			HasherUtil hasher(hasherType);
 
-			//hash the pcr
-			hasher.HashData(pcrValue);
-
 			if (event.PCRIndex == pcrIndex)
 			{
+				HasherUtil eventhasher(hasherType);
+				auto digestevt = eventhasher.OneShotHash(event.Data);
+
 				for (const auto& digest : event.Digests)
 				{
 					if(digest.AlgorithmId == algId)
 					{
+						//hash the pcr
+						hasher.HashData(pcrValue);
 						hasher.HashData(digest.Digest);
+						pcrValue = hasher.FinishHash();
 					}
 				}
 			}
-			pcrValue = hasher.FinishHash();
 		}
 		softPCRTable.insert(softPCRTable.end(), pcrValue.begin(), pcrValue.end());
 	}

@@ -139,6 +139,7 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 {
 	//Grab the tsb log
 	auto tsbLog = NCryptUtil::GetFilteredTbsLog(pcrsToInclude);
+	//auto tsbLog = NCryptUtil::GetTbsLog();
 	auto log = TcgLog::Parse(tsbLog);
 	
 	//grab the largest hash algorithm
@@ -246,7 +247,9 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	auto sig = br.Read(sigSize);
 
 	//get the pcrTable
-	auto pcrs = NCryptUtil::GetPcrTable();
+	auto devicePcrs = NCryptUtil::GetPcrTable();
+	auto pcrTable = SPOK_Pcrs(devicePcrs);
+	auto pcrs = pcrTable.GetFiltered(pcrsToInclude).GetBlob();
 	auto pcrsSize = pcrs.size();
 
 	// calculate the quote length
