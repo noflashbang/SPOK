@@ -134,23 +134,27 @@ struct TPM2B_IDBINDING
 	TPMT_SIGNATURE Signature;
 };
 
-// Storage structure for 2.0 keys - 
+// Storage structure for 2.0 keys - I can't find a source for this structure - other than PCPTool.
+// Not sure if this structure is defined somewhere else. Seems to be specific to PCP from MSFT.
 struct PCP_20_KEY_BLOB 
 {
-	uint32_t   magic;
-	uint32_t   cbHeader;
-	uint32_t   pcpType;
-	uint32_t   flags;
-	uint32_t   cbPublic;
-	uint32_t   cbPrivate;
-	uint32_t   cbMigrationPublic;
-	uint32_t   cbMigrationPrivate;
-	uint32_t   cbPolicyDigestList;
-	uint32_t   cbPCRBinding;
-	uint32_t   cbPCRDigest;
-	uint32_t   cbEncryptedSecret;
-	uint32_t   cbTpm12HostageBlob;
-	uint16_t  pcrAlgId;
+#define PCP_20_KEY_BLOB_MAGIC 'MPCP'
+#define PCPTYPE_TPM20 (0x00000002)
+
+	uint32_t   Magic;
+	uint32_t   HeaderSize;
+	uint32_t   PcpType;
+	uint32_t   Flags;
+	uint32_t   PublicSize;
+	uint32_t   PrivateSize;
+	uint32_t   MigrationPublicSize;
+	uint32_t   MigrationPrivateSize;
+	uint32_t   PolicyDigestListSize;
+	uint32_t   PcrBindingSize;
+	uint32_t   PcrDigestSize;
+	uint32_t   EncryptedSecretSize;
+	uint32_t   Tpm12HostageBlobSize;
+	uint16_t   PcrAlgId;
 };
 
 class TPM_20
