@@ -589,12 +589,17 @@ void NCryptUtil::ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob:
 	NCryptBuffer keyProperties[] = { {0, NCRYPTBUFFER_PKCS_KEY_NAME, NULL}, {sizeof(BCRYPT_RSA_ALGORITHM), NCRYPTBUFFER_PKCS_ALG_ID, (PBYTE)BCRYPT_RSA_ALGORITHM} };
 	NCryptBufferDesc keyParameters = { NCRYPTBUFFER_VERSION, 2, keyProperties };
 
-	keyProperties[0].cbBuffer = SAFE_CAST_TO_UINT32(aik.Name.size());
-	keyProperties[0].pvBuffer = (void*)aik.Name.c_str();
+	auto keyName = aik.Name.c_str();
+	keyProperties[0].cbBuffer = SAFE_CAST_TO_UINT32((wcslen(keyName)+1) * sizeof(wchar_t));
+	keyProperties[0].pvBuffer = (void*)keyName;
 
 	if (type == KeyBlobType::WRAPPED)
 	{
 		HRESULT status = NCryptImportKey(hProv, NULL, BCRYPT_OPAQUE_KEY_BLOB, &keyParameters, &hKey, const_cast<uint8_t*>(key.data()), SAFE_CAST_TO_INT32(key.size()), flags);
+		if (status != ERROR_SUCCESS)
+		{
+			throw std::runtime_error("NCryptImportKey failed");
+		}
 		if (hKey != NULL)
 		{
 			NCryptKeyHandle keyHandle(hKey);

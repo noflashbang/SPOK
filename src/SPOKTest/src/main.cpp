@@ -465,17 +465,18 @@ TEST_CASE("SPC_AIKGetPlatformAttestation")
 	}
 }
 
-TEST_CASE("SPC_AIKGetKeyAttestation")
+TEST_CASE("SPC_ImportWrappedKey_AndAttest")
 {
 	std::unique_ptr<unsigned char[]> pBytes = nullptr;
 	size_t cbSize = 90000;
+	size_t sizeOut = 0;
 
 	pBytes = std::make_unique<unsigned char[]>(cbSize);
 
 	std::wstring name = L"TestAIK";
 	NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
 
-	std::wstring nameKey = L"TestKey";
+	std::wstring nameKey = L"TestWrappedKey";
 	NCRYPT_MACHINE_KEY flagKey = NCRYPT_MACHINE_KEY::NO;
 
 	bool exists = SPC_AIKExists(name.c_str(), flag);
@@ -486,10 +487,51 @@ TEST_CASE("SPC_AIKGetKeyAttestation")
 		SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
 	}
 
-	size_t sizeOut = 0;
+	//generate a key
+	auto key = BCryptUtil::GenerateRsaKeyPair(KeySize::RSA_2048);
+
+	//get the srk
+	memset(pBytes.get(), 0, cbSize);
+	SPC_GetStorageRootKey(pBytes.get(), cbSize, sizeOut);
+	auto srk = SPOK_Blob::New(pBytes.get(), sizeOut);
+
+	//get the aikpub
+	SPC_AIKGetPublicKey(name.c_str(), flag, pBytes.get(), cbSize, sizeOut);
+	auto aikPub = SPOK_Blob::New(pBytes.get(), sizeOut);
+
+	//get the PCRs for the key
+	memset(pBytes.get(), 0, cbSize);
+	SPC_GetPCRTable(pBytes.get(), cbSize, sizeOut);
+	auto pcrs = SPOK_Pcrs(SPOK_Blob::New(pBytes.get(), sizeOut));
+
+	//filter to the PCRs we want
+	auto filteredPcrs = pcrs.GetFiltered(PCR_13 | PCR_14);
+	auto pcrsBlob = filteredPcrs.GetBlob();
+
+	//wrap the key
+	memset(pBytes.get(), 0, cbSize);
+	SPS_WrapKeyForPlatformImport(key.data(), key.size(), srk.data(), srk.size(), pcrsBlob.data(), pcrsBlob.size(), pBytes.get(), cbSize, sizeOut);
+	auto wrappedKey = SPOK_Blob::New(pBytes.get(), sizeOut);
+
+	REQUIRE(wrappedKey.size() > 0);
+
+	//get the public name from wrapped key
+	SPS_WrappedKeyName(wrappedKey.data(), wrappedKey.size(), pBytes.get(), cbSize, sizeOut);
+	auto wrappedKeyName = SPOK_Blob::New(pBytes.get(), sizeOut);
+	
+	REQUIRE(wrappedKeyName.size() > 0);
+
+	//import the key
+	SPC_PlatformImportWrappedKey(nameKey.c_str(), flagKey, wrappedKey.data(), wrappedKey.size());
+
+	//get the attestation
 	auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestKeyNonce"));
 	SPC_AIKGetKeyAttestation(name.c_str(), flag, nonce.data(), nonce.size(), nameKey.c_str(), flagKey, pBytes.get(), cbSize, sizeOut);
 
 	REQUIRE(sizeOut > 0);
 
+	auto handle = SPS_AIKKeyAttest_Decode(pBytes.get(), sizeOut);
+	auto valid = SPS_AIKKeyAttest_Verify(handle, nonce.data(), nonce.size(), aikPub.data(), aikPub.size(), wrappedKeyName.data(), wrappedKeyName.size());
+
+	REQUIRE(valid);
 }

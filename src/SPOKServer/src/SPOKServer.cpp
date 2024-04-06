@@ -45,6 +45,11 @@ SPOK_Blob::Blob SPOKServer::AIKGetTpmAttestationChallenge(const uint16_t ekNameA
 	return challenge;
 };
 
+SPOK_AIKKeyAttestation SPOKServer::AIKKeyAttestationDecode(const SPOK_Blob::Blob& attKey)
+{
+	return SPOK_AIKKeyAttestation(attKey);
+}
+
 SPOK_VerifyResult SPOKServer::AttestationVerify(IAttestation& attestation, const SPOK_AttestationVerify& verify)
 {
 	// Use the visitor on a variant
@@ -78,4 +83,14 @@ bool SPOKServer::VerifySignature(const SPOK_Blob::Blob& key, const SPOK_Blob::Bl
 SPOK_Blob::Blob SPOKServer::GenerateRSAKeyPair(KeySize keySize)
 {
 	return BCryptUtil::GenerateRsaKeyPair(keySize);
+}
+
+SPOK_Blob::Blob SPOKServer::WrapKeyForPlatformImport(const SPOK_Blob::Blob& keyToWrap, const SPOK_Blob::Blob& srk, const SPOK_Pcrs& boundPcrs)
+{
+	return TPM_20::WrapKey(keyToWrap, srk, boundPcrs);
+}
+
+SPOK_Blob::Blob SPOKServer::GetWrappedKeyName(const SPOK_Blob::Blob& keyWrap)
+{
+	return TPM_20::GetWrappedKeyName(keyWrap);
 }

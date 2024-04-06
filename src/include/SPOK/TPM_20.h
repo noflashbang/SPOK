@@ -163,6 +163,8 @@ public:
 	static SPOK_Blob::Blob CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest);
 	static SPOK_Blob::Blob AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, uint32_t pcrsToInclude);
 	static SPOK_Blob::Blob WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& srk, const SPOK_Pcrs& boundPcrs);
+	static SPOK_Blob::Blob GetWrappedKeyName(const SPOK_Blob::Blob& wrappedKey);
+
 
 	static TPM2B_IDBINDING DecodeIDBinding(const SPOK_Blob::Blob& idBinding);
 	static SPOK_Blob::Blob GenerateChallengeCredential(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& aikName, const SPOK_Blob::Blob& secret);
@@ -171,5 +173,6 @@ public:
 
 private:
 
+	static SPOK_Blob::Blob GetNameForPublic(const SPOK_Blob::Blob& publicBlob);
 };
 

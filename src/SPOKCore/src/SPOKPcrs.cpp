@@ -22,6 +22,22 @@ SPOK_Pcrs::SPOK_Pcrs(SPOK_Blob::Blob blob)
 	}
 }
 
+SPOK_Pcrs::SPOK_Pcrs(const SPOK_Pcrs& other)
+{
+	_digestSize = other._digestSize;
+	std::copy(other._pcrTable.begin(), other._pcrTable.end(), _pcrTable.begin());
+}
+
+SPOK_Pcrs& SPOK_Pcrs::operator=(const SPOK_Pcrs& other)
+{
+	if (this != &other)
+	{
+		_digestSize = other._digestSize;
+		std::copy(other._pcrTable.begin(), other._pcrTable.end(), _pcrTable.begin());
+	}
+	return *this;
+}
+
 void SPOK_Pcrs::FillDefaultPcrs()
 {
 	for (uint32_t pcrIndex = 0; pcrIndex < TPM_PCRS_CNT; pcrIndex++)

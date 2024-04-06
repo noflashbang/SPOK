@@ -27,9 +27,9 @@ public:
 	SPOK_Blob::Blob AIKGetTpmAttestationChallenge(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& aikName, const SPOK_Blob::Blob& secret);
 
 	//AIK Key Attestation
-	void AIKKeyAttestationDecode();
-	void AIKKeyAttestationVerify();
+	SPOK_AIKKeyAttestation AIKKeyAttestationDecode(const SPOK_Blob::Blob& attKey);
 
+	//All Types of Attestation
 	SPOK_VerifyResult AttestationVerify(IAttestation& attestation, const SPOK_AttestationVerify& verify);
 
 	//Basic Crypto Operations
@@ -40,5 +40,6 @@ public:
 
 	//Key Helpers
 	SPOK_Blob::Blob GenerateRSAKeyPair(KeySize keySize);
-	void SPS_WrapKeyForPlatformImport();
+	SPOK_Blob::Blob WrapKeyForPlatformImport(const SPOK_Blob::Blob& keyToWrap, const SPOK_Blob::Blob& srk, const SPOK_Pcrs& boundPcrs);
+	SPOK_Blob::Blob GetWrappedKeyName(const SPOK_Blob::Blob& keyWrap);
 };

@@ -301,6 +301,7 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& srk, const SPOK_Pcrs& boundPcrs)
 {
 	PCP_20_KEY_BLOB keyBlob;
+	memset(&keyBlob, 0, sizeof(PCP_20_KEY_BLOB));
 
 	SPOK_Blob::Blob defaultExponent = { 0x01, 0x00, 0x01 };
 	//BCryptKey keyToWrap(key);
@@ -383,8 +384,8 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 		ppbw.Write(pcrCompositeDigest);
 
 		//hash the composite
-		auto hasher = Hasher::Create(TPM_API_ALG_ID_SHA256);
-		auto policyDigest = hasher.OneShotHash(pcrPolicy);
+		auto hasherComposite = Hasher::Create(TPM_API_ALG_ID_SHA256);
+		auto policyDigest = hasherComposite.OneShotHash(pcrPolicy);
 
 		pdlbw.BE_Write16(SHA256_DIGEST_SIZE);
 		pdlbw.Write(policyDigest);
@@ -469,13 +470,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	pkbw.Write(&(key.data())[sizeof(BCRYPT_RSAKEY_BLOB) + pKeyPair->cbPublicExp], pKeyPair->cbModulus);
 
 	//get the public name
-	auto hasher = Hasher::Create(TPM_API_ALG_ID_SHA256);
-	auto publicNameHash = hasher.OneShotHash(publicKey);
-
-	SPOK_Blob::Blob publicName(sizeof(uint16_t) + publicNameHash.size());
-	auto pnbw = SPOK_BinaryWriter(publicName);
-	pnbw.BE_Write16(TPM_API_ALG_ID_SHA256);
-	pnbw.Write(publicNameHash);
+	auto publicName = GetNameForPublic(publicKey);
 
 	uint32_t encryptedSecretSize = sizeof(uint16_t) + blockLength;
 	SPOK_Blob::Blob encryptedSecret(encryptedSecretSize);
@@ -512,6 +507,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	//encrypt the tpm12HostageBlob
 	auto zeroIv = SPOK_Blob::New(AES_KEY_SIZE);
 	auto protectedBlob = CFB(symKey, zeroIv, tpm12HostageBlob);
+	protectedBlob.resize(tpm12HostageBlob.size());
 
 	//calculate the hmac key
 	auto hmacKey = KDFa(TPM_API_ALG_ID_SHA256, seed, "INTEGRITY", SPOK_Blob::New(0), SPOK_Blob::New(0), SHA256_DIGEST_SIZE * 8);
@@ -557,7 +553,21 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	bw.Write(outerHmac);
 	bw.Write(protectedBlob);
 
+	std::cout << "KeyBlob size: " << keyBlobOut.size() << std::endl;
+	std::cout << SPOK_Blob::BlobToHex(keyBlobOut) << std::endl;
+
 	return keyBlobOut;
+}
+
+SPOK_Blob::Blob TPM_20::GetWrappedKeyName(const SPOK_Blob::Blob& wrappedKey)
+{
+	//seek to the start of the public key
+	auto br = SPOK_BinaryReader(wrappedKey);
+	br.Seek(sizeof(PCP_20_KEY_BLOB));
+	auto publicSize = br.BE_Read16();
+	auto publicKey = br.Read(publicSize);
+
+	return GetNameForPublic(publicKey);
 }
 
 TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob::Blob& publicBlob)
@@ -955,4 +965,19 @@ SPOK_Blob::Blob TPM_20::CFB(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& i
 {
 	auto cipher = BCryptUtil::CreateSymmetricCipher(key, BCRYPT_AES_ALGORITHM, BCRYPT_CHAIN_MODE_CFB, iv);
 	return cipher.Encrypt(data);
+}
+
+SPOK_Blob::Blob TPM_20::GetNameForPublic(const SPOK_Blob::Blob& publicBlob)
+{
+	//get the public name
+	auto hasherPublicName = Hasher::Create(TPM_API_ALG_ID_SHA256);
+	auto publicNameHash = hasherPublicName.OneShotHash(publicBlob);
+
+	//add the algid and return
+	SPOK_Blob::Blob publicName(sizeof(uint16_t) + publicNameHash.size());
+	auto pnbw = SPOK_BinaryWriter(publicName);
+	pnbw.BE_Write16(TPM_API_ALG_ID_SHA256);
+	pnbw.Write(publicNameHash);
+
+	return publicName;
 }

@@ -88,6 +88,35 @@ void SPS_AIKTpmAttest_GetChallenge(SPOK_Handle hAttest, const uint16_t ekNameAlg
 	SPOK_Blob::Copy2CStylePtr(challenge, pChallenge, cbChallenge, sizeOut);
 }
 
+SPOK_Handle SPS_AIKKeyAttest_Decode(const uint8_t* pBlob, const size_t cbBlob)
+{
+	auto blob = SPOK_Blob::New(pBlob, cbBlob);
+	auto server = SPOKServer();
+	auto attestation = server.AIKKeyAttestationDecode(blob);
+	return AttestationManager::Add(attestation);
+}
+
+bool SPS_AIKKeyAttest_Verify(SPOK_Handle hAttest, const uint8_t* pNonce, const size_t cbNonce, const uint8_t* pAikPub, const size_t cbAikPub, const uint8_t* pPubName, const size_t cbPubName)
+{
+	auto attestation = AttestationManager::Get(hAttest);
+	if (!attestation.has_value())
+	{
+		throw std::runtime_error("Attestation not found");
+	}
+	if (!std::holds_alternative<SPOK_AIKKeyAttestation>(attestation.value()))
+	{
+		throw std::runtime_error("Attestation is not an AIK Key Attestation");
+	}
+
+	auto nonce = SPOK_Nonce::Make(pNonce, cbNonce);
+	auto aikPub = SPOK_Blob::New(pAikPub, cbAikPub);
+	auto pubName = SPOK_Blob::New(pPubName, cbPubName);
+	auto server = SPOKServer();
+	auto verify = SPOK_AIKKeyVerify{ nonce, aikPub, pubName };
+	auto result = server.AttestationVerify(attestation.value(), verify);
+	return std::get<SPOK_AIKKeyVerifyResult>(result).Result();
+}
+
 bool SPS_AIKAttest_Verify(SPOK_Handle hAttest, const uint8_t* nonce, const size_t cbNonce)
 {
 	auto attestation = AttestationManager::Get(hAttest);
@@ -143,4 +172,22 @@ void SPS_GenerateRSAKeyPair(const uint16_t keySizeBits, uint8_t* pData, const si
 	auto keySize = static_cast<KeySize>(keySizeBits);
 	auto keyPair = server.GenerateRSAKeyPair(keySize);
 	SPOK_Blob::Copy2CStylePtr(keyPair, pData, cbData, sizeOut);
+}
+
+void SPS_WrapKeyForPlatformImport(const uint8_t* pKeyToWrap, const size_t cbKeyToWrap, const uint8_t* pSrk, const size_t cbSrk, uint8_t* pBoundPcrTable, const size_t cbBoundPcrTable, uint8_t* pKeyWrap, const size_t cbKeyWrap, size_t& sizeOut)
+{
+	auto keyToWrap = SPOK_Blob::New(pKeyToWrap, cbKeyToWrap);
+	auto srk = SPOK_Blob::New(pSrk, cbSrk);
+	auto boundPcrTable = SPOK_Pcrs(SPOK_Blob::New(pBoundPcrTable, cbBoundPcrTable));
+	auto server = SPOKServer();
+	auto wrappedKey = server.WrapKeyForPlatformImport(keyToWrap, srk, boundPcrTable);
+	SPOK_Blob::Copy2CStylePtr(wrappedKey, pKeyWrap, cbKeyWrap, sizeOut);
+}
+
+void SPS_WrappedKeyName(const uint8_t* pKeyWrap, const size_t cbKeyWrap, uint8_t* pName, const size_t cbName, size_t& sizeOut)
+{
+	auto keyWrap = SPOK_Blob::New(pKeyWrap, cbKeyWrap);
+	auto server = SPOKServer();
+	auto name = server.GetWrappedKeyName(keyWrap);
+	SPOK_Blob::Copy2CStylePtr(name, pName, cbName, sizeOut);
 }

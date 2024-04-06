@@ -41,6 +41,10 @@ class SPOK_Pcrs
 public:
 	SPOK_Pcrs(uint8_t digestSize);
 	SPOK_Pcrs(SPOK_Blob::Blob blob);
+
+	SPOK_Pcrs(const SPOK_Pcrs& other);
+	SPOK_Pcrs& operator=(const SPOK_Pcrs& other);
+
 	~SPOK_Pcrs() = default;
 
 	void FillDefaultPcrs();
