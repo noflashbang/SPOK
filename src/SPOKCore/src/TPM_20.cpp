@@ -431,8 +431,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	auto hasher = Hasher::Create(TPM_API_ALG_ID_SHA256);
 	auto orPolicyDigest = hasher.OneShotHash(orPolicy);
 
-	uint32_t publicSize = sizeof(uint16_t) + // size
-		sizeof(uint16_t) + // type
+	uint32_t publicSize = sizeof(uint16_t) + // type
 		sizeof(uint16_t) + // nameAlg
 		sizeof(uint32_t) + // objectAttributes
 		sizeof(uint16_t) + // DIGEST + authPolicy.size
@@ -445,7 +444,6 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 		pKeyPair->cbModulus; // modulus
 	SPOK_Blob::Blob publicKey(publicSize);
 	auto pkbw = SPOK_BinaryWriter(publicKey);
-	pkbw.BE_Write16(publicSize);
 	pkbw.BE_Write16(0x0001); // TPM_ALG_RSA
 	pkbw.BE_Write16(TPM_API_ALG_ID_SHA256); // TPM_ALG_SHA256
 	pkbw.BE_Write32(objectAttributes); // objectAttributes
@@ -470,6 +468,14 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	pkbw.BE_Write16(SAFE_CAST_TO_UINT16(pKeyPair->cbModulus));
 	pkbw.Write(&(key.data())[sizeof(BCRYPT_RSAKEY_BLOB) + pKeyPair->cbPublicExp], pKeyPair->cbModulus);
 
+	//get the public name
+	auto hasher = Hasher::Create(TPM_API_ALG_ID_SHA256);
+	auto publicNameHash = hasher.OneShotHash(publicKey);
+
+	SPOK_Blob::Blob publicName(sizeof(uint16_t) + publicNameHash.size());
+	auto pnbw = SPOK_BinaryWriter(publicName);
+	pnbw.BE_Write16(TPM_API_ALG_ID_SHA256);
+	pnbw.Write(publicNameHash);
 
 	uint32_t encryptedSecretSize = sizeof(uint16_t) + blockLength;
 	SPOK_Blob::Blob encryptedSecret(encryptedSecretSize);
@@ -483,22 +489,45 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	auto encryptedSeed = srkKey.Encrypt(seed, false);
 	esbw.Write(encryptedSeed);
 
-	uint32_t tpm12HostageBlobSize = sizeof(uint16_t) +     // hmac.size
-									SHA256_DIGEST_SIZE +   // hmac
-									sizeof(uint16_t) +     // TPM2B_SENSITIVE.size
+
+	uint32_t tpm12HostageBlobSize = sizeof(uint16_t) +     // TPM2B_SENSITIVE.size
 									sizeof(uint16_t) +     // TPMT_SENSITIVE.sensitiveType
 									sizeof(uint16_t) +     // authValue.Size
 									sizeof(uint16_t) +     // symValue.Size
 									sizeof(uint16_t) +     // TPMU_SENSITIVE_COMPOSITE.size
 									pKeyPair->cbPrime1;
+
 	SPOK_Blob::Blob tpm12HostageBlob(tpm12HostageBlobSize);
+	auto thbw = SPOK_BinaryWriter(tpm12HostageBlob);
+	thbw.BE_Write16(tpm12HostageBlobSize - sizeof(uint16_t)); // TPM2B_SENSITIVE.size
+	thbw.BE_Write16(0x0001); // TPMT_SENSITIVE.sensitiveType = RSA
+	thbw.BE_Write16(0x0000); // authValue.Size
+	thbw.BE_Write16(0x0000); // symValue.Size
+	thbw.BE_Write16(pKeyPair->cbPrime1); // TPMU_SENSITIVE_COMPOSITE.size
+	thbw.Write(&(key.data())[sizeof(BCRYPT_RSAKEY_BLOB) + pKeyPair->cbPublicExp + pKeyPair->cbModulus], pKeyPair->cbPrime1); // private
+
+	//calculate the symettric key
+	auto symKey = KDFa(TPM_API_ALG_ID_SHA256, seed, "STORAGE", publicName, SPOK_Blob::New(0), AES_KEY_SIZE * 8);
+
+	//encrypt the tpm12HostageBlob
+	auto zeroIv = SPOK_Blob::New(AES_KEY_SIZE);
+	auto protectedBlob = CFB(symKey, zeroIv, tpm12HostageBlob);
+
+	//calculate the hmac key
+	auto hmacKey = KDFa(TPM_API_ALG_ID_SHA256, seed, "INTEGRITY", SPOK_Blob::New(0), SPOK_Blob::New(0), SHA256_DIGEST_SIZE * 8);
+
+	//calculate the hmac	
+	auto hmacHasher = Hasher::Create_HMAC(TPM_API_ALG_ID_SHA256, hmacKey);
+	hmacHasher.HashData(tpm12HostageBlob);
+	hmacHasher.HashData(publicName);
+	auto outerHmac = hmacHasher.FinishHash();
 
 	//build the opauqe key blob header
 	keyBlob.Magic = PCP_20_KEY_BLOB_MAGIC;
 	keyBlob.HeaderSize = sizeof(PCP_20_KEY_BLOB);
 	keyBlob.PcpType = PCPTYPE_TPM20;
 	keyBlob.Flags = 0;
-	keyBlob.PublicSize = publicKey.size();
+	keyBlob.PublicSize = publicKey.size() + sizeof(uint16_t);
 	keyBlob.PrivateSize = 0;
 	keyBlob.MigrationPublicSize = 0;
 	keyBlob.MigrationPrivateSize = 0;
@@ -506,7 +535,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	keyBlob.PcrBindingSize = pcrBinding.size();
 	keyBlob.PcrDigestSize = pcrDigest.size();
 	keyBlob.EncryptedSecretSize = encryptedSecret.size();
-	keyBlob.Tpm12HostageBlobSize = tpm12HostageBlob.size();
+	keyBlob.Tpm12HostageBlobSize = sizeof(uint16_t) + sizeof(uint16_t) + outerHmac.size() + tpm12HostageBlob.size();
 	keyBlob.PcrAlgId = boundPcrs.GetAlgId();
 
 	//build the key blob
@@ -514,12 +543,19 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	keyBlobOut.resize(sizeof(PCP_20_KEY_BLOB) + keyBlob.PublicSize + keyBlob.PolicyDigestListSize + keyBlob.PcrBindingSize + keyBlob.PcrDigestSize + keyBlob.EncryptedSecretSize + keyBlob.Tpm12HostageBlobSize);
 	auto bw = SPOK_BinaryWriter(keyBlobOut);
 	bw.Write((uint8_t*)&keyBlob, sizeof(PCP_20_KEY_BLOB));
+	
+	bw.BE_Write16(keyBlob.PublicSize);
 	bw.Write(publicKey);
+
 	bw.Write(policyDigestList);
 	bw.Write(pcrBinding);
 	bw.Write(pcrDigest);
 	bw.Write(encryptedSecret);
-	bw.Write(tpm12HostageBlob);
+	
+	bw.BE_Write16(sizeof(uint16_t) + outerHmac.size() + protectedBlob.size());
+	bw.BE_Write16(outerHmac.size());
+	bw.Write(outerHmac);
+	bw.Write(protectedBlob);
 
 	return keyBlobOut;
 }
