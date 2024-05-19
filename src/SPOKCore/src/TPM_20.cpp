@@ -543,7 +543,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	auto bw = SPOK_BinaryWriter(keyBlobOut);
 	bw.Write((uint8_t*)&keyBlob, sizeof(PCP_20_KEY_BLOB));
 	
-	bw.BE_Write16(keyBlob.PublicSize);
+	bw.BE_Write16(publicKey.size());
 	bw.Write(publicKey);
 
 	bw.Write(policyDigestList);

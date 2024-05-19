@@ -534,4 +534,7 @@ TEST_CASE("SPC_ImportWrappedKey_AndAttest")
 	auto valid = SPS_AIKKeyAttest_Verify(handle, nonce.data(), nonce.size(), aikPub.data(), aikPub.size(), wrappedKeyName.data(), wrappedKeyName.size());
 
 	REQUIRE(valid);
+
+	//release the attestation resources
+	SPS_AttestationDestroy(handle);
 }
