@@ -302,21 +302,18 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 {
 	PCP_20_KEY_BLOB keyBlob;
 	memset(&keyBlob, 0, sizeof(PCP_20_KEY_BLOB));
-
 	SPOK_Blob::Blob defaultExponent = { 0x01, 0x00, 0x01 };
-	//BCryptKey keyToWrap(key);
-	//get key struct
 	BCRYPT_RSAKEY_BLOB* pKeyPair = (BCRYPT_RSAKEY_BLOB*)key.data();
 
 	auto pcrMask = boundPcrs.GetMask();
-	uint32_t objectAttributes = 0x00060000;
+	uint32_t objectAttributes = 0x00060400;
 	if(pcrMask == 0)
 	{
 		objectAttributes = objectAttributes | 0x00000040;
 	}
 
 	bool usingDefaultExponent = false;
-	if((pKeyPair->cbPublicExp == 3) && (memcmp(&(key.data())[sizeof(BCRYPT_RSAKEY_BLOB)], defaultExponent.data(), sizeof(defaultExponent)) == 0))
+	if((pKeyPair->cbPublicExp == 3) && memcmp(key.data() + sizeof(BCRYPT_RSAKEY_BLOB), defaultExponent.data(), defaultExponent.size()) == 0)
 	{
 		usingDefaultExponent = true;
 	}
@@ -324,8 +321,10 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	BCryptKey srkKey(srk);
 	auto blockLength = srkKey.BlockLength();
 
-	SPOK_Blob::Blob orPolicy(sizeof(uint32_t) + (4 * SHA256_DIGEST_SIZE)); // TPM_CC_PolicyOR + 4 * (Policies)
+	SPOK_Blob::Blob orPolicy(SHA256_DIGEST_SIZE + sizeof(uint32_t) + (4 * SHA256_DIGEST_SIZE)); // TPM_CC_PolicyOR + 4 * (Policies)
 	auto opbw = SPOK_BinaryWriter(orPolicy);
+	SPOK_Blob::Blob zeroHash(SHA256_DIGEST_SIZE, 0x00);
+	opbw.Write(zeroHash);
 	opbw.BE_Write32(0x00000171); // TPM_CC_PolicyOR
 
 	SPOK_Blob::Blob pcrCompositeDigest;
@@ -369,6 +368,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 				std::copy(pcr.begin(), pcr.end(), std::back_inserter(pcrComposite));
 			}
 		}
+
 		//hash the composite
 		auto hasher = Hasher::Create(TPM_API_ALG_ID_SHA256);
 		pcrCompositeDigest = hasher.OneShotHash(pcrComposite);
@@ -480,10 +480,10 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	//get the random seed
 	const uint16_t AES_KEY_SIZE = 16;
 	auto seed = BCryptUtil::GetRandomBytes(AES_KEY_SIZE);
-	
-	auto encryptedSeed = srkKey.Encrypt(seed, false);
-	esbw.Write(encryptedSeed);
 
+	auto encryptedSeed = srkKey.Encrypt(seed, false);
+
+	esbw.Write(encryptedSeed);
 
 	uint32_t tpm12HostageBlobSize = sizeof(uint16_t) +     // TPM2B_SENSITIVE.size
 									sizeof(uint16_t) +     // TPMT_SENSITIVE.sensitiveType
@@ -512,11 +512,14 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	//calculate the hmac key
 	auto hmacKey = KDFa(TPM_API_ALG_ID_SHA256, seed, "INTEGRITY", SPOK_Blob::New(0), SPOK_Blob::New(0), SHA256_DIGEST_SIZE * 8);
 
+	auto hmacInput = SPOK_Blob::New(protectedBlob.size() + publicName.size());
+	auto hibw = SPOK_BinaryWriter(hmacInput);
+	hibw.Write(protectedBlob);
+	hibw.Write(publicName);
+
 	//calculate the hmac	
 	auto hmacHasher = Hasher::Create_HMAC(TPM_API_ALG_ID_SHA256, hmacKey);
-	hmacHasher.HashData(tpm12HostageBlob);
-	hmacHasher.HashData(publicName);
-	auto outerHmac = hmacHasher.FinishHash();
+	auto outerHmac = hmacHasher.OneShotHash(hmacInput);
 
 	//build the opauqe key blob header
 	keyBlob.Magic = PCP_20_KEY_BLOB_MAGIC;
@@ -552,9 +555,6 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	bw.BE_Write16(outerHmac.size());
 	bw.Write(outerHmac);
 	bw.Write(protectedBlob);
-
-	std::cout << "KeyBlob size: " << keyBlobOut.size() << std::endl;
-	std::cout << SPOK_Blob::BlobToHex(keyBlobOut) << std::endl;
 
 	return keyBlobOut;
 }

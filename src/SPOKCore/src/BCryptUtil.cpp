@@ -14,7 +14,7 @@ BCryptAlgHandle::BCryptAlgHandle(AlgId alg) : m_hAlg(NULL), m_algId(alg)
 		}
 		case AlgId::RSA:
 		{
-			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_RSA_ALGORITHM, NULL, 0);
+			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_RSA_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
 			break;
 		}
 		case AlgId::SHA1:

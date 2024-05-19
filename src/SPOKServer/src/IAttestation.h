@@ -57,7 +57,8 @@ public:
 
 	SPOK_VerifyResult operator()(SPOK_AIKKeyAttestation& attestation) const
 	{
-		return SPOK_AIKKeyVerifyResult();
+		auto verify = std::get<SPOK_AIKKeyVerify>(_verifyData);
+		return attestation.Verify(verify);
 	}
 
 private:
