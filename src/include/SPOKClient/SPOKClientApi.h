@@ -70,6 +70,7 @@ extern "C"
 	//User Key Addition
 	SPOKCLIENT_API void SPC_PlatformImportWrappedKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pKeyBlob, const size_t cbKeyBlob);
 	SPOKCLIENT_API void SPC_CreatePlatformKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);
+	SPOKCLIENT_API bool SPC_PlatformKeyExists(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);
 
 	//Cryptographic Operations
 	SPOKCLIENT_API void SPC_PlatformDecrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut);

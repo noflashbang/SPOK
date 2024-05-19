@@ -28,8 +28,9 @@ public:
 	SPOK_Blob::Blob GetBootLog(const uint32_t pcrsToInclude);
 	SPOK_Blob::Blob GetPCRTable();
 	SPOK_Blob::Blob GetStorageRootKey();
-	void PlatformImportKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type);
-	void PlatformCreateKey(const SPOK_PlatformKey& aik);
+	void PlatformImportKey(const SPOK_PlatformKey& platformKey, const SPOK_Blob::Blob& key, KeyBlobType type);
+	void PlatformCreateKey(const SPOK_PlatformKey& platformKey);
+	bool PlatformKeyExists(const SPOK_PlatformKey& platformKey);
 
 	SPOK_Blob::Blob PlatformDecrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);
 	SPOK_Blob::Blob PlatformEncrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);

@@ -22,7 +22,7 @@ void SPOKClient::AIKDelete(const SPOK_PlatformKey& aik)
 
 bool SPOKClient::AIKExists(const SPOK_PlatformKey& aik)
 {
-	return NCryptUtil::DoesAikExists(aik);
+	return NCryptUtil::DoesPlatformKeyExists(aik);
 }
 
 SPOK_Blob::Blob SPOKClient::AIKGetKeyAttestation(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest)
@@ -78,14 +78,19 @@ SPOK_Blob::Blob SPOKClient::GetStorageRootKey()
 	return NCryptUtil::GetTpmSrk();
 }
 
-void SPOKClient::PlatformImportKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type)
+void SPOKClient::PlatformImportKey(const SPOK_PlatformKey& platformKey, const SPOK_Blob::Blob& key, KeyBlobType type)
 {
-	NCryptUtil::ImportPlatformKey(aik, key, type);
+	NCryptUtil::ImportPlatformKey(platformKey, key, type);
 }
 
-void SPOKClient::PlatformCreateKey(const SPOK_PlatformKey& aik)
+void SPOKClient::PlatformCreateKey(const SPOK_PlatformKey& platformKey)
 {
-	NCryptUtil::CreatePlatformKey(aik);
+	NCryptUtil::CreatePlatformKey(platformKey);
+}
+
+bool SPOKClient::PlatformKeyExists(const SPOK_PlatformKey& platformKey)
+{
+	return NCryptUtil::DoesPlatformKeyExists(platformKey);
 }
 
 SPOK_Blob::Blob SPOKClient::PlatformDecrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data)

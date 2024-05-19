@@ -419,11 +419,11 @@ bool PlatformKey::Verify(const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& sig
 	return false;
 }
 
-bool NCryptUtil::DoesAikExists(const SPOK_PlatformKey& aik)
+bool NCryptUtil::DoesPlatformKeyExists(const SPOK_PlatformKey& platformKey)
 {
 	NCryptProvHandle hProv;
 
-	NCryptKeyHandle hKey(aik.Name, aik.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	NCryptKeyHandle hKey(platformKey.Name, platformKey.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
 	
 	return hKey.IsValid();
 }
@@ -579,17 +579,17 @@ SPOK_Blob::Blob NCryptUtil::GetFilteredTbsLog(uint32_t pcrsToInclude)
 	return TcgLog::Serialize(filteredLog);
 }
 
-void NCryptUtil::ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type)
+void NCryptUtil::ImportPlatformKey(const SPOK_PlatformKey& platformKey, const SPOK_Blob::Blob& key, KeyBlobType type)
 {
 	NCryptProvHandle hProv;
 	NCRYPT_KEY_HANDLE hKey = NULL;
 	
-	int flags = NCRYPT_OVERWRITE_KEY_FLAG | (aik.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	int flags = NCRYPT_OVERWRITE_KEY_FLAG | (platformKey.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
 
 	NCryptBuffer keyProperties[] = { {0, NCRYPTBUFFER_PKCS_KEY_NAME, NULL}, {sizeof(BCRYPT_RSA_ALGORITHM), NCRYPTBUFFER_PKCS_ALG_ID, (PBYTE)BCRYPT_RSA_ALGORITHM} };
 	NCryptBufferDesc keyParameters = { NCRYPTBUFFER_VERSION, 2, keyProperties };
 
-	auto keyName = aik.Name.c_str();
+	auto keyName = platformKey.Name.c_str();
 	keyProperties[0].cbBuffer = SAFE_CAST_TO_UINT32((wcslen(keyName)+1) * sizeof(wchar_t));
 	keyProperties[0].pvBuffer = (void*)keyName;
 
@@ -622,13 +622,13 @@ void NCryptUtil::ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob:
 	}
 }
 
-void NCryptUtil::CreatePlatformKey(const SPOK_PlatformKey& aik)
+void NCryptUtil::CreatePlatformKey(const SPOK_PlatformKey& platformKey)
 {
 	NCryptProvHandle hProv;
 	NCRYPT_KEY_HANDLE hKey = NULL;
 	// Create the key
-	long flags = NCRYPT_OVERWRITE_KEY_FLAG | (aik.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
-	HRESULT status = NCryptCreatePersistedKey(hProv, &hKey, BCRYPT_RSA_ALGORITHM, aik.Name.c_str(), 0, flags);
+	long flags = NCRYPT_OVERWRITE_KEY_FLAG | (platformKey.Flag == NCRYPT_MACHINE_KEY::YES ? NCRYPT_MACHINE_KEY_FLAG : 0);
+	HRESULT status = NCryptCreatePersistedKey(hProv, &hKey, BCRYPT_RSA_ALGORITHM, platformKey.Name.c_str(), 0, flags);
 	if (status != ERROR_SUCCESS)
 	{
 		throw std::runtime_error("NCryptCreatePersistedKey failed");

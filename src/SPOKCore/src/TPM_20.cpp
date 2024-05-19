@@ -970,13 +970,18 @@ SPOK_Blob::Blob TPM_20::CFB(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& i
 SPOK_Blob::Blob TPM_20::GetNameForPublic(const SPOK_Blob::Blob& publicBlob)
 {
 	//get the public name
-	auto hasherPublicName = Hasher::Create(TPM_API_ALG_ID_SHA256);
+	
+	auto pkbr = SPOK_BinaryReader(publicBlob);
+	pkbr.BE_Read16(); // TPM_ALG_RSA
+	auto tpmAlgId = pkbr.BE_Read16(); // TPM_ALG_ID
+
+	auto hasherPublicName = Hasher::Create(tpmAlgId);
 	auto publicNameHash = hasherPublicName.OneShotHash(publicBlob);
 
 	//add the algid and return
 	SPOK_Blob::Blob publicName(sizeof(uint16_t) + publicNameHash.size());
 	auto pnbw = SPOK_BinaryWriter(publicName);
-	pnbw.BE_Write16(TPM_API_ALG_ID_SHA256);
+	pnbw.BE_Write16(tpmAlgId);
 	pnbw.Write(publicNameHash);
 
 	return publicName;

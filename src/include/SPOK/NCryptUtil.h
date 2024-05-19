@@ -113,7 +113,7 @@ enum class KeyBlobType : uint32_t
 class NCryptUtil
 {
 public:
-	static bool DoesAikExists(const SPOK_PlatformKey& aik);
+	static bool DoesPlatformKeyExists(const SPOK_PlatformKey& platformKey);
 	static PlatformAik CreateAik(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce);
 	static void DeleteKey(const SPOK_PlatformKey& aik);
 
@@ -124,8 +124,8 @@ public:
 	static SPOK_Blob::Blob GetFilteredTbsLog(uint32_t pcrsToInclude);
 
 	//import an opaque key into the TPM
-	static void ImportPlatformKey(const SPOK_PlatformKey& aik, const SPOK_Blob::Blob& key, KeyBlobType type);
-	static void CreatePlatformKey(const SPOK_PlatformKey& aik);
+	static void ImportPlatformKey(const SPOK_PlatformKey& platformKey, const SPOK_Blob::Blob& key, KeyBlobType type);
+	static void CreatePlatformKey(const SPOK_PlatformKey& platformKey);
 
 	//Platform key operations
 	static SPOK_Blob::Blob Encrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);

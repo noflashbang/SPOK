@@ -125,6 +125,13 @@ void SPC_CreatePlatformKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag)
 	client.PlatformCreateKey(key);
 }
 
+bool SPC_PlatformKeyExists(const wchar_t* name, const NCRYPT_MACHINE_KEY flag)
+{
+	auto key = SPOK_PlatformKey{ name, flag };
+	SPOKClient client;
+	return client.PlatformKeyExists(key);
+}
+
 void SPC_PlatformDecrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut)
 {
 	auto key = SPOK_PlatformKey{ name, flag };
