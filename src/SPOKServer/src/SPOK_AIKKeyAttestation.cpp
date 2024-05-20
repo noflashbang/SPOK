@@ -24,9 +24,6 @@ SPOK_AIKKeyAttestation::SPOK_AIKKeyAttestation(SPOK_Blob::Blob attCertify)
 		throw std::invalid_argument("Invalid Header Size");
 	}
 
-	uint32_t KeyAttestSize;
-	uint32_t SignatureSize;
-
 	//we can be reasonably sure that the attQuote is valid at this point
 	m_KeyBlobHeader.KeyAttestSize = certifyReader.LE_Read32();
 	m_KeyBlobHeader.SignatureSize = certifyReader.LE_Read32();

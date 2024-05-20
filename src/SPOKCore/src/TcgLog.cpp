@@ -2,6 +2,7 @@
 #include "StandardLib.h"
 #include "SPOKBlob.h"
 #include "HasherUtil.h"
+#include "Util.h"
 
 TcgLogEventType TcgLog::GetEventType(uint32_t eventType)
 {
@@ -345,9 +346,9 @@ std::vector<uint8_t> TcgLog::Serialize(const TcgLog& tcgLog)
 	size += 1; //SpecErrata
 	size += 1; //UintnSize
 	size += 4; //NumberOfAlgorithms
-	size += tcgLog.Header.DigestSizes.size() * 4; //DigestSizes
+	size += SAFE_CAST_TO_UINT32(tcgLog.Header.DigestSizes.size() * 4); //DigestSizes
 	size += 1; //VendorInfoSize
-	size += tcgLog.Header.VendorInfo.size(); //VendorInfo
+	size += SAFE_CAST_TO_UINT32(tcgLog.Header.VendorInfo.size()); //VendorInfo
 	for (const auto& event : tcgLog.Events)
 	{
 		size += 4; //PCRIndex
@@ -356,10 +357,10 @@ std::vector<uint8_t> TcgLog::Serialize(const TcgLog& tcgLog)
 		for (const auto& digest : event.Digests)
 		{
 			size += 2;
-			size += digest.Digest.size();
+			size += SAFE_CAST_TO_UINT32(digest.Digest.size());
 		}
 		size += 4; //DataSize
-		size += event.Data.size(); //Data
+		size += SAFE_CAST_TO_UINT32(event.Data.size()); //Data
 	}
 	SPOK_Blob::Blob tbsLog(size);
 	SPOK_BinaryWriter stream(tbsLog);

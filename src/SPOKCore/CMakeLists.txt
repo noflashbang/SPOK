@@ -3,6 +3,7 @@ cmake_path(GET CMAKE_CURRENT_SOURCE_DIR PARENT_PATH PARENT_DIR)
 
 set( externHeadersCore 
     ${PARENT_DIR}/include/SPOK/SPOKCore.h
+    ${PARENT_DIR}/include/SPOK/SPOKError.h
     ${PARENT_DIR}/include/SPOK/SPOKApiTypes.h
     ${PARENT_DIR}/include/SPOK/SPOKNonce.h
     ${PARENT_DIR}/include/SPOK/SPOKBlob.h
@@ -21,6 +22,7 @@ set( libHeaders
 
 set( libSource
 	${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKCore.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKError.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKBlob.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SPOKPcrs.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NCryptUtil.cpp

@@ -2,7 +2,7 @@
 #include "TPM_20.h"
 #include "HasherUtil.h"
 #include "BCryptUtil.h"
-
+#include "Util.h"
 
 SPOK_AIKTpmAttestation::SPOK_AIKTpmAttestation(SPOK_Blob::Blob idBinding)
 {
@@ -25,8 +25,8 @@ SPOK_Blob::Blob SPOK_AIKTpmAttestation::GetPublicRSABlob() const
 
 	bw.LE_Write32(BCRYPT_RSAPUBLIC_MAGIC); //magic
 	bw.LE_Write32(m_idBinding.Public.KeyBits); //bitlen
-	bw.LE_Write32(m_idBinding.Public.Exponent.size()); //exponent size
-	bw.LE_Write32(m_idBinding.Public.Modulus.size()); //modulus size
+	bw.LE_Write32(SAFE_CAST_TO_UINT32(m_idBinding.Public.Exponent.size())); //exponent size
+	bw.LE_Write32(SAFE_CAST_TO_UINT32(m_idBinding.Public.Modulus.size())); //modulus size
 	bw.LE_Write32(0); //Prime1 size
 	bw.LE_Write32(0); //Prime2 size
 

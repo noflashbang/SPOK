@@ -249,7 +249,7 @@ uint16_t PlatformKey::KeySize() const
 		throw std::runtime_error("NCryptGetProperty \"NCRYPT_LENGTH_PROPERTY\" failed");
 	}
 
-	return keySize;
+	return SAFE_CAST_TO_UINT16(keySize);
 }
 
 uint16_t PlatformKey::MaxMessage() const

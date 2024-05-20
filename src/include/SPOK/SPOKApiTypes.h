@@ -33,3 +33,7 @@ enum class NCRYPT_MACHINE_KEY : int
 	NO = 0,
 	YES = 1
 };
+
+typedef std::int32_t SPOKSTATUS;
+
+

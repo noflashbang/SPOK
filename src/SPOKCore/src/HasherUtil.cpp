@@ -21,7 +21,7 @@ BCryptHashHandle::BCryptHashHandle(const BCryptAlgHandle& hAlg)
 BCryptHashHandle::BCryptHashHandle(const BCryptAlgHandle& hAlg, SPOK_Blob::Blob secret)
 {
 	m_Secret = secret;
-	NTSTATUS status = BCryptCreateHash(hAlg, &m_hHash, nullptr, 0, secret.data(), secret.size(), 0);
+	NTSTATUS status = BCryptCreateHash(hAlg, &m_hHash, nullptr, 0, secret.data(), SAFE_CAST_TO_UINT32(secret.size()), 0);
 	if (!SUCCEEDED(status))
 	{
 		throw std::runtime_error("BCryptCreateHash failed");
@@ -161,7 +161,7 @@ SPOK_Blob::Blob Hasher::PublicKeyHash(const SPOK_Blob::Blob& keyBlob)
 		exponentTL.push_back(static_cast<uint8_t>(expSize & 0xFF));
 	}
 
-	uint16_t length = modSize + expSize + exponentTL.size() + modulusTL.size();
+	uint16_t length = SAFE_CAST_TO_UINT16((modSize + expSize + exponentTL.size() + modulusTL.size()));
 
 	sequenceTL.push_back(0x30);
 	if (length < 128)

@@ -71,7 +71,7 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 	SPOK_Blob::Blob rsp;
 	rsp.resize(512);
 
-	uint32_t rspSize = rsp.size();
+	uint32_t rspSize = SAFE_CAST_TO_UINT32(rsp.size());
 	
 	auto bw = SPOK_BinaryWriter(cmd);
 	uint32_t usageAuthSize = 2 * sizeof(UINT32) + // authHandle
@@ -103,7 +103,7 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 
 	bw.BE_Write16(0x0010); // TPM_ALG_NULL
 
-	uint32_t cmdSize = bw.Tell();
+	uint32_t cmdSize = SAFE_CAST_TO_UINT32(bw.Tell());
 	bw.Seek(2); // go back to parameterSize
 	bw.BE_Write32(cmdSize); // write the size of the command
 
@@ -229,12 +229,12 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	bw.BE_Write16(0x0010);
 	bw.Write(pcrProfile); // PCR profile
 
-	uint32_t cmdSize = bw.Tell();
+	uint32_t cmdSize = SAFE_CAST_TO_UINT32(bw.Tell());
 	bw.Seek(2); // go back to parameterSize
 	bw.BE_Write32(cmdSize); // write the size of the command
 
 	// Send the command to the TPM
-	uint32_t rspSize = rsp.size();
+	uint32_t rspSize = SAFE_CAST_TO_UINT32(rsp.size());
 	auto status = Tbsip_Submit_Command(tsbHandle, TBS_COMMAND_LOCALITY_ZERO, TBS_COMMAND_PRIORITY_NORMAL, cmd.data(), cmdSize, rsp.data(), &rspSize);
 	if (status != TBS_SUCCESS)
 	{
@@ -284,10 +284,10 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	platAttBlob.Magic = SPOK_PLATFORM_ATT_MAGIC;
 	platAttBlob.TpmVersion = SPOK_TPM_VERSION_20;
 	platAttBlob.HeaderSize = sizeof(SPOK_PLATFORM_ATT_BLOB);
-	platAttBlob.PcrValuesSize = pcrsSize;
+	platAttBlob.PcrValuesSize = SAFE_CAST_TO_UINT32(pcrsSize);
 	platAttBlob.QuoteSize = quoteSize;
 	platAttBlob.SignatureSize = sigSize;
-	platAttBlob.TsbSize = tsbLog.size();
+	platAttBlob.TsbSize = SAFE_CAST_TO_UINT32(tsbLog.size());
 
 	bwQuote.Write((uint8_t*)&platAttBlob, sizeof(SPOK_PLATFORM_ATT_BLOB));
 	bwQuote.Write(pcrs);
@@ -494,11 +494,11 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 
 	SPOK_Blob::Blob tpm12HostageBlob(tpm12HostageBlobSize);
 	auto thbw = SPOK_BinaryWriter(tpm12HostageBlob);
-	thbw.BE_Write16(tpm12HostageBlobSize - sizeof(uint16_t)); // TPM2B_SENSITIVE.size
+	thbw.BE_Write16(SAFE_CAST_TO_UINT16((tpm12HostageBlobSize - sizeof(uint16_t)))); // TPM2B_SENSITIVE.size
 	thbw.BE_Write16(0x0001); // TPMT_SENSITIVE.sensitiveType = RSA
 	thbw.BE_Write16(0x0000); // authValue.Size
 	thbw.BE_Write16(0x0000); // symValue.Size
-	thbw.BE_Write16(pKeyPair->cbPrime1); // TPMU_SENSITIVE_COMPOSITE.size
+	thbw.BE_Write16(SAFE_CAST_TO_UINT16(pKeyPair->cbPrime1)); // TPMU_SENSITIVE_COMPOSITE.size
 	thbw.Write(&(key.data())[sizeof(BCRYPT_RSAKEY_BLOB) + pKeyPair->cbPublicExp + pKeyPair->cbModulus], pKeyPair->cbPrime1); // private
 
 	//calculate the symettric key
@@ -526,15 +526,15 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	keyBlob.HeaderSize = sizeof(PCP_20_KEY_BLOB);
 	keyBlob.PcpType = PCPTYPE_TPM20;
 	keyBlob.Flags = 0;
-	keyBlob.PublicSize = publicKey.size() + sizeof(uint16_t);
+	keyBlob.PublicSize = SAFE_CAST_TO_UINT32((publicKey.size() + sizeof(uint16_t)));
 	keyBlob.PrivateSize = 0;
 	keyBlob.MigrationPublicSize = 0;
 	keyBlob.MigrationPrivateSize = 0;
-	keyBlob.PolicyDigestListSize = policyDigestList.size();
-	keyBlob.PcrBindingSize = pcrBinding.size();
-	keyBlob.PcrDigestSize = pcrDigest.size();
-	keyBlob.EncryptedSecretSize = encryptedSecret.size();
-	keyBlob.Tpm12HostageBlobSize = sizeof(uint16_t) + sizeof(uint16_t) + outerHmac.size() + tpm12HostageBlob.size();
+	keyBlob.PolicyDigestListSize = SAFE_CAST_TO_UINT32(policyDigestList.size());
+	keyBlob.PcrBindingSize = SAFE_CAST_TO_UINT32(pcrBinding.size());
+	keyBlob.PcrDigestSize = SAFE_CAST_TO_UINT32(pcrDigest.size());
+	keyBlob.EncryptedSecretSize = SAFE_CAST_TO_UINT32(encryptedSecret.size());
+	keyBlob.Tpm12HostageBlobSize = SAFE_CAST_TO_UINT32((sizeof(uint16_t) + sizeof(uint16_t) + outerHmac.size() + tpm12HostageBlob.size()));
 	keyBlob.PcrAlgId = boundPcrs.GetAlgId();
 
 	//build the key blob
@@ -543,7 +543,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	auto bw = SPOK_BinaryWriter(keyBlobOut);
 	bw.Write((uint8_t*)&keyBlob, sizeof(PCP_20_KEY_BLOB));
 	
-	bw.BE_Write16(publicKey.size());
+	bw.BE_Write16(SAFE_CAST_TO_UINT16(publicKey.size()));
 	bw.Write(publicKey);
 
 	bw.Write(policyDigestList);
@@ -551,8 +551,8 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	bw.Write(pcrDigest);
 	bw.Write(encryptedSecret);
 	
-	bw.BE_Write16(sizeof(uint16_t) + outerHmac.size() + protectedBlob.size());
-	bw.BE_Write16(outerHmac.size());
+	bw.BE_Write16(SAFE_CAST_TO_UINT16((sizeof(uint16_t) + outerHmac.size() + protectedBlob.size())));
+	bw.BE_Write16(SAFE_CAST_TO_UINT16(outerHmac.size()));
 	bw.Write(outerHmac);
 	bw.Write(protectedBlob);
 
@@ -644,7 +644,7 @@ TPM2B_CREATION_DATA TPM2B_CREATION_DATA::Decode(const SPOK_Blob::Blob& creationB
 
 	auto prcSelection = std::vector<TPM2B_PCR_SELECTION>();
 	auto pcrSelectionSize = br.BE_Read32();
-	for (auto i = 0; i < pcrSelectionSize; i++)
+	for (uint32_t i = 0; i < pcrSelectionSize; i++)
 	{
 		auto algId = br.BE_Read16();
 		auto bitmapSize = br.BE_Read16();
@@ -706,7 +706,7 @@ TPM2B_ATTEST_QUOTE TPM2B_ATTEST_QUOTE::Decode(const SPOK_Blob::Blob& attestBlob)
 
 	auto prcSelection = std::vector<TPM2B_PCR_SELECTION>();
 	auto pcrSelectionSize = br.BE_Read32();
-	for (auto i = 0; i < pcrSelectionSize; i++)
+	for (uint32_t i = 0; i < pcrSelectionSize; i++)
 	{
 		auto algId = br.BE_Read16();
 		auto bitmapSize = br.Read();
@@ -889,10 +889,10 @@ SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, 
 	auto ekBlockLength = ekKey.BlockLength();
 
 	//create the challenge
-	uint16_t challengeSize = sizeof(uint16_t) +                      // TPM2B_ID_OBJECT.size
-							 sizeof(uint16_t) + SHA256_DIGEST_SIZE + // TPM2B_DIGEST outerHAMC
-							 encryptedSecret.size()                + // TPM2B_DIGEST credential value
-							 sizeof(uint16_t) + ekBlockLength;       // TPM2B_ENCRYPTED_SECRET protecting credential value
+	uint16_t challengeSize = SAFE_CAST_TO_UINT16((sizeof(uint16_t) +                      // TPM2B_ID_OBJECT.size
+							                      sizeof(uint16_t) + SHA256_DIGEST_SIZE + // TPM2B_DIGEST outerHAMC
+							                      encryptedSecret.size()                + // TPM2B_DIGEST credential value
+							                      sizeof(uint16_t) + ekBlockLength));     // TPM2B_ENCRYPTED_SECRET protecting credential value
 								
 	auto challengeObject = SPOK_Blob::Blob(challengeSize);
 	auto challengeBw = SPOK_BinaryWriter(challengeObject);
@@ -944,13 +944,11 @@ SPOK_Blob::Blob TPM_20::KDFa(const uint16_t nameAlgId, const SPOK_Blob::Blob& ke
 		bw.Seek(0);
 		bw.BE_Write32(iteration);
 
-		//std::cout << "KDFa Input: " << SPOK_Blob::BlobToBase64(buffer) << std::endl;
-
 		auto hash = hasher.OneShotHash(buffer);
 		if(hash.size() <= remaining)
 		{
 			out.insert(out.end(), hash.begin(), hash.end());
-			counter += hash.size();
+			counter += SAFE_CAST_TO_UINT16(hash.size());
 		}
 		else
 		{

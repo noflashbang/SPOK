@@ -64,48 +64,6 @@ public:
 	{
 		return (value >> 56) | ((value >> 40) & 0x000000000000FF00) | ((value >> 24) & 0x0000000000FF0000) | ((value >> 8) & 0x00000000FF000000) | ((value << 8) & 0x000000FF00000000) | ((value << 24) & 0x0000FF0000000000) | ((value << 40) & 0x00FF000000000000) | (value << 56);
 	}
-
-	//Might need these for 'optimizations' later
-	//static inline void Swap16InToByteArray(uint8_t* data, uint16_t value)
-	//{
-	//	data[0] = value >> 8;
-	//	data[1] = value & 0xFF;
-	//}
-	//
-	//static inline void Swap32InToByteArray(uint8_t* data, uint32_t value)
-	//{
-	//	data[0] = value >> 24;
-	//	data[1] = (value >> 16) & 0xFF;
-	//	data[2] = (value >> 8) & 0xFF;
-	//	data[3] = value & 0xFF;
-	//}
-	//
-	//static inline void Swap64InToByteArray(uint8_t* data, uint64_t value)
-	//{
-	//	data[0] = value >> 56;
-	//	data[1] = (value >> 48) & 0xFF;
-	//	data[2] = (value >> 40) & 0xFF;
-	//	data[3] = (value >> 32) & 0xFF;
-	//	data[4] = (value >> 24) & 0xFF;
-	//	data[5] = (value >> 16) & 0xFF;
-	//	data[6] = (value >> 8) & 0xFF;
-	//	data[7] = value & 0xFF;
-	//}
-	//
-	//static inline uint16_t Swap16FromByteArray(const uint8_t* data)
-	//{
-	//	return (data[0] << 8) | data[1];
-	//}
-	//
-	//static inline uint32_t Swap32FromByteArray(const uint8_t* data)
-	//{
-	//	return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
-	//}
-	//
-	//static inline uint64_t Swap64FromByteArray(const uint8_t* data)
-	//{
-	//	return ((uint64_t)data[0] << 56) | ((uint64_t)data[1] << 48) | ((uint64_t)data[2] << 40) | ((uint64_t)data[3] << 32) | ((uint64_t)data[4] << 24) | ((uint64_t)data[5] << 16) | ((uint64_t)data[6] << 8) | (uint64_t)data[7];
-	//}
 };
 
 class SPOK_BinaryWriter

@@ -1,6 +1,7 @@
 
 #include <SPOKCore.h>
 #include <SPOKNonce.h>
+#include <SPOKError.h>
 
 #include <SPOKClientApi.h>
 #include <SPOKServerApi.h>
@@ -114,41 +115,42 @@ TEST_CASE("Server RSA Operations")
 	pBytes = std::make_unique<unsigned char[]>(cbSize);
 	size_t sizeOut = 0;
 	
-	SPS_GenerateRSAKeyPair(1024, pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_GenerateRSAKeyPair(1024, pBytes.get(), cbSize, sizeOut)));
 	auto key_128 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
 	
-	SPS_GenerateRSAKeyPair(2048, pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_GenerateRSAKeyPair(2048, pBytes.get(), cbSize, sizeOut)));
 	auto key_256 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
 
-	SPS_GenerateRSAKeyPair(4096, pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_GenerateRSAKeyPair(4096, pBytes.get(), cbSize, sizeOut)));
 	auto key_512 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
 
 	auto secret = BCryptUtil::GetRandomBytes(32);
 
-	SPS_Encrypt(key_128.data(), key_128.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+
+	REQUIRE(SPOK_SUCCESS(SPS_Encrypt(key_128.data(), key_128.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut)));
 	auto enc_128 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
 
-	SPS_Encrypt(key_256.data(), key_256.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_Encrypt(key_256.data(), key_256.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut)));
 	auto enc_256 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
 
-	SPS_Encrypt(key_512.data(), key_512.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_Encrypt(key_512.data(), key_512.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut)));
 	auto enc_512 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
 
-	SPS_Decrypt(key_128.data(), key_128.size(), enc_128.data(), enc_128.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_Decrypt(key_128.data(), key_128.size(), enc_128.data(), enc_128.size(), pBytes.get(), cbSize, sizeOut)));
 	auto dec_128 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
 
-	SPS_Decrypt(key_256.data(), key_256.size(), enc_256.data(), enc_256.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_Decrypt(key_256.data(), key_256.size(), enc_256.data(), enc_256.size(), pBytes.get(), cbSize, sizeOut)));
 	auto dec_256 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
 
-	SPS_Decrypt(key_512.data(), key_512.size(), enc_512.data(), enc_512.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_Decrypt(key_512.data(), key_512.size(), enc_512.data(), enc_512.size(), pBytes.get(), cbSize, sizeOut)));
 	auto dec_512 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
 
@@ -156,15 +158,15 @@ TEST_CASE("Server RSA Operations")
 	REQUIRE(secret == dec_256);
 	REQUIRE(secret == dec_512);
 
-	SPS_Sign(key_128.data(), key_128.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_Sign(key_128.data(), key_128.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut)));
 	auto sig_128 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
 
-	SPS_Sign(key_256.data(), key_256.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_Sign(key_256.data(), key_256.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut)));
 	auto sig_256 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
 
-	SPS_Sign(key_512.data(), key_512.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_Sign(key_512.data(), key_512.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut)));
 	auto sig_512 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
 
@@ -182,7 +184,7 @@ TEST_CASE("Platform RSA Operations")
 	auto keyExists = SPC_PlatformKeyExists(L"TestKey", NCRYPT_MACHINE_KEY::NO);
 	if (!keyExists)
 	{
-		SPC_CreatePlatformKey(L"TestKey", NCRYPT_MACHINE_KEY::NO);
+		REQUIRE(SPOK_SUCCESS(SPC_CreatePlatformKey(L"TestKey", NCRYPT_MACHINE_KEY::NO)));
 	}
 
 	auto secret = BCryptUtil::GetRandomBytes(32);
@@ -194,19 +196,19 @@ TEST_CASE("Platform RSA Operations")
 
 	size_t sizeOut = 0;
 
-	SPC_PlatformEncrypt(L"TestKey", NCRYPT_MACHINE_KEY::NO, secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_PlatformEncrypt(L"TestKey", NCRYPT_MACHINE_KEY::NO, secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut)));
 	auto enc = SPOK_Blob::New(pBytes.get(), sizeOut);
 
 	ZeroMemory(pBytes.get(), cbSize);
 
-	SPC_PlatformDecrypt(L"TestKey", NCRYPT_MACHINE_KEY::NO, enc.data(), enc.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_PlatformDecrypt(L"TestKey", NCRYPT_MACHINE_KEY::NO, enc.data(), enc.size(), pBytes.get(), cbSize, sizeOut)));
 
 	REQUIRE(sizeOut == secret.size());
 	REQUIRE(0 == memcmp(pBytes.get(), secret.data(), sizeOut));
 
 	ZeroMemory(pBytes.get(), cbSize);
 
-	SPC_PlatformSign(L"TestKey", NCRYPT_MACHINE_KEY::NO, secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_PlatformSign(L"TestKey", NCRYPT_MACHINE_KEY::NO, secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut)));
 	auto sig = SPOK_Blob::New(pBytes.get(), sizeOut);
 
 	ZeroMemory(pBytes.get(), cbSize);
@@ -234,11 +236,11 @@ TEST_CASE("SPC_AIKGetPublicKey")
 	if (!exists)
 	{
 		auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestNonce"));
-		SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
+		REQUIRE(SPOK_SUCCESS(SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size())));
 	}
 
 	//get the size
-	SPC_AIKGetPublicKey(name.c_str(), flag, pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_AIKGetPublicKey(name.c_str(), flag, pBytes.get(), cbSize, sizeOut)));
 
 	REQUIRE(sizeOut > 0);
 }
@@ -253,7 +255,7 @@ TEST_CASE("SPC_GetPublicEndorsementKey")
 	size_t sizeOut = 0;
 
 	//get the size
-	SPC_GetEndorsementPublicKey(pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_GetEndorsementPublicKey(pBytes.get(), cbSize, sizeOut)));
 
 	SPOK_Blob::Blob blob = SPOK_Blob::New(pBytes.get(), sizeOut);
 
@@ -276,7 +278,7 @@ TEST_CASE("SPC_GetSRK")
 	size_t sizeOut = 0;
 
 	//get the size
-	SPC_GetStorageRootKey(pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_GetStorageRootKey(pBytes.get(), cbSize, sizeOut)));
 
 	SPOK_Blob::Blob blob = SPOK_Blob::New(pBytes.get(), sizeOut);
 
@@ -308,10 +310,10 @@ TEST_CASE("SPC_AIKGetChallengeBinding")
 		if (!exists)
 		{
 			auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestNonce"));
-			SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
+			REQUIRE(SPOK_SUCCESS(SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size())));
 		}
 
-		SPC_AIKGetChallengeBinding(name.c_str(), flag, pBytes.get(), cbSize, sizeOut);
+		REQUIRE(SPOK_SUCCESS(SPC_AIKGetChallengeBinding(name.c_str(), flag, pBytes.get(), cbSize, sizeOut)));
 
 		REQUIRE(sizeOut > 0);
 	}
@@ -325,19 +327,19 @@ TEST_CASE("SPC_AIKGetChallengeBinding")
 
 		REQUIRE(valid);
 
-		SPC_GetEndorsementPublicKey(pBytes.get(), cbSize, sizeOut);
+		REQUIRE(SPOK_SUCCESS(SPC_GetEndorsementPublicKey(pBytes.get(), cbSize, sizeOut)));
 		auto ekPub = SPOK_Blob::New(pBytes.get(), sizeOut);
 
 		auto secret = BCryptUtil::GetRandomBytes(32);
 
-		SPS_AIKTpmAttest_GetChallenge(handle, ((uint16_t)0x000B), ekPub.data(), ekPub.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+		REQUIRE(SPOK_SUCCESS(SPS_AIKTpmAttest_GetChallenge(handle, ((uint16_t)0x000B), ekPub.data(), ekPub.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut)));
 
-		SPS_AttestationDestroy(handle);
+		REQUIRE(SPOK_SUCCESS(SPS_AttestationDestroy(handle)));
 
 		REQUIRE(sizeOut > 0);
 		auto challenge = SPOK_Blob::New(pBytes.get(), sizeOut);
 
-		SPC_AIKActivateChallenge(name.c_str(), flag, challenge.data(), challenge.size(), pBytes.get(), cbSize, sizeOut);
+		REQUIRE(SPOK_SUCCESS(SPC_AIKActivateChallenge(name.c_str(), flag, challenge.data(), challenge.size(), pBytes.get(), cbSize, sizeOut)));
 
 		REQUIRE(sizeOut > 0);
 
@@ -367,7 +369,7 @@ TEST_CASE("SPC_GetPCRTable")
 
 	size_t sizeOut = 0;
 
-	SPC_GetPCRTable(pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_GetPCRTable(pBytes.get(), cbSize, sizeOut)));
 
 	REQUIRE(sizeOut > 0);
 }
@@ -381,7 +383,7 @@ TEST_CASE("SPC_GetBootLog")
 
 	size_t sizeOut = 0;
 
-	SPC_GetBootLog(pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_GetBootLog(pBytes.get(), cbSize, sizeOut)));
 
 	REQUIRE(sizeOut > 0);
 
@@ -400,7 +402,7 @@ TEST_CASE("SPC_GetFilteredBootLog")
 
 	size_t sizeOut = 0;
 
-	SPC_GetFilteredBootLog((PCR_13 | PCR_14), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_GetFilteredBootLog((PCR_13 | PCR_14), pBytes.get(), cbSize, sizeOut)));
 
 	REQUIRE(sizeOut > 0);
 
@@ -428,14 +430,14 @@ TEST_CASE("SPC_AIKGetPlatformAttestation")
 		if (!exists)
 		{
 			auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestNonce"));
-			SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
+			REQUIRE(SPOK_SUCCESS(SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size())));
 		}
 
-		SPC_AIKGetPublicKey(name.c_str(), flag, pBytes.get(), cbSize, sizeOut);
+		REQUIRE(SPOK_SUCCESS(SPC_AIKGetPublicKey(name.c_str(), flag, pBytes.get(), cbSize, sizeOut)));
 		aikPub = SPOK_Blob::New(pBytes.get(), sizeOut);
 		
 		auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestPlatformNonce"));
-		SPC_AIKGetPlatformAttestation(name.c_str(), flag, nonce.data(), nonce.size(), (PCR_13 | PCR_14), pBytes.get(), cbSize, sizeOut);
+		REQUIRE(SPOK_SUCCESS(SPC_AIKGetPlatformAttestation(name.c_str(), flag, nonce.data(), nonce.size(), (PCR_13 | PCR_14), pBytes.get(), cbSize, sizeOut)));
 
 		REQUIRE(sizeOut > 0);
 
@@ -452,7 +454,7 @@ TEST_CASE("SPC_AIKGetPlatformAttestation")
 		REQUIRE(valid);
 
 		uint8_t hashSize;
-		SPS_AIKPlatformAttest_GetPCR(handle, pBytes.get(), cbSize, sizeOut, hashSize);
+		REQUIRE(SPOK_SUCCESS(SPS_AIKPlatformAttest_GetPCR(handle, pBytes.get(), cbSize, sizeOut, hashSize)));
 
 		SPOK_Pcrs pcrs = SPOK_Pcrs(SPOK_Blob::New(pBytes.get(), sizeOut));
 
@@ -460,12 +462,12 @@ TEST_CASE("SPC_AIKGetPlatformAttestation")
 		REQUIRE(pcrs.GetDigestSize() == hashSize);
 		REQUIRE(pcrs.GetBlob().size() > 0);
 
-		SPS_AIKPlatformAttest_GetTcgLog(handle, pBytes.get(), cbSize, sizeOut);
+		REQUIRE(SPOK_SUCCESS(SPS_AIKPlatformAttest_GetTcgLog(handle, pBytes.get(), cbSize, sizeOut)));
 
 		auto log = TcgLog::Parse(SPOK_Blob::New(pBytes.get(), sizeOut));
 		REQUIRE(log.Events.size() > 0);
 
-		SPS_AttestationDestroy(handle);
+		REQUIRE(SPOK_SUCCESS(SPS_AttestationDestroy(handle)));
 	}
 }
 
@@ -488,7 +490,7 @@ TEST_CASE("SPC_ImportWrappedKey_AndAttest")
 	if (!exists)
 	{
 		auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestNonce"));
-		SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size());
+		REQUIRE(SPOK_SUCCESS(SPC_AIKCreate(name.c_str(), flag, nonce.data(), nonce.size())));
 	}
 
 	//generate a key
@@ -496,16 +498,16 @@ TEST_CASE("SPC_ImportWrappedKey_AndAttest")
 
 	//get the srk
 	memset(pBytes.get(), 0, cbSize);
-	SPC_GetStorageRootKey(pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_GetStorageRootKey(pBytes.get(), cbSize, sizeOut)));
 	auto srk = SPOK_Blob::New(pBytes.get(), sizeOut);
 
 	//get the aikpub
-	SPC_AIKGetPublicKey(name.c_str(), flag, pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_AIKGetPublicKey(name.c_str(), flag, pBytes.get(), cbSize, sizeOut)));
 	auto aikPub = SPOK_Blob::New(pBytes.get(), sizeOut);
 
 	//get the PCRs for the key
 	memset(pBytes.get(), 0, cbSize);
-	SPC_GetPCRTable(pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_GetPCRTable(pBytes.get(), cbSize, sizeOut)));
 	auto pcrs = SPOK_Pcrs(SPOK_Blob::New(pBytes.get(), sizeOut));
 
 	//filter to the PCRs we want
@@ -514,23 +516,23 @@ TEST_CASE("SPC_ImportWrappedKey_AndAttest")
 
 	//wrap the key
 	memset(pBytes.get(), 0, cbSize);
-	SPS_WrapKeyForPlatformImport(key.data(), key.size(), srk.data(), srk.size(), pcrsBlob.data(), pcrsBlob.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_WrapKeyForPlatformImport(key.data(), key.size(), srk.data(), srk.size(), pcrsBlob.data(), pcrsBlob.size(), pBytes.get(), cbSize, sizeOut)));
 	auto wrappedKey = SPOK_Blob::New(pBytes.get(), sizeOut);
 
 	REQUIRE(wrappedKey.size() > 0);
 
 	//get the public name from wrapped key
-	SPS_WrappedKeyName(wrappedKey.data(), wrappedKey.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPS_WrappedKeyName(wrappedKey.data(), wrappedKey.size(), pBytes.get(), cbSize, sizeOut)));
 	auto wrappedKeyName = SPOK_Blob::New(pBytes.get(), sizeOut);
 	
 	REQUIRE(wrappedKeyName.size() > 0);
 
 	//import the key
-	SPC_PlatformImportWrappedKey(nameKey.c_str(), flagKey, wrappedKey.data(), wrappedKey.size());
+	REQUIRE(SPOK_SUCCESS(SPC_PlatformImportWrappedKey(nameKey.c_str(), flagKey, wrappedKey.data(), wrappedKey.size())));
 
 	//get the attestation
 	auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestKeyNonce"));
-	SPC_AIKGetKeyAttestation(name.c_str(), flag, nonce.data(), nonce.size(), nameKey.c_str(), flagKey, pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_AIKGetKeyAttestation(name.c_str(), flag, nonce.data(), nonce.size(), nameKey.c_str(), flagKey, pBytes.get(), cbSize, sizeOut)));
 
 	REQUIRE(sizeOut > 0);
 
@@ -540,7 +542,7 @@ TEST_CASE("SPC_ImportWrappedKey_AndAttest")
 	REQUIRE(valid);
 
 	//release the attestation resources
-	SPS_AttestationDestroy(handle);
+	REQUIRE(SPOK_SUCCESS(SPS_AttestationDestroy(handle)));
 }
 
 TEST_CASE("Platform Wrapped Key RSA Operations")
@@ -556,19 +558,19 @@ TEST_CASE("Platform Wrapped Key RSA Operations")
 
 	size_t sizeOut = 0;
 
-	SPC_PlatformEncrypt(L"TestWrappedKey", NCRYPT_MACHINE_KEY::NO, secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_PlatformEncrypt(L"TestWrappedKey", NCRYPT_MACHINE_KEY::NO, secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut)));
 	auto enc = SPOK_Blob::New(pBytes.get(), sizeOut);
 
 	ZeroMemory(pBytes.get(), cbSize);
 
-	SPC_PlatformDecrypt(L"TestWrappedKey", NCRYPT_MACHINE_KEY::NO, enc.data(), enc.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_PlatformDecrypt(L"TestWrappedKey", NCRYPT_MACHINE_KEY::NO, enc.data(), enc.size(), pBytes.get(), cbSize, sizeOut)));
 
 	REQUIRE(sizeOut == secret.size());
 	REQUIRE(0 == memcmp(pBytes.get(), secret.data(), sizeOut));
 
 	ZeroMemory(pBytes.get(), cbSize);
 
-	SPC_PlatformSign(L"TestWrappedKey", NCRYPT_MACHINE_KEY::NO, secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut);
+	REQUIRE(SPOK_SUCCESS(SPC_PlatformSign(L"TestWrappedKey", NCRYPT_MACHINE_KEY::NO, secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut)));
 	auto sig = SPOK_Blob::New(pBytes.get(), sizeOut);
 
 	ZeroMemory(pBytes.get(), cbSize);

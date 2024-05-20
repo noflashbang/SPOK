@@ -41,41 +41,41 @@ extern "C"
 #endif
 		
 	//AIK Management
-	SPOKCLIENT_API void SPC_AIKCreate(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* nonce, const size_t cbNonce);
-	SPOKCLIENT_API void SPC_AIKDelete(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);
+	SPOKCLIENT_API SPOKSTATUS SPC_AIKCreate(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* nonce, const size_t cbNonce);
+	SPOKCLIENT_API SPOKSTATUS SPC_AIKDelete(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);
 	SPOKCLIENT_API bool SPC_AIKExists(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);
 
 	//AIK Attestation
-	SPOKCLIENT_API void SPC_AIKGetKeyAttestation(const wchar_t* aikName, const NCRYPT_MACHINE_KEY aikFlag, const uint8_t* nonce, const size_t cbNonce, const wchar_t* keyName, const NCRYPT_MACHINE_KEY keyFlag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
-	SPOKCLIENT_API void SPC_AIKGetPlatformAttestation(const wchar_t* aikName, const NCRYPT_MACHINE_KEY aikFlag, const uint8_t* nonce, const size_t cbNonce, const uint32_t pcrsToInclude, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_AIKGetKeyAttestation(const wchar_t* aikName, const NCRYPT_MACHINE_KEY aikFlag, const uint8_t* nonce, const size_t cbNonce, const wchar_t* keyName, const NCRYPT_MACHINE_KEY keyFlag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_AIKGetPlatformAttestation(const wchar_t* aikName, const NCRYPT_MACHINE_KEY aikFlag, const uint8_t* nonce, const size_t cbNonce, const uint32_t pcrsToInclude, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 
 	//AIK Public Key
-	SPOKCLIENT_API void SPC_AIKGetPublicKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_AIKGetPublicKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 
 	//Endorsement Key Access
-	SPOKCLIENT_API void SPC_GetEndorsementPublicKey(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_GetEndorsementPublicKey(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 
 	//AIK Challenge
-	SPOKCLIENT_API void SPC_AIKGetChallengeBinding(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
-	SPOKCLIENT_API void SPC_AIKActivateChallenge(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pChallenge, const size_t cbChallenge, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_AIKGetChallengeBinding(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_AIKActivateChallenge(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pChallenge, const size_t cbChallenge, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 
 	//AIK Quote and Verify
-	SPOKCLIENT_API void SPC_GetBootLog(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
-	SPOKCLIENT_API void SPC_GetFilteredBootLog(const uint32_t pcrsToInclude, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
-	SPOKCLIENT_API void SPC_GetPCRTable(uint8_t* pPcrTable, const size_t cbPcrTable, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_GetBootLog(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_GetFilteredBootLog(const uint32_t pcrsToInclude, uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_GetPCRTable(uint8_t* pPcrTable, const size_t cbPcrTable, size_t& sizeOut);
 
 	//SRK Access
-	SPOKCLIENT_API void SPC_GetStorageRootKey(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_GetStorageRootKey(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut);
 
 	//User Key Addition
-	SPOKCLIENT_API void SPC_PlatformImportWrappedKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pKeyBlob, const size_t cbKeyBlob);
-	SPOKCLIENT_API void SPC_CreatePlatformKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);
+	SPOKCLIENT_API SPOKSTATUS SPC_PlatformImportWrappedKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pKeyBlob, const size_t cbKeyBlob);
+	SPOKCLIENT_API SPOKSTATUS SPC_CreatePlatformKey(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);
 	SPOKCLIENT_API bool SPC_PlatformKeyExists(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);
 
 	//Cryptographic Operations
-	SPOKCLIENT_API void SPC_PlatformDecrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut);
-	SPOKCLIENT_API void SPC_PlatformEncrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut);
-	SPOKCLIENT_API void SPC_PlatformSign(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pHash, const size_t cbhash, uint8_t* pSignature, const size_t cbSignature, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_PlatformDecrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_PlatformEncrypt(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pBytes, const size_t cbBytes, uint8_t* pData, const size_t cbData, size_t& sizeOut);
+	SPOKCLIENT_API SPOKSTATUS SPC_PlatformSign(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pHash, const size_t cbhash, uint8_t* pSignature, const size_t cbSignature, size_t& sizeOut);
 	SPOKCLIENT_API bool SPC_PlatformVerifySignature(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* pHash, const size_t cbhash, const uint8_t* pSignature, const size_t cbSignature);
 
 #ifdef __cplusplus

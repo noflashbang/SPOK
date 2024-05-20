@@ -1,4 +1,5 @@
 #include "SPOKBlob.h"
+#include "SPOKError.h"
 
 
 SPOK_Blob::Blob SPOK_Blob::New(const size_t size)
@@ -15,7 +16,7 @@ void SPOK_Blob::Copy2CStylePtr(const SPOK_Blob::Blob& source, uint8_t* destPtr, 
 	sizeOut = source.size();
 	if (destPtr == nullptr || destSize <= sizeOut)
 	{
-		return;
+		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_Blob::Copy2CStylePtr out of bounds");
 	}
 	memcpy_s(destPtr, destSize, source.data(), source.size());
 }
@@ -87,7 +88,7 @@ SPOK_Blob::Blob SPOK_Blob::Base64ToBlob(const std::string& base64)
 	{
 		std::array<uint8_t, 256> values;
 		values.fill(0xFF);
-		for (size_t i = 0; i < 64; i++)
+		for (uint8_t i = 0; i < 64; i++)
 		{
 			values["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[i]] = i;
 		}
@@ -130,7 +131,7 @@ uint8_t SPOK_BinaryReader::Read()
 {
 	if(CanRead(1) == false)
 	{
-		return 0;
+		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryReader::Read out of bounds");
 	}
 	uint8_t value = m_data[m_cursor];
 	m_cursor++;
@@ -140,7 +141,7 @@ uint16_t SPOK_BinaryReader::LE_Read16()
 {
 	if(CanRead(2) == false)
 	{
-		return 0;
+		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryReader::LE_Read16 out of bounds");
 	}
 	uint16_t value = m_data[m_cursor] | (m_data[m_cursor + 1] << 8);
 	m_cursor += 2;
@@ -151,7 +152,7 @@ uint32_t SPOK_BinaryReader::LE_Read32()
 {
 	if(CanRead(4) == false)
 	{
-		return 0;
+		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryReader::LE_Read32 out of bounds");
 	}
 	uint32_t value = (uint32_t)m_data[m_cursor] | ((uint32_t)m_data[m_cursor + 1] << 8) | ((uint32_t)m_data[m_cursor + 2] << 16) | ((uint32_t)m_data[m_cursor + 3] << 24);
 	m_cursor += 4;
@@ -162,7 +163,7 @@ uint64_t SPOK_BinaryReader::LE_Read64()
 {
 	if(CanRead(8) == false)
 	{
-		return 0;
+		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryReader::LE_Read64 out of bounds");
 	}
 	uint64_t value = (uint64_t)m_data[m_cursor] | ((uint64_t)m_data[m_cursor + 1] << 8) | ((uint64_t)m_data[m_cursor + 2] << 16) | ((uint64_t)m_data[m_cursor + 3] << 24) | ((uint64_t)m_data[m_cursor + 4] << 32) | ((uint64_t)m_data[m_cursor + 5] << 40) | ((uint64_t)m_data[m_cursor + 6] << 48) | ((uint64_t)m_data[m_cursor + 7] << 56);
 	m_cursor += 8;
@@ -188,7 +189,7 @@ void SPOK_BinaryWriter::Write(const uint8_t value)
 {
 	if(CanWrite(1) == false)
 	{
-		return;
+		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryWriter::Write out of bounds");
 	}
 	m_data[m_cursor] = value;
 	m_cursor++;
@@ -198,7 +199,7 @@ void SPOK_BinaryWriter::LE_Write16(const uint16_t value)
 {
 	if(CanWrite(2) == false)
 	{
-		return;
+		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryWriter::LE_Write16 out of bounds");
 	}
 	m_data[m_cursor] = value & 0xFF;
 	m_data[m_cursor + 1] = (value >> 8) & 0xFF;
@@ -208,7 +209,7 @@ void SPOK_BinaryWriter::LE_Write32(const uint32_t value)
 {
 	if(CanWrite(4) == false)
 	{
-		return;
+		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryWriter::LE_Write32 out of bounds");
 	}
 	m_data[m_cursor] = value & 0xFF;
 	m_data[m_cursor + 1] = (value >> 8) & 0xFF;
@@ -220,7 +221,7 @@ void SPOK_BinaryWriter::LE_Write64(const uint64_t value)
 {
 	if(CanWrite(8) == false)
 	{
-		return;
+		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryWriter::LE_Write64 out of bounds");
 	}
 	m_data[m_cursor] = value & 0xFF;
 	m_data[m_cursor + 1] = (value >> 8) & 0xFF;
@@ -250,7 +251,7 @@ void SPOK_BinaryReader::Read(uint8_t* dest, const size_t size)
 {
 	if(CanRead(size) == false)
 	{
-		return;
+		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryReader::Read out of bounds");
 	}
 	memcpy_s(dest, size, m_data.data() + m_cursor, size);
 	m_cursor += size;
@@ -260,7 +261,7 @@ SPOK_Blob::Blob SPOK_BinaryReader::Read(const size_t size)
 {
 	if (CanRead(size) == false)
 	{
-		return SPOK_Blob::New(0);
+		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryReader::Read out of bounds");
 	}
 	auto blob = SPOK_Blob::New(m_data.data() + m_cursor, size);
 	m_cursor += size;
@@ -271,7 +272,7 @@ void SPOK_BinaryWriter::Write(const uint8_t* source, const size_t size)
 {
 	if(CanWrite(size) == false)
 	{
-		return;
+		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryWriter::Write out of bounds");
 	}
 	memcpy_s(m_data.data() + m_cursor, m_data.size() - m_cursor, source, size);
 	m_cursor += size;

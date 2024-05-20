@@ -1,6 +1,7 @@
 #include "BCryptUtil.h"
 #include <ncrypt.h>
 #include "Util.h"
+#include "SPOKError.h"
 
 BCryptAlgHandle::BCryptAlgHandle(AlgId alg) : m_hAlg(NULL), m_algId(alg)
 {
@@ -45,7 +46,8 @@ BCryptAlgHandle::BCryptAlgHandle(AlgId alg) : m_hAlg(NULL), m_algId(alg)
 		}
 		default:
 		{
-			throw std::runtime_error("Invalid algorithm");
+			auto fmtError = std::format("BCryptAlgHandle: Unknown algorithm id {}", (uint16_t)alg);
+			SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 		}
 	}
 
@@ -53,7 +55,7 @@ BCryptAlgHandle::BCryptAlgHandle(AlgId alg) : m_hAlg(NULL), m_algId(alg)
 	{
 		auto name = Name();
 		auto fmtError = std::format("BCryptOpenAlgorithmProvider failed for algorithm {} with error {}", name, status);
-		throw std::runtime_error(fmtError);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 }
 
@@ -84,7 +86,8 @@ BCryptAlgHandle::BCryptAlgHandle(AlgId alg, bool hmacFlag) : m_hAlg(NULL), m_alg
 		}
 		default:
 		{
-			throw std::runtime_error("Invalid algorithm");
+			auto fmtError = std::format("BCryptAlgHandle: Unknown algorithm id {}", (uint16_t)alg);
+			SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 		}
 	}
 
@@ -92,7 +95,7 @@ BCryptAlgHandle::BCryptAlgHandle(AlgId alg, bool hmacFlag) : m_hAlg(NULL), m_alg
 	{
 		auto name = Name();
 		auto fmtError = std::format("BCryptOpenAlgorithmProvider failed for algorithm {} with error {}", name, status);
-		throw std::runtime_error(fmtError);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 }
 
@@ -136,7 +139,8 @@ std::string BCryptAlgHandle::Name() const
 		}
 		default:
 		{
-			throw std::runtime_error("Invalid algorithm");
+			auto fmtError = std::format("BCryptAlgHandle: Unknown algorithm id {}", (uint16_t)m_algId);
+			SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 		}
 	}
 }
@@ -182,14 +186,16 @@ SPOK_Blob::Blob BCryptKey::GetPublicKey()
 	HRESULT status = BCryptExportKey(m_hKey, NULL, BCRYPT_RSAPUBLIC_BLOB, NULL, 0, &keyBlobSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptExportKey failed");
+		auto fmtError = std::format("GetPublicKey: BCryptExportKey failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	auto keyBlob = SPOK_Blob::New(keyBlobSize);
 	status = BCryptExportKey(m_hKey, NULL, BCRYPT_RSAPUBLIC_BLOB, keyBlob.data(), SAFE_CAST_TO_UINT32(keyBlob.size()), &keyBlobSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptExportKey failed");
+		auto fmtError = std::format("GetPublicKey: BCryptExportKey failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 	return keyBlob;
 }
@@ -201,9 +207,10 @@ uint16_t BCryptKey::KeySize() const
 	HRESULT status = BCryptGetProperty(m_hKey, BCRYPT_KEY_LENGTH, (PUCHAR)&keySize, sizeof(keySize), &cbData, 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptGetProperty failed");
+		auto fmtError = std::format("KeySize: BCryptGetProperty failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
-	return keySize;
+	return SAFE_CAST_TO_UINT16(keySize);
 }
 
 uint16_t BCryptKey::BlockLength() const
@@ -213,9 +220,10 @@ uint16_t BCryptKey::BlockLength() const
 	HRESULT status = BCryptGetProperty(m_hKey, BCRYPT_BLOCK_LENGTH, (PUCHAR)&blockLength, sizeof(blockLength), &cbData, 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptGetProperty failed");
+		auto fmtError = std::format("BlockLength: BCryptGetProperty failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
-	return blockLength;
+	return SAFE_CAST_TO_UINT16(blockLength);
 }
 
 uint16_t BCryptKey::MaxMessage() const
@@ -229,7 +237,7 @@ SPOK_Blob::Blob BCryptKey::Encrypt(const SPOK_Blob::Blob& data, bool useIdentity
 {
 	if (data.size() > MaxMessage())
 	{
-		throw std::runtime_error(std::format("Data too large to encrypt -> Max {} bytes, got {} bytes", MaxMessage(), data.size()));
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, std::format("Data too large to encrypt -> Max {} bytes, got {} bytes", MaxMessage(), data.size()));
 	}
 
 	DWORD dataSize = 0;
