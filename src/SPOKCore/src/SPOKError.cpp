@@ -6,6 +6,10 @@ SPOKSTATUS SPOK_Error::SPOK_LippincottHandler()
 	{
 		throw;
 	}
+	catch (const std::overflow_error& e)
+	{
+		return SPOK_OVERFLOW;
+	}
 	catch (const std::runtime_error& e)
 	{
 		return SPOK_ErrorMessageToStatus(e.what());
