@@ -56,5 +56,6 @@ std::map<SPOKSTATUS, std::string> SPOK_Error::m_ErrorMessages = {
 	{SPOK_INVALID_DATA, "Invalid data"},
 	{SPOK_INVALID_SIGNATURE, "Invalid signature"},
 	{SPOK_INVALID_KEY, "Invalid key"},
-	{SPOK_TPM_CMD_FAILED, "TPM command failed"},
+	{SPOK_TPMCMD_FAILED, "TPM command failed"},
+	{SPOK_TCGLOG_FAILURE, "TCG log failure"}
 };

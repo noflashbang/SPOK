@@ -252,20 +252,22 @@ SPOK_Blob::Blob BCryptKey::Encrypt(const SPOK_Blob::Blob& data, bool useIdentity
 		cbLabel = 9;
 	}
 
-	auto paddingInfo = BCRYPT_OAEP_PADDING_INFO{ BCRYPT_SHA256_ALGORITHM, szLabel, cbLabel };
+	auto paddingInfo = BCRYPT_OAEP_PADDING_INFO { BCRYPT_SHA256_ALGORITHM, szLabel, cbLabel };
 
 	// Encrypt the data
 	HRESULT status = BCryptEncrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), &paddingInfo, NULL, 0, NULL, NULL, &dataSize, BCRYPT_PAD_OAEP);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptEncrypt failed");
+		auto fmtError = std::format("Encrypt: BCryptEncrypt failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	auto encryptedData = SPOK_Blob::New(dataSize);
 	status = BCryptEncrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), &paddingInfo, NULL, 0, encryptedData.data(), SAFE_CAST_TO_UINT32(encryptedData.size()), &dataSize, BCRYPT_PAD_OAEP);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("NCryptEncrypt failed");
+		auto fmtError = std::format("Encrypt: BCryptEncrypt failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	return encryptedData;
@@ -285,14 +287,16 @@ SPOK_Blob::Blob BCryptKey::Decrypt(const SPOK_Blob::Blob& data)
 	HRESULT status = BCryptDecrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), &paddingInfo, NULL, 0, NULL, 0, &dataSize, BCRYPT_PAD_OAEP);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptDecrypt failed");
+		auto fmtError = std::format("Decrypt: BCryptDecrypt failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	auto decryptedData = SPOK_Blob::New(dataSize);
 	status = BCryptDecrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), &paddingInfo, NULL, 0, decryptedData.data(), SAFE_CAST_TO_UINT32(decryptedData.size()), &dataSize, BCRYPT_PAD_OAEP);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptDecrypt failed");
+		auto fmtError = std::format("Decrypt: BCryptDecrypt failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	return decryptedData;
@@ -308,7 +312,7 @@ SPOK_Blob::Blob BCryptKey::Sign(const SPOK_Blob::Blob& hash)
 {
 	if (hash.size() > MaxMessage())
 	{
-		throw std::runtime_error(std::format("Data too large to sign -> Max {} bytes, got {} bytes", MaxMessage(), hash.size()));
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, std::format("Data too large to sign -> Max {} bytes, got {} bytes", MaxMessage(), hash.size()));
 	}
 	
 	BCRYPT_PKCS1_PADDING_INFO padInfo;
@@ -330,14 +334,16 @@ SPOK_Blob::Blob BCryptKey::Sign(const SPOK_Blob::Blob& hash)
 	}
 	else
 	{
-		throw std::runtime_error("Invalid hash algorithm");
+		auto fmtError = std::format("Sign: Unknown algorithm id {}", (uint16_t)m_signHashAlg);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 	}
 
 	DWORD signatureSize = 0;
 	HRESULT status = BCryptSignHash(m_hKey, &padInfo, const_cast<uint8_t*>(hash.data()), SAFE_CAST_TO_UINT32(hash.size()), NULL, 0, &signatureSize, BCRYPT_PAD_PKCS1);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptSignHash failed");
+		auto fmtError = std::format("Sign: BCryptSignHash failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	auto signature = SPOK_Blob::New(signatureSize);
@@ -345,7 +351,8 @@ SPOK_Blob::Blob BCryptKey::Sign(const SPOK_Blob::Blob& hash)
 	status = BCryptSignHash(m_hKey, &padInfo, const_cast<uint8_t*>(hash.data()), SAFE_CAST_TO_UINT32(hash.size()), signature.data(), SAFE_CAST_TO_UINT32(signature.size()), &signatureSize, BCRYPT_PAD_PKCS1);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptSignHash failed");
+		auto fmtError = std::format("Sign: BCryptSignHash failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	return signature;
@@ -372,7 +379,8 @@ bool BCryptKey::Verify(const SPOK_Blob::Blob& hash, const SPOK_Blob::Blob& signa
 	}
 	else
 	{
-		throw std::runtime_error("Invalid hash algorithm");
+		auto fmtError = std::format("Verify: Unknown algorithm id {}", (uint16_t)m_signHashAlg);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 	}
 
 	HRESULT status = BCryptVerifySignature(m_hKey, &padInfo, const_cast<uint8_t*>(hash.data()), SAFE_CAST_TO_UINT32(hash.size()), const_cast<uint8_t*>(signature.data()), SAFE_CAST_TO_UINT32(signature.size()), BCRYPT_PAD_PKCS1);
@@ -388,24 +396,26 @@ SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring&
 {
 	if(alg != BCRYPT_AES_ALGORITHM)
 	{
-		throw std::runtime_error("Invalid algorithm");
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, "SymmetricCipher: Invalid algorithm - must be AES");
 	}
-	if(mode != BCRYPT_CHAIN_MODE_CFB) //only supporting CBC mode for now
+	if(mode != BCRYPT_CHAIN_MODE_CFB) //only supporting CFB mode for now
 	{
-		throw std::runtime_error("Invalid mode");
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, "SymmetricCipher: Invalid mode - must be CFB");
 	}
 
 	NTSTATUS status = BCryptGenerateSymmetricKey(m_hAlg, &m_hKey, NULL, 0, const_cast<uint8_t*>(key.data()), SAFE_CAST_TO_UINT32(key.size()), 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptGenerateSymmetricKey failed");
+		auto fmtError = std::format("SymmetricCipher: BCryptGenerateSymmetricKey failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	//set chaining mode
 	status = BCryptSetProperty(m_hKey, BCRYPT_CHAINING_MODE, (PUCHAR)mode.c_str(), SAFE_CAST_TO_UINT32(mode.size()), 0);
 	if(status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptSetProperty failed");
+		auto fmtError = std::format("SymmetricCipher: BCryptSetProperty failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	//set block length
@@ -413,7 +423,8 @@ SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring&
 	status = BCryptSetProperty(m_hKey, BCRYPT_MESSAGE_BLOCK_LENGTH, (PUCHAR)&blockLength, sizeof(blockLength), 0);
 	if(status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptSetProperty failed");
+		auto fmtError = std::format("SymmetricCipher: BCryptSetProperty failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 }
 SymmetricCipher::~SymmetricCipher()
@@ -431,14 +442,16 @@ SPOK_Blob::Blob SymmetricCipher::Encrypt(const SPOK_Blob::Blob& data)
 	NTSTATUS status = BCryptEncrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), NULL, 0, &dataSize, BCRYPT_BLOCK_PADDING);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptEncrypt failed");
+		auto fmtError = std::format("Encrypt: BCryptEncrypt failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	auto encryptedData = SPOK_Blob::New(dataSize);
 	status = BCryptEncrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), encryptedData.data(), SAFE_CAST_TO_UINT32(encryptedData.size()), &dataSize, BCRYPT_BLOCK_PADDING);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptEncrypt failed");
+		auto fmtError = std::format("Encrypt: BCryptEncrypt failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	return encryptedData;
@@ -449,14 +462,16 @@ DWORD dataSize = 0;
 	NTSTATUS status = BCryptDecrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), NULL, 0, &dataSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptDecrypt failed");
+		auto fmtError = std::format("Decrypt: BCryptDecrypt failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	auto decryptedData = SPOK_Blob::New(dataSize);
 	status = BCryptDecrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), decryptedData.data(), SAFE_CAST_TO_UINT32(decryptedData.size()), &dataSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptDecrypt failed");
+		auto fmtError = std::format("Decrypt: BCryptDecrypt failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);;
 	}
 
 	return decryptedData;
@@ -475,7 +490,7 @@ std::wstring BCryptUtil::RsaKeyType(const SPOK_Blob::Blob& keyBlob)
 	}
 	else
 	{
-		throw std::runtime_error("Invalid RSA key blob");
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, "Invalid RSA key blob");
 	}
 }
 
@@ -492,7 +507,8 @@ SPOK_Blob::Blob BCryptUtil::GenerateRsaKeyPair(const KeySize keySize)
 	NTSTATUS status = BCryptGenerateKeyPair(hAlg, &hKey, (uint32_t)keySize, 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptGenerateKeyPair failed");
+		auto fmtError = std::format("GenerateRsaKeyPair: BCryptGenerateKeyPair failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	BCryptKey key(hKey); // RAII
@@ -500,21 +516,24 @@ SPOK_Blob::Blob BCryptUtil::GenerateRsaKeyPair(const KeySize keySize)
 	status = BCryptFinalizeKeyPair(key, 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptFinalizeKeyPair failed");
+		auto fmtError = std::format("GenerateRsaKeyPair: BCryptFinalizeKeyPair failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	DWORD keyBlobSize = 0;
 	status = BCryptExportKey(key, NULL, BCRYPT_RSAPRIVATE_BLOB, NULL, 0, &keyBlobSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptExportKey failed");
+		auto fmtError = std::format("GenerateRsaKeyPair: BCryptExportKey failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	auto keyBlob = SPOK_Blob::New(keyBlobSize);
 	status = BCryptExportKey(key, NULL, BCRYPT_RSAPRIVATE_BLOB, keyBlob.data(), SAFE_CAST_TO_UINT32(keyBlob.size()), &keyBlobSize, 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptExportKey failed");
+		auto fmtError = std::format("GenerateRsaKeyPair: BCryptExportKey failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 	return keyBlob;
 }
@@ -526,7 +545,8 @@ SPOK_Blob::Blob BCryptUtil::GetRandomBytes(const uint32_t size)
 	NTSTATUS status = BCryptGenRandom(hAlg, randomBytes.data(), SAFE_CAST_TO_UINT32(randomBytes.size()), 0);
 	if (status != ERROR_SUCCESS)
 	{
-		throw std::runtime_error("BCryptGenRandom failed");
+		auto fmtError = std::format("GetRandomBytes: BCryptGenRandom failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 	return randomBytes;
 }

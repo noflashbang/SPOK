@@ -1,4 +1,5 @@
 #include "SPOKServer.h"
+#include "SPOKError.h"
 #include "TPM_20.h"
 
 SPOKServer::SPOKServer()
@@ -17,7 +18,8 @@ SPOK_Pcrs SPOKServer::AIKAttestationGetPCR(IAttestation& attestation)
 {
 	if (!std::holds_alternative<SPOK_AIKPlatformAttestation>(attestation))
 	{
-		throw std::runtime_error("Attestation is not an AIK Platform Attestation");
+		auto fmtError = std::format("Attestation is not an AIK Platform Attestation");
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	auto aikPlatformAttestation = std::get<SPOK_AIKPlatformAttestation>(attestation);
@@ -27,7 +29,8 @@ SPOK_Blob::Blob SPOKServer::AIKAttestationGetTcgLog(IAttestation& attestation)
 {
 	if (!std::holds_alternative<SPOK_AIKPlatformAttestation>(attestation))
 	{
-		throw std::runtime_error("Attestation is not an AIK Platform Attestation");
+		auto fmtError = std::format("Attestation is not an AIK Platform Attestation");
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	auto aikPlatformAttestation = std::get<SPOK_AIKPlatformAttestation>(attestation);

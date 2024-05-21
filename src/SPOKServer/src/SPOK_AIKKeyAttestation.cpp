@@ -1,4 +1,6 @@
 #include "SPOK_AIKKeyAttestation.h"
+#include "SPOKError.h"
+
 #include <HasherUtil.h>
 
 
@@ -9,19 +11,22 @@ SPOK_AIKKeyAttestation::SPOK_AIKKeyAttestation(SPOK_Blob::Blob attCertify)
 
 	if (m_KeyBlobHeader.Magic != SPOK_KEY_ATT_MAGIC)
 	{
-		throw std::invalid_argument("Invalid Magic");
+		auto fmtError = std::format("Invalid Magic: {}", m_KeyBlobHeader.Magic);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	m_KeyBlobHeader.TpmVersion = certifyReader.LE_Read32();
 	if (m_KeyBlobHeader.TpmVersion != SPOK_TPM_VERSION_20)
 	{
-		throw std::invalid_argument("Invalid TPM Version");
+		auto fmtError = std::format("Invalid TPM Version: {}", m_KeyBlobHeader.TpmVersion);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	m_KeyBlobHeader.HeaderSize = certifyReader.LE_Read32();
 	if (m_KeyBlobHeader.HeaderSize != sizeof(SPOK_KEY_ATT_BLOB))
 	{
-		throw std::invalid_argument("Invalid Header Size");
+		auto fmtError = std::format("Invalid Header Size: {}", m_KeyBlobHeader.HeaderSize);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	//we can be reasonably sure that the attQuote is valid at this point

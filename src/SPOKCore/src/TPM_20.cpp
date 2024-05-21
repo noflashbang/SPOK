@@ -7,6 +7,8 @@
 #include "TcgLog.h"
 #include "HasherUtil.h"
 #include <iostream>
+#include <format>
+#include "SPOKError.h"
 
 
 
@@ -36,7 +38,8 @@ uint32_t TPM2B_PCR_SELECTION::GetMask() const
 {
 	if (Bitmap.size() != 3)
 	{
-		throw std::invalid_argument("Invalid PcrSelection");
+		auto fmtError = std::format("Invalid PCR selection size: {}", Bitmap.size());
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	//read the selected PCRs
@@ -59,7 +62,7 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 
 	if (aikProvider != keyProvider)
 	{
-		throw std::runtime_error("The AIK and the key to attest are not from the same provider");
+		SPOK_THROW_ERROR(SPOK_INVALID_HANDLE, "The AIK and the key to attest are not from the same provider");
 	}
 	auto tsbHandle = aikKey.GetTsbHandle();
 	auto aikHandle = aikKey.GetPlatformHandle();
@@ -111,7 +114,8 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 	auto status = Tbsip_Submit_Command(tsbHandle, TBS_COMMAND_LOCALITY_ZERO, TBS_COMMAND_PRIORITY_NORMAL, cmd.data(), cmdSize, rsp.data(), &rspSize);
 	if (status != TBS_SUCCESS)
 	{
-		throw std::runtime_error("Tbsip_Submit_Command failed");
+		auto fmtError = std::format("Tbsip_Submit_Command failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_TPMCMD_FAILED, fmtError);
 	}
 
 	// Check the response
@@ -121,7 +125,8 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 	auto retCode = br.BE_Read32();
 	if (retCode != 0)
 	{
-		throw std::runtime_error("TPM2.0 Certify failed");
+		auto fmtError = std::format("TPM2.0 Certify failed with {}", retCode);
+		SPOK_THROW_ERROR(SPOK_TPMCMD_FAILED, fmtError);
 	}
 	auto paramSize = br.BE_Read32();
 	auto certifyInfoSize = br.BE_Read16();
@@ -129,12 +134,14 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 	auto sigAlg = br.BE_Read16();
 	if (sigAlg != 0x0014)
 	{
-		throw std::runtime_error("Invalid signature algorithm - Expected TPM_ALG_RSASSA_PKCS1v1_5");
+		auto fmtError = std::format("Invalid signature algorithm: {} - Expected TPM_ALG_RSASSA_PKCS1v1_5", sigAlg);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 	}
 	auto sigHashAlg = br.BE_Read16();
 	if (sigHashAlg != TPM_API_ALG_ID_SHA1)
 	{
-		throw std::runtime_error("Invalid signature hash algorithm - Expected TPM_ALG_SHA1");
+		auto fmtError = std::format("Invalid signature hash algorithm: {} - Expected TPM_ALG_SHA1", sigHashAlg);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 	}
 	auto sigSize = br.BE_Read16();
 	auto sig = br.Read(sigSize);
@@ -238,7 +245,8 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	auto status = Tbsip_Submit_Command(tsbHandle, TBS_COMMAND_LOCALITY_ZERO, TBS_COMMAND_PRIORITY_NORMAL, cmd.data(), cmdSize, rsp.data(), &rspSize);
 	if (status != TBS_SUCCESS)
 	{
-		throw std::runtime_error("Tbsip_Submit_Command failed");
+		auto fmtError = std::format("Tbsip_Submit_Command failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_TPMCMD_FAILED, fmtError);
 	}
 
 	// Check the response
@@ -249,7 +257,8 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 
 	if (retCode != 0)
 	{
-		throw std::runtime_error("TPM2.0 Quote failed");
+		auto fmtError = std::format("TPM2.0 Quote failed with {}", retCode);
+		SPOK_THROW_ERROR(SPOK_TPMCMD_FAILED, fmtError);
 	}
 
 	auto paramSize = br.BE_Read32();
@@ -259,12 +268,14 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	auto sigAlg = br.BE_Read16();
 	if (sigAlg != 0x0014)
 	{
-		throw std::runtime_error("Invalid signature algorithm - Expected TPM_ALG_RSASSA_PKCS1v1_5");
+		auto fmtError = std::format("Invalid signature algorithm: {} - Expected TPM_ALG_RSASSA_PKCS1v1_5", sigAlg);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 	}
 	auto sigHashAlg = br.BE_Read16();
 	if (sigHashAlg != TPM_API_ALG_ID_SHA1)
 	{
-		throw std::runtime_error("Invalid signature hash algorithm - Expected TPM_ALG_SHA1");
+		auto fmtError = std::format("Invalid signature hash algorithm: {} - Expected TPM_ALG_SHA1", sigHashAlg);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 	}
 	auto sigSize = br.BE_Read16();
 	auto sig = br.Read(sigSize);
@@ -588,7 +599,8 @@ TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob::Blob& publicBlob)
 	}
 	else if (symmetric != 0x0010)
 	{
-		throw std::runtime_error("Invalid symmetric algorithm");
+		auto fmtError = std::format("Invalid symmetric algorithm: {} - expected 0x0010", symmetric);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 	}
 	auto scheme = br.BE_Read16();
 
@@ -599,7 +611,8 @@ TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob::Blob& publicBlob)
 	}
 	else if (scheme != 0x0010)
 	{
-		throw std::runtime_error("Invalid scheme");
+		auto fmtError = std::format("Invalid scheme: {} - expected 0x0010 or 0x0014", scheme);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 	}
 
 	auto keybits = br.BE_Read16();
@@ -680,13 +693,15 @@ TPM2B_ATTEST_QUOTE TPM2B_ATTEST_QUOTE::Decode(const SPOK_Blob::Blob& attestBlob)
 	auto generated = br.BE_Read32();
 	if (generated != 0xff544347) // TPM_GENERATED
 	{
-		throw std::runtime_error("Invalid attestation generation");
+		auto fmtError = std::format("Invalid attestation generation: {}", generated);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	auto type = br.BE_Read16();
 	if (type != 0x8018) //TPM_ST_ATTEST_QUOTE
 	{
-		throw std::runtime_error("Invalid attestation type");
+		auto fmtError = std::format("Invalid attestation type: {} - expected TPM_ST_ATTEST_QUOTE", type);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	auto qualifiedSignerSize = br.BE_Read16();
@@ -728,13 +743,15 @@ TPM2B_ATTEST_CERTIFY TPM2B_ATTEST_CERTIFY::Decode(const SPOK_Blob::Blob& certify
 	auto generated = br.BE_Read32();
 	if (generated != 0xff544347) // TPM_GENERATED
 	{
-		throw std::runtime_error("Invalid attestation generation");
+		auto fmtError = std::format("Invalid attestation generation: {}", generated);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	auto type = br.BE_Read16();
 	if (type != 0x8017) //TPM_ST_ATTEST_CERTIFY
 	{
-		throw std::runtime_error("Invalid attestation type");
+		auto fmtError = std::format("Invalid attestation type: {} - expected TPM_ST_ATTEST_CERTIFY", type);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	auto qualifiedSignerSize = br.BE_Read16();
@@ -768,13 +785,15 @@ TPM2B_ATTEST_CREATION TPM2B_ATTEST_CREATION::Decode(const SPOK_Blob::Blob& attes
 	auto generated = br.BE_Read32();
 	if (generated != 0xff544347) // TPM_GENERATED
 	{
-		throw std::runtime_error("Invalid attestation generation");
+		auto fmtError = std::format("Invalid attestation generation: {}", generated);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	auto type = br.BE_Read16();
 	if (type != 0x801A) //TPM_ST_ATTEST_CREATION
 	{
-		throw std::runtime_error("Invalid attestation type");
+		auto fmtError = std::format("Invalid attestation type: {} - expected TPM_ST_ATTEST_CREATION", type);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	auto qualifiedSignerSize = br.BE_Read16();
@@ -845,7 +864,8 @@ SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, 
 	//validate the secret
 	if (secret.size() > SHA256_DIGEST_SIZE)
 	{
-		throw std::runtime_error("Secret is too large max is SHA256_DIGEST_SIZE");
+		auto fmtError = std::format("Secret is too large max is {}", SHA256_DIGEST_SIZE);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	//get the random seed
@@ -883,7 +903,8 @@ SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, 
 	auto ekKey = BCryptUtil::Open(ekPub);
 	if (ekKey.IsValid() == false)
 	{
-		throw std::runtime_error("Failed to open the EK key");
+		auto fmtError = std::format("Failed to open the EK key");
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 	auto encryptedSeed = ekKey.Encrypt(seed, true);
 	auto ekBlockLength = ekKey.BlockLength();

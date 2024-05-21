@@ -3,6 +3,8 @@
 #include "SPOKBlob.h"
 #include "HasherUtil.h"
 #include "Util.h"
+#include "SPOKError.h"
+#include <format>
 
 TcgLogEventType TcgLog::GetEventType(uint32_t eventType)
 {
@@ -67,7 +69,10 @@ TcgLogEventType TcgLog::GetEventType(uint32_t eventType)
 		case 0x800000E0:
 			return TcgLogEventType::EV_EFI_VARIABLE_AUTHORITY;
 		default:
-			throw std::runtime_error("Invalid TCG log event type");
+		{
+			auto msg = std::format("Invalid TCG log event type: {0}", eventType);
+			SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
+		}
 	}
 }
 
@@ -106,7 +111,10 @@ TPM_ALG_ID TcgLog::GetTpmAlgId(uint16_t algId)
 		case 0x0025:
 			return TPM_ALG_ID::TPM_ALG_SHA3_512;
 		default:
-			throw std::runtime_error("Invalid TCG log digest algorithm");
+		{
+			auto msg = std::format("Invalid TCG log digest algorithm: {0}", algId);
+			SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
+		}
 	}
 }
 
@@ -131,7 +139,10 @@ uint32_t TcgLog::GetDigestSize(TPM_ALG_ID algId)
 		case TPM_ALG_ID::TPM_ALG_SHA3_512:
 			return 64;
 		default:
-			throw std::runtime_error("Invalid TCG log digest algorithm");
+		{
+			auto msg = std::format("Invalid TCG log digest algorithm: {0}", (uint16_t)algId);
+			SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
+		}
 	}
 }
 
@@ -144,26 +155,29 @@ TcgLog TcgLog::Parse(const std::vector<uint8_t>& tcgLogData)
 	// Parse the TCG log header
 	if(tcgLogData.size() < 65)
 	{
-		throw std::runtime_error("Invalid TCG log size");
+		auto msg = std::format("Invalid TCG log size: {0}", tcgLogData.size());
+		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
 	}
 
 	auto pcrIndex = stream.LE_Read32();
 	if(pcrIndex != 0)
 	{
-		throw std::runtime_error("Invalid PCR index");
+		auto msg = std::format("Invalid PCR index: {0}", pcrIndex);
+		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
 	}
 
 	TcgLogEventType eventType = GetEventType(stream.LE_Read32());
 
 	if(eventType != TcgLogEventType::EV_NO_ACTION)
 	{
-		throw std::runtime_error("Invalid TCG log event type");
+		auto msg = std::format("Invalid TCG log event type: {0}", (uint32_t)eventType);
+		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
 	}
 
 	auto digest = stream.Read(20);
 	if(digest != std::vector<uint8_t>(20, 0))
 	{
-		throw std::runtime_error("Invalid TCG log digest");
+		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, "Invalid TCG log digest");
 	}
 
 	auto eventSize = stream.LE_Read32();
@@ -171,7 +185,7 @@ TcgLog TcgLog::Parse(const std::vector<uint8_t>& tcgLogData)
 	auto signature = stream.Read(16);
 	if (signature != std::vector<uint8_t> { 'S', 'p', 'e', 'c', ' ', 'I', 'D', ' ', 'E', 'v', 'e', 'n', 't', '0', '3', '\0' })
 	{
-		throw std::runtime_error("Invalid TCG log signature");
+		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, "Invalid TCG log signature");
 	}
 
 	auto platformClass = stream.LE_Read32();
@@ -264,7 +278,8 @@ std::vector<uint8_t> TcgLog::ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_I
 	}
 	else
 	{
-		throw std::runtime_error("Unsupported TCG log digest algorithm");
+		auto msg = std::format("Unsupported TCG log digest algorithm: {0}", (uint16_t)algId);
+		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
 	}
 		
 	std::vector<uint8_t> softPCRTable;

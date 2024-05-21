@@ -1,6 +1,9 @@
 #include "SPOKPcrs.h"
 #include "Util.h"
 #include <TPM_20.h>
+#include <format>
+#include "SPOKError.h"
+
 
 
 SPOK_Pcrs::SPOK_Pcrs(uint8_t digestSize) : _digestSize(digestSize)
@@ -65,7 +68,8 @@ std::array<uint8_t, TPM_PCRS_MAXSIZE> SPOK_Pcrs::GetPcr(const uint8_t pcrRegiste
 {
 	if (pcrRegister >= TPM_PCRS_CNT)
 	{
-		throw std::invalid_argument("Invalid PCR Register");
+		auto fmtError = std::format("Invalid PCR Register: {}", pcrRegister);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	std::array<uint8_t, TPM_PCRS_MAXSIZE> pcrValue;
@@ -77,7 +81,8 @@ void SPOK_Pcrs::SetPcr(const uint8_t pcrRegister, const std::array<uint8_t, TPM_
 {
 	if (pcrRegister >= TPM_PCRS_CNT)
 	{
-		throw std::invalid_argument("Invalid PCR Register");
+		auto fmtError = std::format("Invalid PCR Register: {}", pcrRegister);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	std::copy(pcrValue.begin(), pcrValue.end(), _pcrTable.begin() + (pcrRegister * _digestSize));

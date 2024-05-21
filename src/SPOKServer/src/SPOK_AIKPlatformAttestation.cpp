@@ -1,4 +1,5 @@
 #include "SPOK_AIKPlatformAttestation.h"
+#include "SPOKError.h"
 #include <HasherUtil.h>
 #include <SPOKPcrs.h>
 #include <TcgLog.h>
@@ -11,19 +12,22 @@ SPOK_AIKPlatformAttestation::SPOK_AIKPlatformAttestation(SPOK_Blob::Blob attQuot
 
 	if (m_AttBlobHeader.Magic != SPOK_PLATFORM_ATT_MAGIC)
 	{
-		throw std::invalid_argument("Invalid Magic");
+		auto fmtError = std::format("Invalid Magic: {}", m_AttBlobHeader.Magic);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	m_AttBlobHeader.TpmVersion = attQuoteReader.LE_Read32();
 	if (m_AttBlobHeader.TpmVersion != SPOK_TPM_VERSION_20)
 	{
-		throw std::invalid_argument("Invalid TPM Version");
+		auto fmtError = std::format("Invalid TPM Version: {}", m_AttBlobHeader.TpmVersion);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	m_AttBlobHeader.HeaderSize = attQuoteReader.LE_Read32();
 	if (m_AttBlobHeader.HeaderSize != sizeof(SPOK_PLATFORM_ATT_BLOB))
 	{
-		throw std::invalid_argument("Invalid Header Size");
+		auto fmtError = std::format("Invalid Header Size: {}", m_AttBlobHeader.HeaderSize);
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	//we can be reasonably sure that the attQuote is valid at this point
@@ -53,7 +57,8 @@ SPOK_Blob::Blob SPOK_AIKPlatformAttestation::GetTrustedPcrs() const
 	auto table = SPOK_Pcrs(m_pcrs);
 	if (m_Quote.PcrSelection.size() != 1)
 	{
-		throw std::invalid_argument("Invalid PcrSelection");
+		auto fmtError = std::format("Invalid PcrSelection: {}", m_Quote.PcrSelection.size());
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	auto mask = m_Quote.PcrSelection[0].GetMask();
@@ -65,7 +70,8 @@ SPOK_Blob::Blob SPOK_AIKPlatformAttestation::GetTrustedTsbLog() const
 	auto log = TcgLog::Parse(m_tsbLog);
 	if (m_Quote.PcrSelection.size() != 1)
 	{
-		throw std::invalid_argument("Invalid PcrSelection");
+		auto fmtError = std::format("Invalid PcrSelection: {}", m_Quote.PcrSelection.size());
+		SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
 	}
 
 	auto mask = m_Quote.PcrSelection[0].GetMask();

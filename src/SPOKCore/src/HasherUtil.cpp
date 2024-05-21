@@ -1,20 +1,22 @@
 #include "HasherUtil.h"
 #include "Util.h"
-
+#include "SPOKError.h"
 
 BCryptHashHandle::BCryptHashHandle(const BCryptAlgHandle& hAlg)
 {
 	NTSTATUS status = BCryptCreateHash(hAlg, &m_hHash, nullptr, 0, nullptr, 0, 0);
 	if (!SUCCEEDED(status))
 	{
-		throw std::runtime_error("BCryptCreateHash failed");
+		auto fmtError = std::format("BCryptHashHandle: BCryptCreateHash failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	ULONG cbOut = 0;
 	status = BCryptGetProperty(hAlg, BCRYPT_HASH_LENGTH, (PUCHAR)&m_HashSize, sizeof(uint32_t), &cbOut, 0);
 	if (!SUCCEEDED(status))
 	{
-		throw std::runtime_error("BCryptGetProperty failed");
+		auto fmtError = std::format("BCryptHashHandle: BCryptGetProperty failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 }
 
@@ -24,14 +26,16 @@ BCryptHashHandle::BCryptHashHandle(const BCryptAlgHandle& hAlg, SPOK_Blob::Blob 
 	NTSTATUS status = BCryptCreateHash(hAlg, &m_hHash, nullptr, 0, secret.data(), SAFE_CAST_TO_UINT32(secret.size()), 0);
 	if (!SUCCEEDED(status))
 	{
-		throw std::runtime_error("BCryptCreateHash failed");
+		auto fmtError = std::format("BCryptHashHandle: BCryptCreateHash failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	ULONG cbOut = 0;
 	status = BCryptGetProperty(hAlg, BCRYPT_HASH_LENGTH, (PUCHAR)&m_HashSize, sizeof(uint32_t), &cbOut, 0);
 	if (!SUCCEEDED(status))
 	{
-		throw std::runtime_error("BCryptGetProperty failed");
+		auto fmtError = std::format("BCryptHashHandle: BCryptGetProperty failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 }
 
@@ -77,7 +81,8 @@ void HasherUtil::HashData(const SPOK_Blob::Blob& data)
 	NTSTATUS status = BCryptHashData(m_hHash, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), 0);
 	if (!SUCCEEDED(status))
 	{
-		throw std::runtime_error("BCryptHashData failed");
+		auto fmtError = std::format("BCryptHashData failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 }
 SPOK_Blob::Blob HasherUtil::FinishHash()
@@ -87,7 +92,8 @@ SPOK_Blob::Blob HasherUtil::FinishHash()
 	NTSTATUS status = BCryptFinishHash(m_hHash, hash.data(), SAFE_CAST_TO_UINT32(hash.size()), 0);
 	if (!SUCCEEDED(status))
 	{
-		throw std::runtime_error("BCryptFinishHash failed");
+		auto fmtError = std::format("BCryptFinishHash failed with {}", status);
+		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 
 	return hash;
@@ -231,7 +237,8 @@ HasherUtil Hasher::Create(uint16_t algId)
 	}
 	else
 	{
-		throw std::runtime_error("Unsupported hash algorithm");
+		auto fmtError = std::format("Hasher::Create: Unsupported hash algorithm {}", algId);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 	}
 }
 
@@ -255,6 +262,7 @@ HasherUtil Hasher::Create_HMAC(uint16_t algId, SPOK_Blob::Blob secret)
 	}
 	else
 	{
-		throw std::runtime_error("Unsupported hash algorithm");
+		auto fmtError = std::format("Hasher::Create_HMAC: Unsupported hash algorithm {}", algId);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
 	}
 }
