@@ -22,31 +22,11 @@
 
 #pragma once
 
+#include "TPMAlgId.h"
 #include <stdint.h>
 #include <vector>
 #include <array>
 
-
-enum class TPM_ALG_ID : uint16_t
-{
-	TPM_ALG_ERROR     = 0x0000,
-	TPM_ALG_RSA       = 0x0001,
-	TPM_ALG_SHA1      = 0x0004,
-	TPM_ALG_HMAC      = 0x0005,
-	TPM_ALG_AES       = 0x0006,
-	TPM_ALG_MGF1      = 0x0007,
-	TPM_ALG_KEYEDHASH = 0x0008,
-	TPM_ALG_XOR       = 0x000A,
-	TPM_ALG_SHA256    = 0x000B,
-	TPM_ALG_SHA384    = 0x000C,
-	TPM_ALG_SHA512    = 0x000D,
-	TPM_ALG_NULL      = 0x0010,
-	TPM_ALG_SM3_256   = 0x0012,
-    TPM_ALG_SHA3_256  = 0x0027, //Defined in wbcl.h
-    TPM_ALG_SHA3_384  = 0x0028, //Defined in wbcl.h
-    TPM_ALG_SHA3_512  = 0x0029  //Defined in wbcl.h
-
-};
 
 enum class TcgLogEventType : uint32_t
 {

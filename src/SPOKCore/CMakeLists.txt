@@ -13,6 +13,7 @@ set( externHeadersCore
     ${PARENT_DIR}/include/SPOK/HasherUtil.h
     ${PARENT_DIR}/include/SPOK/TPM_20.h
     ${PARENT_DIR}/include/SPOK/TcgLog.h
+    ${PARENT_DIR}/include/SPOK/TPMAlgId.h
 )
 
 set( libHeaders 

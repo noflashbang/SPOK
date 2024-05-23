@@ -22,7 +22,6 @@
 
 #pragma once 
 #include <string>
-#include <map>
 #include <stdexcept>
 
 #include "SPOKApiTypes.h"
@@ -31,14 +30,92 @@ class SPOK_Error
 {
 public:
 	static SPOKSTATUS SPOK_LippincottHandler();
-	static SPOKSTATUS SPOK_ErrorMessageToStatus(const std::string& message);
-	static std::string SPOK_StatusToErrorMessage(SPOKSTATUS status);
 	static void SPOK_SetLastError(const std::string& message);
 
+	static std::exception SPOK_This_Error(SPOKSTATUS x, std::string msg);
+
 private:
-	static std::map<SPOKSTATUS, std::string> m_ErrorMessages;
+	static std::string _lastError;
 };
 
+
+class SPOK_Overflow : public std::overflow_error
+{
+public:
+	SPOK_Overflow(const std::string& message) noexcept : std::overflow_error(message) {}
+};
+
+class SPOK_InvalidAlgorithm : public std::invalid_argument
+{
+public:
+	SPOK_InvalidAlgorithm(const std::string& message) noexcept : std::invalid_argument(message) {}
+};
+
+class SPOK_NotFound : public std::out_of_range
+{
+public:
+	SPOK_NotFound(const std::string& message) noexcept : std::out_of_range(message) {}
+};
+
+class SPOK_BCryptFailure : public std::runtime_error
+{
+public:
+	SPOK_BCryptFailure(const std::string& message) noexcept : std::runtime_error(message) {}
+};
+
+class SPOK_NCryptFailure : public std::runtime_error
+{
+public:
+	SPOK_NCryptFailure(const std::string& message) noexcept : std::runtime_error(message) {}
+};
+
+class SPOK_InsufficientBuffer : public std::length_error
+{
+public:
+	SPOK_InsufficientBuffer(const std::string& message) noexcept : std::length_error(message) {}
+};
+
+class SPOK_InvalidHandle : public std::invalid_argument
+{
+public:
+	SPOK_InvalidHandle(const std::string& message) noexcept : std::invalid_argument(message) {}
+};
+
+class SPOK_InvalidState : public std::invalid_argument
+{
+public:
+	SPOK_InvalidState(const std::string& message) noexcept : std::invalid_argument(message) {}
+};
+
+class SPOK_InvalidData : public std::invalid_argument
+{
+public:
+	SPOK_InvalidData(const std::string& message) noexcept : std::invalid_argument(message) {}
+};
+
+class SPOK_InvalidSignature : public std::invalid_argument
+{
+public:
+	SPOK_InvalidSignature(const std::string& message) noexcept : std::invalid_argument(message) {}
+};
+
+class SPOK_InvalidKey : public std::invalid_argument
+{
+public:
+	SPOK_InvalidKey(const std::string& message) noexcept : std::invalid_argument(message) {}
+};
+
+class SPOK_TpmCmdFailed : public std::runtime_error
+{
+public:
+	SPOK_TpmCmdFailed(const std::string& message) noexcept : std::runtime_error(message) {}
+};
+
+class SPOK_TcgLogFailure : public std::runtime_error
+{
+public:
+	SPOK_TcgLogFailure(const std::string& message) noexcept : std::runtime_error(message) {}
+};
 
 
 #define SPOK_OKAY  ( 0)
@@ -47,14 +124,7 @@ private:
 #define SPOK_SUCCESS(x) ((x & SPOK_ERROR) == 0)
 #define SPOK_FAILURE(x) ((x & SPOK_ERROR) != 0)
 
-#define SPOK_ERROR_MESSAGE(x)  SPOK_Error::SPOK_StatusToErrorMessage(x)
-#define SPOK_SET_LAST_ERROR(x) SPOK_Error::SPOK_SetLastError(x)
-
-#define SPOK_THROW_ERROR(x, msg) {                                              \
-									SPOK_SET_LAST_ERROR(msg);                   \
-									auto gMsg = SPOK_ERROR_MESSAGE(x);          \
-									throw std::runtime_error(gMsg);             \
-								 }
+#define SPOK_THROW_ERROR(x, msg) throw SPOK_Error::SPOK_This_Error(x, msg)
 
 #define SPOK_OVERFLOW             (0x80000001)
 #define SPOK_INVALID_ALGORITHM    (0x80000002)
@@ -67,9 +137,10 @@ private:
 #define SPOK_INVALID_DATA         (0x80000009)
 #define SPOK_INVALID_SIGNATURE    (0x8000000A)
 #define SPOK_INVALID_KEY          (0x8000000B)
-#define SPOK_TPMCMD_FAILED       (0x8000000B)
-#define SPOK_TCGLOG_FAILURE      (0x8000000C)
+#define SPOK_TPMCMD_FAILED        (0x8000000C)
+#define SPOK_TCGLOG_FAILURE       (0x8000000D)
 
 #define SPOK_UNKNOWN_ERROR		  (0x8000FFFE)
 #define SPOK_LAST_ERROR           (0x8000FFFF)
+
 

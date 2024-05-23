@@ -3,43 +3,43 @@
 #include "Util.h"
 #include "SPOKError.h"
 
-BCryptAlgHandle::BCryptAlgHandle(AlgId alg) : m_hAlg(NULL), m_algId(alg)
+BCryptAlgHandle::BCryptAlgHandle(TPM_ALG_ID alg) : m_hAlg(NULL), m_algId(alg)
 {
 	NTSTATUS status;
 	switch (alg)
 	{
-		case AlgId::RNG:
+	case TPM_ALG_ID::TPM_ALG_RNG:
 		{
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_RNG_ALGORITHM, NULL, 0);
 			break;
 		}
-		case AlgId::RSA:
+	case TPM_ALG_ID::TPM_ALG_RSA:
 		{
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_RSA_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
 			break;
 		}
-		case AlgId::SHA1:
+	case TPM_ALG_ID::TPM_ALG_SHA1:
 		{
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA1_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
 			break;
 		}
-		case AlgId::SHA256:
+		case TPM_ALG_ID::TPM_ALG_SHA256:
 		{
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA256_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
 			break;
 		}
-		case AlgId::SHA384:
+		case TPM_ALG_ID::TPM_ALG_SHA384:
 		{
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA384_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
 			break;
 
 		}
-		case AlgId::SHA512:
+		case TPM_ALG_ID::TPM_ALG_SHA512:
 		{
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA512_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
 			break;
 		}
-		case AlgId::AES:
+		case TPM_ALG_ID::TPM_ALG_AES:
 		{
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_AES_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
 			break;
@@ -59,27 +59,27 @@ BCryptAlgHandle::BCryptAlgHandle(AlgId alg) : m_hAlg(NULL), m_algId(alg)
 	}
 }
 
-BCryptAlgHandle::BCryptAlgHandle(AlgId alg, bool hmacFlag) : m_hAlg(NULL), m_algId(alg)
+BCryptAlgHandle::BCryptAlgHandle(TPM_ALG_ID alg, bool hmacFlag) : m_hAlg(NULL), m_algId(alg)
 {
 	NTSTATUS status;
 	switch (alg)
 	{
-		case AlgId::SHA1:
+		case TPM_ALG_ID::TPM_ALG_SHA1:
 		{
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA1_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
 			break;
 		}
-		case AlgId::SHA256:
+		case TPM_ALG_ID::TPM_ALG_SHA256:
 		{
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA256_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
 			break;
 		}
-		case AlgId::SHA384:
+		case TPM_ALG_ID::TPM_ALG_SHA384:
 		{
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA384_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
 			break;
 		}
-		case AlgId::SHA512:
+		case TPM_ALG_ID::TPM_ALG_SHA512:
 		{
 			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA512_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
 			break;
@@ -117,23 +117,23 @@ std::string BCryptAlgHandle::Name() const
 {
 	switch (m_algId)
 	{
-		case AlgId::RSA:
+		case TPM_ALG_ID::TPM_ALG_RSA:
 		{
 			return "RSA";
 		}
-		case AlgId::SHA1:
+		case TPM_ALG_ID::TPM_ALG_SHA1:
 		{
 			return "SHA1";
 		}
-		case AlgId::SHA256:
+		case TPM_ALG_ID::TPM_ALG_SHA256:
 		{
 			return "SHA256";
 		}
-		case AlgId::SHA384:
+		case TPM_ALG_ID::TPM_ALG_SHA384:
 		{
 			return "SHA384";
 		}
-		case AlgId::SHA512:
+		case TPM_ALG_ID::TPM_ALG_SHA512:
 		{
 			return "SHA512";
 		}
@@ -146,7 +146,7 @@ std::string BCryptAlgHandle::Name() const
 }
 
 
-BCryptKey::BCryptKey(SPOK_Blob::Blob keyBlob) : m_hAlg(AlgId::RSA)
+BCryptKey::BCryptKey(SPOK_Blob::Blob keyBlob) : m_hAlg(TPM_ALG_ID::TPM_ALG_RSA)
 {
 	BCRYPT_KEY_HANDLE hKey;
 	// Open the key
@@ -162,7 +162,7 @@ BCryptKey::BCryptKey(SPOK_Blob::Blob keyBlob) : m_hAlg(AlgId::RSA)
 	}
 }
 
-BCryptKey::BCryptKey(const BCRYPT_KEY_HANDLE& hKey) : m_hAlg(AlgId::RSA), m_hKey(hKey)
+BCryptKey::BCryptKey(const BCRYPT_KEY_HANDLE& hKey) : m_hAlg(TPM_ALG_ID::TPM_ALG_RSA), m_hKey(hKey)
 {
 }
 
@@ -392,7 +392,7 @@ bool BCryptKey::Verify(const SPOK_Blob::Blob& hash, const SPOK_Blob::Blob& signa
 	return false;
 }
 
-SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob::Blob& iv): m_hAlg(AlgId::AES), m_hKey(NULL), m_iv(iv)
+SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob::Blob& iv): m_hAlg(TPM_ALG_ID::TPM_ALG_AES), m_hKey(NULL), m_iv(iv)
 {
 	if(alg != BCRYPT_AES_ALGORITHM)
 	{
@@ -501,7 +501,7 @@ BCryptKey BCryptUtil::Open(const SPOK_Blob::Blob& keyBlob)
 
 SPOK_Blob::Blob BCryptUtil::GenerateRsaKeyPair(const KeySize keySize)
 {
-	BCryptAlgHandle hAlg(AlgId::RSA);
+	BCryptAlgHandle hAlg(TPM_ALG_ID::TPM_ALG_RSA);
 	BCRYPT_KEY_HANDLE hKey;
 
 	NTSTATUS status = BCryptGenerateKeyPair(hAlg, &hKey, (uint32_t)keySize, 0);
@@ -540,7 +540,7 @@ SPOK_Blob::Blob BCryptUtil::GenerateRsaKeyPair(const KeySize keySize)
 
 SPOK_Blob::Blob BCryptUtil::GetRandomBytes(const uint32_t size)
 {
-	BCryptAlgHandle hAlg(AlgId::RNG);
+	BCryptAlgHandle hAlg(TPM_ALG_ID::TPM_ALG_RSA);
 	auto randomBytes = SPOK_Blob::New(size);
 	NTSTATUS status = BCryptGenRandom(hAlg, randomBytes.data(), SAFE_CAST_TO_UINT32(randomBytes.size()), 0);
 	if (status != ERROR_SUCCESS)

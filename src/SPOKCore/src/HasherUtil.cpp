@@ -58,11 +58,11 @@ uint32_t BCryptHashHandle::GetHashSize() const
 }
 
 
-HasherUtil::HasherUtil(HasherType type) : m_hAlg((AlgId)type), m_hHash(m_hAlg)
+HasherUtil::HasherUtil(HasherType type) : m_hAlg((TPM_ALG_ID)type), m_hHash(m_hAlg)
 {
 }
 
-HasherUtil::HasherUtil(HasherType type, SPOK_Blob::Blob secret) : m_hAlg((AlgId)type, true), m_hHash(m_hAlg, secret)
+HasherUtil::HasherUtil(HasherType type, SPOK_Blob::Blob secret) : m_hAlg((TPM_ALG_ID)type, true), m_hHash(m_hAlg, secret)
 {
 }
 

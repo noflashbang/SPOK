@@ -21,6 +21,8 @@
 //SOFTWARE.
 
 #pragma once
+
+#include "TPMAlgId.h"
 #include "SPOKCore.h"
 #include "SPOKNonce.h"
 #include "SPOKBlob.h"
@@ -33,23 +35,13 @@
 #include <bcrypt.h>
 
 
-enum class AlgId : uint16_t
-{
-	RNG,
-	RSA,
-	SHA1   = 0x0004, //MATCH TPM_ALG_SHA1
-	AES    = 0x0006, //MATCH TPM_ALG_AES
-	SHA256 = 0x000B, //MATCH TPM_ALG_SHA256
-	SHA384 = 0x000C, //MATCH TPM_ALG_SHA384
-	SHA512 = 0x000D, //MATCH TPM_ALG_SHA512
-	
-};
+
 
 class BCryptAlgHandle
 {
 public:
-	BCryptAlgHandle(AlgId alg);
-	BCryptAlgHandle(AlgId alg, bool hmacFlag);
+	BCryptAlgHandle(TPM_ALG_ID alg);
+	BCryptAlgHandle(TPM_ALG_ID alg, bool hmacFlag);
 	~BCryptAlgHandle();
 	operator BCRYPT_ALG_HANDLE() const;
 
@@ -57,7 +49,7 @@ public:
 
 private:
 	BCRYPT_ALG_HANDLE m_hAlg;
-	AlgId m_algId;
+	TPM_ALG_ID m_algId;
 };
 
 class BCryptKey

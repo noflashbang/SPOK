@@ -23,16 +23,17 @@
 #pragma once
 
 #include "SPOKCore.h"
+#include "TPMAlgId.h"
 #include "SPOKBlob.h"
 #include "BCryptUtil.h"
 
 
 enum class HasherType
 {
-	SHA1 = AlgId::SHA1,
-	SHA256 = AlgId::SHA256,
-	SHA384 = AlgId::SHA384,
-	SHA512 = AlgId::SHA512,
+	SHA1 = TPM_ALG_ID::TPM_ALG_SHA1,
+	SHA256 = TPM_ALG_ID::TPM_ALG_SHA256,
+	SHA384 = TPM_ALG_ID::TPM_ALG_SHA384,
+	SHA512 = TPM_ALG_ID::TPM_ALG_SHA512,
 };
 
 class BCryptHashHandle
