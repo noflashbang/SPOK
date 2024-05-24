@@ -534,7 +534,7 @@ SPOK_Blob::Blob BCryptUtil::GenerateRsaKeyPair(const KeySize keySize)
 
 SPOK_Blob::Blob BCryptUtil::GetRandomBytes(const uint32_t size)
 {
-	BCryptAlgHandle hAlg(TPM_ALG_ID::TPM_ALG_RSA);
+	BCryptAlgHandle hAlg(TPM_ALG_ID::TPM_ALG_RNG);
 	auto randomBytes = SPOK_Blob::New(size);
 	NTSTATUS status = BCryptGenRandom(hAlg, randomBytes.data(), SAFE_CAST_TO_UINT32(randomBytes.size()), 0);
 	if (status != ERROR_SUCCESS)
