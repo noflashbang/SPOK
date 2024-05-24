@@ -38,7 +38,6 @@ public:
 	SPOKServer();
 	~SPOKServer();
 
-
 	//AIK Platform Attestation
 	SPOK_AIKPlatformAttestation AIKAttestationDecode(const SPOK_Blob::Blob& attQuote);
 	SPOK_Pcrs AIKAttestationGetPCR(IAttestation& attestation);

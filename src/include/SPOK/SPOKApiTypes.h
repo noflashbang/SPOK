@@ -20,7 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#pragma once 
+#pragma once
 #include <cstdint>
 #include <array>
 #include <vector>
@@ -35,5 +35,3 @@ enum class NCRYPT_MACHINE_KEY : int
 };
 
 typedef std::int32_t SPOKSTATUS;
-
-

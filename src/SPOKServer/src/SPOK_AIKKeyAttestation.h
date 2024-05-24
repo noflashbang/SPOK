@@ -25,4 +25,3 @@ private:
 	TPM2B_ATTEST_CERTIFY m_KeyCertify;
 	SPOK_Blob::Blob m_Signature;
 };
-

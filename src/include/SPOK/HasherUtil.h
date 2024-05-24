@@ -27,7 +27,6 @@
 #include "SPOKBlob.h"
 #include "BCryptUtil.h"
 
-
 enum class HasherType
 {
 	SHA1 = TPM_ALG_ID::TPM_ALG_SHA1,
@@ -68,7 +67,6 @@ private:
 	BCryptAlgHandle m_hAlg;
 	BCryptHashHandle m_hHash;
 };
-
 
 class Hasher
 {

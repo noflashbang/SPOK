@@ -93,7 +93,5 @@ SPOK_VerifyResult SPOK_AIKTpmAttestation::Verify(const SPOK_AIKTpmVerify& verify
 	auto name = VerifyName();
 	auto nonceCheck = VerifyNonce(verify.Nonce);
 	auto signature = VerifySignature();
-	return SPOK_TpmVerifyResult {creation, name, nonceCheck, signature };
+	return SPOK_TpmVerifyResult{ creation, name, nonceCheck, signature };
 }
-
-

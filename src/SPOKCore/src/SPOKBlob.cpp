@@ -1,7 +1,6 @@
 #include "SPOKBlob.h"
 #include "SPOKError.h"
 
-
 SPOK_Blob::Blob SPOK_Blob::New(const size_t size)
 {
 	return Blob(size, 0);
@@ -45,7 +44,7 @@ SPOK_Blob::Blob SPOK_Blob::HexToBlob(const std::string& hex)
 }
 
 std::string SPOK_Blob::BlobToBase64(const Blob& blob)
- {
+{
 	static const std::string base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	std::string base64;
 	base64.reserve((blob.size() + 2) / 3 * 4);
@@ -85,41 +84,41 @@ std::string SPOK_Blob::BlobToBase64(const Blob& blob)
 SPOK_Blob::Blob SPOK_Blob::Base64ToBlob(const std::string& base64)
 {
 	static const std::array<uint8_t, 256> base64Values = []()
-	{
-		std::array<uint8_t, 256> values;
-		values.fill(0xFF);
-		for (uint8_t i = 0; i < 64; i++)
 		{
-			values["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[i]] = i;
-		}
-		values['='] = 0;
-		return values;
-	}();
-	Blob blob;
-	blob.reserve((base64.size() + 3) / 4 * 3);
-	for (size_t i = 0; i < base64.size(); i += 4)
-	{
-		uint32_t value = base64Values[base64[i]] << 18;
-		value = value | (base64Values[base64[i + 1]] << 12);
-		if (base64[i + 2] != '=')
+			std::array<uint8_t, 256> values;
+			values.fill(0xFF);
+			for (uint8_t i = 0; i < 64; i++)
+			{
+				values["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[i]] = i;
+			}
+			values['='] = 0;
+			return values;
+		}();
+		Blob blob;
+		blob.reserve((base64.size() + 3) / 4 * 3);
+		for (size_t i = 0; i < base64.size(); i += 4)
 		{
-			value = value | (base64Values[base64[i + 2]] << 6);
+			uint32_t value = base64Values[base64[i]] << 18;
+			value = value | (base64Values[base64[i + 1]] << 12);
+			if (base64[i + 2] != '=')
+			{
+				value = value | (base64Values[base64[i + 2]] << 6);
+			}
+			if (base64[i + 3] != '=')
+			{
+				value = value | base64Values[base64[i + 3]];
+			}
+			blob.push_back((value >> 16) & 0xFF);
+			if (base64[i + 2] != '=')
+			{
+				blob.push_back((value >> 8) & 0xFF);
+			}
+			if (base64[i + 3] != '=')
+			{
+				blob.push_back(value & 0xFF);
+			}
 		}
-		if (base64[i + 3] != '=')
-		{
-			value = value | base64Values[base64[i + 3]];
-		}
-		blob.push_back((value >> 16) & 0xFF);
-		if (base64[i + 2] != '=')
-		{
-			blob.push_back((value >> 8) & 0xFF);
-		}
-		if (base64[i + 3] != '=')
-		{
-			blob.push_back(value & 0xFF);
-		}
-	}
-	return blob;
+		return blob;
 }
 
 SPOK_Blob::Blob SPOK_Blob::FromString(const std::string& str)
@@ -129,7 +128,7 @@ SPOK_Blob::Blob SPOK_Blob::FromString(const std::string& str)
 
 uint8_t SPOK_BinaryReader::Read()
 {
-	if(CanRead(1) == false)
+	if (CanRead(1) == false)
 	{
 		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryReader::Read out of bounds");
 	}
@@ -139,7 +138,7 @@ uint8_t SPOK_BinaryReader::Read()
 }
 uint16_t SPOK_BinaryReader::LE_Read16()
 {
-	if(CanRead(2) == false)
+	if (CanRead(2) == false)
 	{
 		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryReader::LE_Read16 out of bounds");
 	}
@@ -150,7 +149,7 @@ uint16_t SPOK_BinaryReader::LE_Read16()
 
 uint32_t SPOK_BinaryReader::LE_Read32()
 {
-	if(CanRead(4) == false)
+	if (CanRead(4) == false)
 	{
 		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryReader::LE_Read32 out of bounds");
 	}
@@ -161,7 +160,7 @@ uint32_t SPOK_BinaryReader::LE_Read32()
 
 uint64_t SPOK_BinaryReader::LE_Read64()
 {
-	if(CanRead(8) == false)
+	if (CanRead(8) == false)
 	{
 		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryReader::LE_Read64 out of bounds");
 	}
@@ -187,7 +186,7 @@ uint64_t SPOK_BinaryReader::BE_Read64()
 
 void SPOK_BinaryWriter::Write(const uint8_t value)
 {
-	if(CanWrite(1) == false)
+	if (CanWrite(1) == false)
 	{
 		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryWriter::Write out of bounds");
 	}
@@ -197,7 +196,7 @@ void SPOK_BinaryWriter::Write(const uint8_t value)
 
 void SPOK_BinaryWriter::LE_Write16(const uint16_t value)
 {
-	if(CanWrite(2) == false)
+	if (CanWrite(2) == false)
 	{
 		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryWriter::LE_Write16 out of bounds");
 	}
@@ -207,7 +206,7 @@ void SPOK_BinaryWriter::LE_Write16(const uint16_t value)
 }
 void SPOK_BinaryWriter::LE_Write32(const uint32_t value)
 {
-	if(CanWrite(4) == false)
+	if (CanWrite(4) == false)
 	{
 		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryWriter::LE_Write32 out of bounds");
 	}
@@ -219,7 +218,7 @@ void SPOK_BinaryWriter::LE_Write32(const uint32_t value)
 }
 void SPOK_BinaryWriter::LE_Write64(const uint64_t value)
 {
-	if(CanWrite(8) == false)
+	if (CanWrite(8) == false)
 	{
 		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryWriter::LE_Write64 out of bounds");
 	}
@@ -249,7 +248,7 @@ void SPOK_BinaryWriter::BE_Write64(const uint64_t value)
 
 void SPOK_BinaryReader::Read(uint8_t* dest, const size_t size)
 {
-	if(CanRead(size) == false)
+	if (CanRead(size) == false)
 	{
 		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryReader::Read out of bounds");
 	}
@@ -270,7 +269,7 @@ SPOK_Blob::Blob SPOK_BinaryReader::Read(const size_t size)
 
 void SPOK_BinaryWriter::Write(const uint8_t* source, const size_t size)
 {
-	if(CanWrite(size) == false)
+	if (CanWrite(size) == false)
 	{
 		SPOK_THROW_ERROR(SPOK_INSUFFICIENT_BUFFER, "SPOK_BinaryWriter::Write out of bounds");
 	}
@@ -293,7 +292,7 @@ void SPOK_BinaryReader::Seek(const size_t position)
 
 void SPOK_BinaryWriter::Seek(const size_t position)
 {
-	if(position < m_data.size())
+	if (position < m_data.size())
 	{
 		m_cursor = position;
 	}

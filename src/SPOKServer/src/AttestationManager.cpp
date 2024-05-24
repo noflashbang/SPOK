@@ -59,4 +59,3 @@ std::optional<IAttestation> AttestationManager::GetAttestation(SPOK_Handle handl
 		}
 	}
 }
-

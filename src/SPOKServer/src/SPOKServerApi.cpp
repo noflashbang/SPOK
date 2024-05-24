@@ -53,7 +53,6 @@ SPOKSTATUS SPS_AIKPlatformAttest_GetPCR(SPOK_Handle hAttest, uint8_t* pPcrTable,
 	{
 		return SPOK_Error::SPOK_LippincottHandler();
 	}
-	
 }
 
 SPOKSTATUS SPS_AIKPlatformAttest_GetTcgLog(SPOK_Handle hAttest, uint8_t* pLog, const size_t cbLog, size_t& sizeOut)

@@ -27,15 +27,11 @@
 #include "SPOKNonce.h"
 #include "SPOKBlob.h"
 
-
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
 #include <bcrypt.h>
-
-
-
 
 class BCryptAlgHandle
 {

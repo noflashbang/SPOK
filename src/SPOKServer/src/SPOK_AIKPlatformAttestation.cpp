@@ -4,7 +4,6 @@
 #include <SPOKPcrs.h>
 #include <TcgLog.h>
 
-
 SPOK_AIKPlatformAttestation::SPOK_AIKPlatformAttestation(SPOK_Blob::Blob attQuote)
 {
 	auto attQuoteReader = SPOK_BinaryReader(attQuote);
@@ -44,7 +43,6 @@ SPOK_AIKPlatformAttestation::SPOK_AIKPlatformAttestation(SPOK_Blob::Blob attQuot
 }
 SPOK_AIKPlatformAttestation::~SPOK_AIKPlatformAttestation()
 {
-
 }
 
 SPOK_Blob::Blob SPOK_AIKPlatformAttestation::GetQuoteDigest() const
@@ -101,7 +99,7 @@ bool SPOK_AIKPlatformAttestation::VerifyPcrs() const
 	auto hashSize = trustedPcrs.GetDigestSize();
 	auto pcrMask = trustedPcrs.GetMask();
 	auto pcrBuffer = SPOK_Blob::Blob();
-	
+
 	bool equal = true;
 	for (int i = 0; i < TPM_PCRS_CNT; i++)
 	{
@@ -173,8 +171,5 @@ SPOK_VerifyResult SPOK_AIKPlatformAttestation::Verify(const SPOK_AIKPlatformVeri
 	auto nonceVerify = VerifyNonce(verify.Nonce);
 	auto sigVerify = VerifySignature(verify.AIKBlob);
 	auto pcrsVerify = VerifyPcrs();
-	return SPOK_AIKPlatformVerifyResult { nonceVerify, sigVerify, pcrsVerify };
+	return SPOK_AIKPlatformVerifyResult{ nonceVerify, sigVerify, pcrsVerify };
 }
-
-
-

@@ -6,8 +6,6 @@
 #include "SPOKBlob.h"
 #include "SPOKPcrs.h"
 
-
-
 struct SPOK_AIKTpmVerify
 {
 	SPOK_Nonce::Nonce Nonce;
@@ -28,7 +26,7 @@ struct SPOK_AIKPlatformVerify
 
 struct SPOK_TpmVerifyResult
 {
-	inline bool Result() const { return NonceVerified && NameVerified && CreationVerified && SignatureVerified;	};
+	inline bool Result() const { return NonceVerified && NameVerified && CreationVerified && SignatureVerified; };
 
 	bool NonceVerified;
 	bool NameVerified;

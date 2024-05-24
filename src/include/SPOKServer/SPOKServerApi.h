@@ -28,11 +28,10 @@
 
 #include "SPOKCore.h"
 
-
 #ifdef SPOKSERVER_EXPORTS
 #define SPOKSERVER_API __declspec(dllexport)
 #else
-#define SPOKSERVER_API __declspec(dllimport) 
+#define SPOKSERVER_API __declspec(dllimport)
 #endif
 
 #ifdef __cplusplus

@@ -57,7 +57,6 @@ uint32_t BCryptHashHandle::GetHashSize() const
 	return m_HashSize;
 }
 
-
 HasherUtil::HasherUtil(HasherType type) : m_hAlg((TPM_ALG_ID)type), m_hHash(m_hAlg)
 {
 }
@@ -185,7 +184,7 @@ SPOK_Blob::Blob Hasher::PublicKeyHash(const SPOK_Blob::Blob& keyBlob)
 		sequenceTL.push_back(static_cast<uint8_t>((length >> 8) & 0xFF));
 		sequenceTL.push_back(static_cast<uint8_t>(length & 0xFF));
 	}
-	
+
 	bw.Resize(length + sequenceTL.size());
 
 	// Add the ASN.1 header (sequence tag and length)
@@ -204,7 +203,7 @@ SPOK_Blob::Blob Hasher::PublicKeyHash(const SPOK_Blob::Blob& keyBlob)
 		bw.Write(0x00);
 	}
 	bw.Write(exponentV.data(), exponentV.size());
-	
+
 	// Hash the encoded key
 	HasherUtil hasher(HasherType::SHA256);
 	return hasher.OneShotHash(encodedKey);
@@ -219,7 +218,7 @@ SPOK_Nonce::Nonce Hasher::Blob2Nonce(const SPOK_Blob::Blob& blob)
 
 HasherUtil Hasher::Create(uint16_t algId)
 {
-	if(algId == 0x0004)
+	if (algId == 0x0004)
 	{
 		return HasherUtil(HasherType::SHA1);
 	}
@@ -242,7 +241,7 @@ HasherUtil Hasher::Create(uint16_t algId)
 	}
 }
 
-HasherUtil Hasher::Create_HMAC(uint16_t algId, SPOK_Blob::Blob secret) 
+HasherUtil Hasher::Create_HMAC(uint16_t algId, SPOK_Blob::Blob secret)
 {
 	if (algId == 0x0004)
 	{

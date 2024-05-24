@@ -27,17 +27,17 @@ public:
 	{
 		switch (type)
 		{
-			case AttestationType::AIKPlatformAttestation:
-				return SPOK_AIKPlatformAttestation(blob);
-			case AttestationType::AIKTpmAttestation:
-				return SPOK_AIKTpmAttestation(blob);
-			case AttestationType::AIKKeyAttestation:
-				return SPOK_AIKKeyAttestation(blob);
-			default:
-			{
-				auto fmtError = std::format("Invalid AttestationType: {}", (uint32_t)type);
-				SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
-			}
+		case AttestationType::AIKPlatformAttestation:
+			return SPOK_AIKPlatformAttestation(blob);
+		case AttestationType::AIKTpmAttestation:
+			return SPOK_AIKTpmAttestation(blob);
+		case AttestationType::AIKKeyAttestation:
+			return SPOK_AIKKeyAttestation(blob);
+		default:
+		{
+			auto fmtError = std::format("Invalid AttestationType: {}", (uint32_t)type);
+			SPOK_THROW_ERROR(SPOK_INVALID_DATA, fmtError);
+		}
 		}
 	};
 };

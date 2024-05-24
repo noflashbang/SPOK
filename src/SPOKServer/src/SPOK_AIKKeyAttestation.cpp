@@ -3,7 +3,6 @@
 
 #include <HasherUtil.h>
 
-
 SPOK_AIKKeyAttestation::SPOK_AIKKeyAttestation(SPOK_Blob::Blob attCertify)
 {
 	auto certifyReader = SPOK_BinaryReader(attCertify);
@@ -40,7 +39,6 @@ SPOK_AIKKeyAttestation::SPOK_AIKKeyAttestation(SPOK_Blob::Blob attCertify)
 
 SPOK_AIKKeyAttestation::~SPOK_AIKKeyAttestation()
 {
-
 }
 
 SPOK_Blob::Blob SPOK_AIKKeyAttestation::GetCertifyDigest() const
@@ -80,5 +78,3 @@ SPOK_VerifyResult SPOK_AIKKeyAttestation::Verify(const SPOK_AIKKeyVerify& verify
 	auto sigVerify = VerifySignature(verify.AikBlob);
 	return SPOK_AIKKeyVerifyResult{ nonceVerify, nameVerify, sigVerify };
 }
-
-

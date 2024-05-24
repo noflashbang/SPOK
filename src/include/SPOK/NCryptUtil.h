@@ -48,7 +48,6 @@
 #define TCG_EVENT_LOG_FORMAT_2      (2)
 #endif
 
-
 class NCryptProvHandle
 {
 public:
@@ -82,19 +81,19 @@ private:
 
 class PlatformAik
 {
-	public:
-		PlatformAik(const SPOK_PlatformKey& aik);
-		~PlatformAik();
+public:
+	PlatformAik(const SPOK_PlatformKey& aik);
+	~PlatformAik();
 
-		SPOK_Blob::Blob GetIdBinding();
-		SPOK_Blob::Blob GetPublicKey();
+	SPOK_Blob::Blob GetIdBinding();
+	SPOK_Blob::Blob GetPublicKey();
 
-		NCRYPT_PROV_HANDLE GetProviderHandle();
-		TBS_HCONTEXT GetTsbHandle();
-		uint32_t GetPlatformHandle();
-		uint32_t GetSignatureSize();
+	NCRYPT_PROV_HANDLE GetProviderHandle();
+	TBS_HCONTEXT GetTsbHandle();
+	uint32_t GetPlatformHandle();
+	uint32_t GetSignatureSize();
 
-		SPOK_Blob::Blob ActiveChallenge(const SPOK_Blob::Blob& challenge);
+	SPOK_Blob::Blob ActiveChallenge(const SPOK_Blob::Blob& challenge);
 
 private:
 	NCryptKeyHandle m_key;

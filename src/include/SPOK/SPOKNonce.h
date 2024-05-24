@@ -20,7 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#pragma once 
+#pragma once
 #include <array>
 #include <vector>
 #include <algorithm>
@@ -28,7 +28,6 @@
 #include "SPOKApiTypes.h"
 #include "SPOKCore.h"
 #include "SPOKBlob.h"
-
 
 class SPOK_Nonce
 {
@@ -72,5 +71,3 @@ public:
 		return equal;
 	};
 };
-
-

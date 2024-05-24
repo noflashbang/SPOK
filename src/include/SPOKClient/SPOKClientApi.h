@@ -28,18 +28,17 @@
 
 #include "SPOKApiTypes.h"
 
-
 #ifdef SPOKCLIENT_EXPORTS
 #define SPOKCLIENT_API __declspec(dllexport)
 #else
-#define SPOKCLIENT_API __declspec(dllimport) 
+#define SPOKCLIENT_API __declspec(dllimport)
 #endif
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-		
+
 	//AIK Management
 	SPOKCLIENT_API SPOKSTATUS SPC_AIKCreate(const wchar_t* name, const NCRYPT_MACHINE_KEY flag, const uint8_t* nonce, const size_t cbNonce);
 	SPOKCLIENT_API SPOKSTATUS SPC_AIKDelete(const wchar_t* name, const NCRYPT_MACHINE_KEY flag);

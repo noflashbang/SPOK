@@ -9,46 +9,45 @@ BCryptAlgHandle::BCryptAlgHandle(TPM_ALG_ID alg) : m_hAlg(NULL), m_algId(alg)
 	switch (alg)
 	{
 	case TPM_ALG_ID::TPM_ALG_RNG:
-		{
-			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_RNG_ALGORITHM, NULL, 0);
-			break;
-		}
+	{
+		status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_RNG_ALGORITHM, NULL, 0);
+		break;
+	}
 	case TPM_ALG_ID::TPM_ALG_RSA:
-		{
-			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_RSA_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
-			break;
-		}
+	{
+		status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_RSA_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
+		break;
+	}
 	case TPM_ALG_ID::TPM_ALG_SHA1:
-		{
-			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA1_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
-			break;
-		}
-		case TPM_ALG_ID::TPM_ALG_SHA256:
-		{
-			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA256_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
-			break;
-		}
-		case TPM_ALG_ID::TPM_ALG_SHA384:
-		{
-			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA384_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
-			break;
-
-		}
-		case TPM_ALG_ID::TPM_ALG_SHA512:
-		{
-			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA512_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
-			break;
-		}
-		case TPM_ALG_ID::TPM_ALG_AES:
-		{
-			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_AES_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
-			break;
-		}
-		default:
-		{
-			auto fmtError = std::format("BCryptAlgHandle: Unknown algorithm id {}", (uint16_t)alg);
-			SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
-		}
+	{
+		status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA1_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
+		break;
+	}
+	case TPM_ALG_ID::TPM_ALG_SHA256:
+	{
+		status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA256_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
+		break;
+	}
+	case TPM_ALG_ID::TPM_ALG_SHA384:
+	{
+		status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA384_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
+		break;
+	}
+	case TPM_ALG_ID::TPM_ALG_SHA512:
+	{
+		status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA512_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
+		break;
+	}
+	case TPM_ALG_ID::TPM_ALG_AES:
+	{
+		status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_AES_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0);
+		break;
+	}
+	default:
+	{
+		auto fmtError = std::format("BCryptAlgHandle: Unknown algorithm id {}", (uint16_t)alg);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
+	}
 	}
 
 	if (status != ERROR_SUCCESS)
@@ -64,31 +63,31 @@ BCryptAlgHandle::BCryptAlgHandle(TPM_ALG_ID alg, bool hmacFlag) : m_hAlg(NULL), 
 	NTSTATUS status;
 	switch (alg)
 	{
-		case TPM_ALG_ID::TPM_ALG_SHA1:
-		{
-			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA1_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
-			break;
-		}
-		case TPM_ALG_ID::TPM_ALG_SHA256:
-		{
-			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA256_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
-			break;
-		}
-		case TPM_ALG_ID::TPM_ALG_SHA384:
-		{
-			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA384_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
-			break;
-		}
-		case TPM_ALG_ID::TPM_ALG_SHA512:
-		{
-			status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA512_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
-			break;
-		}
-		default:
-		{
-			auto fmtError = std::format("BCryptAlgHandle: Unknown algorithm id {}", (uint16_t)alg);
-			SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
-		}
+	case TPM_ALG_ID::TPM_ALG_SHA1:
+	{
+		status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA1_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
+		break;
+	}
+	case TPM_ALG_ID::TPM_ALG_SHA256:
+	{
+		status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA256_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
+		break;
+	}
+	case TPM_ALG_ID::TPM_ALG_SHA384:
+	{
+		status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA384_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
+		break;
+	}
+	case TPM_ALG_ID::TPM_ALG_SHA512:
+	{
+		status = BCryptOpenAlgorithmProvider(&m_hAlg, BCRYPT_SHA512_ALGORITHM, MS_PRIMITIVE_PROVIDER, hmacFlag ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
+		break;
+	}
+	default:
+	{
+		auto fmtError = std::format("BCryptAlgHandle: Unknown algorithm id {}", (uint16_t)alg);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
+	}
 	}
 
 	if (status != ERROR_SUCCESS)
@@ -117,34 +116,33 @@ std::string BCryptAlgHandle::Name() const
 {
 	switch (m_algId)
 	{
-		case TPM_ALG_ID::TPM_ALG_RSA:
-		{
-			return "RSA";
-		}
-		case TPM_ALG_ID::TPM_ALG_SHA1:
-		{
-			return "SHA1";
-		}
-		case TPM_ALG_ID::TPM_ALG_SHA256:
-		{
-			return "SHA256";
-		}
-		case TPM_ALG_ID::TPM_ALG_SHA384:
-		{
-			return "SHA384";
-		}
-		case TPM_ALG_ID::TPM_ALG_SHA512:
-		{
-			return "SHA512";
-		}
-		default:
-		{
-			auto fmtError = std::format("BCryptAlgHandle: Unknown algorithm id {}", (uint16_t)m_algId);
-			SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
-		}
+	case TPM_ALG_ID::TPM_ALG_RSA:
+	{
+		return "RSA";
+	}
+	case TPM_ALG_ID::TPM_ALG_SHA1:
+	{
+		return "SHA1";
+	}
+	case TPM_ALG_ID::TPM_ALG_SHA256:
+	{
+		return "SHA256";
+	}
+	case TPM_ALG_ID::TPM_ALG_SHA384:
+	{
+		return "SHA384";
+	}
+	case TPM_ALG_ID::TPM_ALG_SHA512:
+	{
+		return "SHA512";
+	}
+	default:
+	{
+		auto fmtError = std::format("BCryptAlgHandle: Unknown algorithm id {}", (uint16_t)m_algId);
+		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, fmtError);
+	}
 	}
 }
-
 
 BCryptKey::BCryptKey(SPOK_Blob::Blob keyBlob) : m_hAlg(TPM_ALG_ID::TPM_ALG_RSA)
 {
@@ -246,13 +244,13 @@ SPOK_Blob::Blob BCryptKey::Encrypt(const SPOK_Blob::Blob& data, bool useIdentity
 	uint8_t* szLabel = (uint8_t*)"DUPLICATE";
 	DWORD cbLabel = 10;
 
-	if(useIdentity)
+	if (useIdentity)
 	{
 		szLabel = (uint8_t*)"IDENTITY";
 		cbLabel = 9;
 	}
 
-	auto paddingInfo = BCRYPT_OAEP_PADDING_INFO { BCRYPT_SHA256_ALGORITHM, szLabel, cbLabel };
+	auto paddingInfo = BCRYPT_OAEP_PADDING_INFO{ BCRYPT_SHA256_ALGORITHM, szLabel, cbLabel };
 
 	// Encrypt the data
 	HRESULT status = BCryptEncrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), &paddingInfo, NULL, 0, NULL, NULL, &dataSize, BCRYPT_PAD_OAEP);
@@ -271,7 +269,6 @@ SPOK_Blob::Blob BCryptKey::Encrypt(const SPOK_Blob::Blob& data, bool useIdentity
 	}
 
 	return encryptedData;
-
 }
 SPOK_Blob::Blob BCryptKey::Decrypt(const SPOK_Blob::Blob& data)
 {
@@ -300,7 +297,6 @@ SPOK_Blob::Blob BCryptKey::Decrypt(const SPOK_Blob::Blob& data)
 	}
 
 	return decryptedData;
-
 }
 
 void  BCryptKey::SetSignHashAlg(uint16_t algId)
@@ -314,7 +310,7 @@ SPOK_Blob::Blob BCryptKey::Sign(const SPOK_Blob::Blob& hash)
 	{
 		SPOK_THROW_ERROR(SPOK_INVALID_DATA, std::format("Data too large to sign -> Max {} bytes, got {} bytes", MaxMessage(), hash.size()));
 	}
-	
+
 	BCRYPT_PKCS1_PADDING_INFO padInfo;
 	if (m_signHashAlg == 0x0004)
 	{
@@ -356,7 +352,6 @@ SPOK_Blob::Blob BCryptKey::Sign(const SPOK_Blob::Blob& hash)
 	}
 
 	return signature;
-
 }
 bool BCryptKey::Verify(const SPOK_Blob::Blob& hash, const SPOK_Blob::Blob& signature)
 {
@@ -392,13 +387,13 @@ bool BCryptKey::Verify(const SPOK_Blob::Blob& hash, const SPOK_Blob::Blob& signa
 	return false;
 }
 
-SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob::Blob& iv): m_hAlg(TPM_ALG_ID::TPM_ALG_AES), m_hKey(NULL), m_iv(iv)
+SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob::Blob& iv) : m_hAlg(TPM_ALG_ID::TPM_ALG_AES), m_hKey(NULL), m_iv(iv)
 {
-	if(alg != BCRYPT_AES_ALGORITHM)
+	if (alg != BCRYPT_AES_ALGORITHM)
 	{
 		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, "SymmetricCipher: Invalid algorithm - must be AES");
 	}
-	if(mode != BCRYPT_CHAIN_MODE_CFB) //only supporting CFB mode for now
+	if (mode != BCRYPT_CHAIN_MODE_CFB) //only supporting CFB mode for now
 	{
 		SPOK_THROW_ERROR(SPOK_INVALID_ALGORITHM, "SymmetricCipher: Invalid mode - must be CFB");
 	}
@@ -412,7 +407,7 @@ SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring&
 
 	//set chaining mode
 	status = BCryptSetProperty(m_hKey, BCRYPT_CHAINING_MODE, (PUCHAR)mode.c_str(), SAFE_CAST_TO_UINT32(mode.size()), 0);
-	if(status != ERROR_SUCCESS)
+	if (status != ERROR_SUCCESS)
 	{
 		auto fmtError = std::format("SymmetricCipher: BCryptSetProperty failed with {}", status);
 		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
@@ -421,7 +416,7 @@ SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring&
 	//set block length
 	DWORD blockLength = 16;
 	status = BCryptSetProperty(m_hKey, BCRYPT_MESSAGE_BLOCK_LENGTH, (PUCHAR)&blockLength, sizeof(blockLength), 0);
-	if(status != ERROR_SUCCESS)
+	if (status != ERROR_SUCCESS)
 	{
 		auto fmtError = std::format("SymmetricCipher: BCryptSetProperty failed with {}", status);
 		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
@@ -429,7 +424,6 @@ SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring&
 }
 SymmetricCipher::~SymmetricCipher()
 {
-
 }
 SymmetricCipher::operator BCRYPT_KEY_HANDLE() const
 {
@@ -458,7 +452,7 @@ SPOK_Blob::Blob SymmetricCipher::Encrypt(const SPOK_Blob::Blob& data)
 }
 SPOK_Blob::Blob SymmetricCipher::Decrypt(const SPOK_Blob::Blob& data)
 {
-DWORD dataSize = 0;
+	DWORD dataSize = 0;
 	NTSTATUS status = BCryptDecrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), NULL, 0, &dataSize, 0);
 	if (status != ERROR_SUCCESS)
 	{

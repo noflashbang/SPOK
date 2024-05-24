@@ -1,4 +1,3 @@
-
 #include <SPOKCore.h>
 #include <SPOKNonce.h>
 #include <SPOKError.h>
@@ -20,7 +19,7 @@
 //	const std::wstring name = L"TestAIK";
 //	NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
 //	bool exists = SPC_AIKExists(name.c_str(), flag);
-//	
+//
 //	if (exists)
 //	{
 //		SPC_AIKDelete(name.c_str(), flag);
@@ -97,7 +96,7 @@ TEST_CASE("RSA Operations")
 	auto sig_128 = BCryptKey_128.Sign(secret);
 	auto sig_256 = BCryptKey_256.Sign(secret);
 	auto sig_512 = BCryptKey_512.Sign(secret);
-		
+
 	auto ver_128 = BCryptKey_128.Verify(secret, sig_128);
 	auto ver_256 = BCryptKey_256.Verify(secret, sig_256);
 	auto ver_512 = BCryptKey_512.Verify(secret, sig_512);
@@ -114,11 +113,11 @@ TEST_CASE("Server RSA Operations")
 
 	pBytes = std::make_unique<unsigned char[]>(cbSize);
 	size_t sizeOut = 0;
-	
+
 	REQUIRE(SPOK_SUCCESS(SPS_GenerateRSAKeyPair(1024, pBytes.get(), cbSize, sizeOut)));
 	auto key_128 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
-	
+
 	REQUIRE(SPOK_SUCCESS(SPS_GenerateRSAKeyPair(2048, pBytes.get(), cbSize, sizeOut)));
 	auto key_256 = SPOK_Blob::New(pBytes.get(), sizeOut);
 	ZeroMemory(pBytes.get(), cbSize);
@@ -128,7 +127,6 @@ TEST_CASE("Server RSA Operations")
 	ZeroMemory(pBytes.get(), cbSize);
 
 	auto secret = BCryptUtil::GetRandomBytes(32);
-
 
 	REQUIRE(SPOK_SUCCESS(SPS_Encrypt(key_128.data(), key_128.size(), secret.data(), secret.size(), pBytes.get(), cbSize, sizeOut)));
 	auto enc_128 = SPOK_Blob::New(pBytes.get(), sizeOut);
@@ -188,7 +186,7 @@ TEST_CASE("Platform RSA Operations")
 	}
 
 	auto secret = BCryptUtil::GetRandomBytes(32);
-	
+
 	std::unique_ptr<unsigned char[]> pBytes = nullptr;
 	size_t cbSize = 512;
 
@@ -218,12 +216,11 @@ TEST_CASE("Platform RSA Operations")
 	REQUIRE(isGood);
 }
 
-
 TEST_CASE("SPC_AIKGetPublicKey")
 {
- 	std::unique_ptr<unsigned char[]> pBytes = nullptr;
+	std::unique_ptr<unsigned char[]> pBytes = nullptr;
 	size_t cbSize = 512;
-	
+
 	pBytes = std::make_unique<unsigned char[]>(cbSize);
 
 	size_t sizeOut = 0;
@@ -291,7 +288,6 @@ TEST_CASE("SPC_GetSRK")
 	INFO("EKPub Hash is " << str);
 }
 
-
 TEST_CASE("SPC_AIKGetChallengeBinding")
 {
 	std::unique_ptr<unsigned char[]> pBytes = nullptr;
@@ -300,7 +296,7 @@ TEST_CASE("SPC_AIKGetChallengeBinding")
 	pBytes = std::make_unique<unsigned char[]>(cbSize);
 
 	size_t sizeOut = 0;
-	
+
 	std::wstring name = L"TestAIK";
 	NCRYPT_MACHINE_KEY flag = NCRYPT_MACHINE_KEY::NO;
 
@@ -435,12 +431,11 @@ TEST_CASE("SPC_AIKGetPlatformAttestation")
 
 		REQUIRE(SPOK_SUCCESS(SPC_AIKGetPublicKey(name.c_str(), flag, pBytes.get(), cbSize, sizeOut)));
 		aikPub = SPOK_Blob::New(pBytes.get(), sizeOut);
-		
+
 		auto nonce = Hasher::Blob2Nonce(SPOK_Blob::FromString("TestPlatformNonce"));
 		REQUIRE(SPOK_SUCCESS(SPC_AIKGetPlatformAttestation(name.c_str(), flag, nonce.data(), nonce.size(), (PCR_13 | PCR_14), pBytes.get(), cbSize, sizeOut)));
 
 		REQUIRE(sizeOut > 0);
-
 	}
 	{
 		auto handle = SPS_AIKPlatformAttest_Decode(pBytes.get(), sizeOut);
@@ -524,7 +519,7 @@ TEST_CASE("SPC_ImportWrappedKey_AndAttest")
 	//get the public name from wrapped key
 	REQUIRE(SPOK_SUCCESS(SPS_WrappedKeyName(wrappedKey.data(), wrappedKey.size(), pBytes.get(), cbSize, sizeOut)));
 	auto wrappedKeyName = SPOK_Blob::New(pBytes.get(), sizeOut);
-	
+
 	REQUIRE(wrappedKeyName.size() > 0);
 
 	//import the key

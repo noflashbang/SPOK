@@ -20,7 +20,7 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#pragma once 
+#pragma once
 #include <string>
 #include <stdexcept>
 
@@ -37,7 +37,6 @@ public:
 private:
 	static std::string _lastError;
 };
-
 
 class SPOK_Overflow : public std::overflow_error
 {
@@ -117,7 +116,6 @@ public:
 	SPOK_TcgLogFailure(const std::string& message) noexcept : std::runtime_error(message) {}
 };
 
-
 #define SPOK_OKAY  ( 0)
 #define SPOK_ERROR (0x80000000)
 
@@ -142,5 +140,3 @@ public:
 
 #define SPOK_UNKNOWN_ERROR		  (0x8000FFFE)
 #define SPOK_LAST_ERROR           (0x8000FFFF)
-
-

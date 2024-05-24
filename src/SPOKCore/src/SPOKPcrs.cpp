@@ -4,8 +4,6 @@
 #include <format>
 #include "SPOKError.h"
 
-
-
 SPOK_Pcrs::SPOK_Pcrs(uint8_t digestSize) : _digestSize(digestSize)
 {
 	std::fill(_pcrTable.begin(), _pcrTable.end(), 0); //zero out the table
@@ -88,7 +86,7 @@ void SPOK_Pcrs::SetPcr(const uint8_t pcrRegister, const std::array<uint8_t, TPM_
 	std::copy(pcrValue.begin(), pcrValue.end(), _pcrTable.begin() + (pcrRegister * _digestSize));
 }
 std::array<uint8_t, TPM_PCR_TABLE_MAXSIZE> SPOK_Pcrs::GetPcrTable() const
-{ 
+{
 	return _pcrTable;
 }
 void SPOK_Pcrs::SetPcrTable(const std::array<uint8_t, TPM_PCR_TABLE_MAXSIZE>& pcrTable)

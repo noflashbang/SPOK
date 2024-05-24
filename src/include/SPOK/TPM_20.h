@@ -97,10 +97,10 @@ struct TPM2B_ATTEST_QUOTE
 	SPOK_Nonce::Nonce CreationNonce;
 	TPMS_CLOCK_INFO ClockInfo;
 	uint64_t FirmwareVersion;
-	
+
 	std::vector<TPM2B_PCR_SELECTION> PcrSelection;
 	SPOK_Blob::Blob PcrDigest;
-	
+
 	SPOK_Blob::Blob Raw;
 	static TPM2B_ATTEST_QUOTE Decode(const SPOK_Blob::Blob& attest);
 };
@@ -157,7 +157,7 @@ struct TPM2B_IDBINDING
 
 // Storage structure for 2.0 keys - I can't find a source for this structure - other than PCPTool.
 // Not sure if this structure is defined somewhere else. Seems to be specific to PCP from MSFT.
-struct PCP_20_KEY_BLOB 
+struct PCP_20_KEY_BLOB
 {
 #define PCP_20_KEY_BLOB_MAGIC 'MPCP'
 #define PCPTYPE_TPM20 (0x00000002)
@@ -186,7 +186,6 @@ public:
 	static SPOK_Blob::Blob WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& srk, const SPOK_Pcrs& boundPcrs);
 	static SPOK_Blob::Blob GetWrappedKeyName(const SPOK_Blob::Blob& wrappedKey);
 
-
 	static TPM2B_IDBINDING DecodeIDBinding(const SPOK_Blob::Blob& idBinding);
 	static SPOK_Blob::Blob GenerateChallengeCredential(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& aikName, const SPOK_Blob::Blob& secret);
 	static SPOK_Blob::Blob KDFa(const uint16_t nameAlgId, const SPOK_Blob::Blob& key, const std::string& label, const SPOK_Blob::Blob& contextU, const SPOK_Blob::Blob& contextV, uint16_t bits);
@@ -196,4 +195,3 @@ private:
 
 	static SPOK_Blob::Blob GetNameForPublic(const SPOK_Blob::Blob& publicBlob);
 };
-

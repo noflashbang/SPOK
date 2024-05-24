@@ -10,69 +10,69 @@ TcgLogEventType TcgLog::GetEventType(uint32_t eventType)
 {
 	switch (eventType)
 	{
-		case 0x00000000:
-			return TcgLogEventType::EV_PREBOOT_CERT;
-		case 0x00000001:
-			return TcgLogEventType::EV_POST_CODE;
-		case 0x00000002:
-			return TcgLogEventType::EV_UNUSED;
-		case 0x00000003:
-			return TcgLogEventType::EV_NO_ACTION;
-		case 0x00000004:
-			return TcgLogEventType::EV_SEPARATOR;
-		case 0x00000005:
-			return TcgLogEventType::EV_ACTION;
-		case 0x00000006:
-			return TcgLogEventType::EV_EVENT_TAG;
-		case 0x00000007:
-			return TcgLogEventType::EV_S_CRTM_CONTENTS;
-		case 0x00000008:
-			return TcgLogEventType::EV_S_CRTM_VERSION;
-		case 0x00000009:
-			return TcgLogEventType::EV_CPU_MICROCODE;
-		case 0x0000000A:
-			return TcgLogEventType::EV_PLATFORM_CONFIG_FLAGS;
-		case 0x0000000B:
-			return TcgLogEventType::EV_TABLE_OF_DEVICES;
-		case 0x0000000C:
-			return TcgLogEventType::EV_COMPACT_HASH;
-		case 0x0000000D:
-			return TcgLogEventType::EV_IPL;
-		case 0x0000000E:
-			return TcgLogEventType::EV_IPL_PARTITION_DATA;
-		case 0x0000000F:
-			return TcgLogEventType::EV_NONHOST_CODE;
-		case 0x00000010:
-			return TcgLogEventType::EV_NONHOST_CONFIG;
-		case 0x00000011:
-			return TcgLogEventType::EV_NONHOST_INFO;
-		case 0x80000001:
-			return TcgLogEventType::EV_EFI_VARIABLE_DRIVER_CONFIG;
-		case 0x80000002:
-			return TcgLogEventType::EV_EFI_VARIABLE_BOOT;
-		case 0x80000003:
-			return TcgLogEventType::EV_EFI_BOOT_SERVICES_APPLICATION;
-		case 0x80000004:
-			return TcgLogEventType::EV_EFI_BOOT_SERVICES_DRIVER;
-		case 0x80000005:
-			return TcgLogEventType::EV_EFI_RUNTIME_SERVICES_DRIVER;
-		case 0x80000006:
-			return TcgLogEventType::EV_EFI_GPT_EVENT;
-		case 0x80000007:
-			return TcgLogEventType::EV_EFI_ACTION;
-		case 0x80000008:
-			return TcgLogEventType::EV_EFI_PLATFORM_FIRMWARE_BLOB;
-		case 0x80000009:
-			return TcgLogEventType::EV_EFI_HANDOFF_TABLES;
-		case 0x8000000A:
-			return TcgLogEventType::EV_EFI_HCRTM_EVENT;
-		case 0x800000E0:
-			return TcgLogEventType::EV_EFI_VARIABLE_AUTHORITY;
-		default:
-		{
-			auto msg = std::format("Invalid TCG log event type: {0}", eventType);
-			SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
-		}
+	case 0x00000000:
+		return TcgLogEventType::EV_PREBOOT_CERT;
+	case 0x00000001:
+		return TcgLogEventType::EV_POST_CODE;
+	case 0x00000002:
+		return TcgLogEventType::EV_UNUSED;
+	case 0x00000003:
+		return TcgLogEventType::EV_NO_ACTION;
+	case 0x00000004:
+		return TcgLogEventType::EV_SEPARATOR;
+	case 0x00000005:
+		return TcgLogEventType::EV_ACTION;
+	case 0x00000006:
+		return TcgLogEventType::EV_EVENT_TAG;
+	case 0x00000007:
+		return TcgLogEventType::EV_S_CRTM_CONTENTS;
+	case 0x00000008:
+		return TcgLogEventType::EV_S_CRTM_VERSION;
+	case 0x00000009:
+		return TcgLogEventType::EV_CPU_MICROCODE;
+	case 0x0000000A:
+		return TcgLogEventType::EV_PLATFORM_CONFIG_FLAGS;
+	case 0x0000000B:
+		return TcgLogEventType::EV_TABLE_OF_DEVICES;
+	case 0x0000000C:
+		return TcgLogEventType::EV_COMPACT_HASH;
+	case 0x0000000D:
+		return TcgLogEventType::EV_IPL;
+	case 0x0000000E:
+		return TcgLogEventType::EV_IPL_PARTITION_DATA;
+	case 0x0000000F:
+		return TcgLogEventType::EV_NONHOST_CODE;
+	case 0x00000010:
+		return TcgLogEventType::EV_NONHOST_CONFIG;
+	case 0x00000011:
+		return TcgLogEventType::EV_NONHOST_INFO;
+	case 0x80000001:
+		return TcgLogEventType::EV_EFI_VARIABLE_DRIVER_CONFIG;
+	case 0x80000002:
+		return TcgLogEventType::EV_EFI_VARIABLE_BOOT;
+	case 0x80000003:
+		return TcgLogEventType::EV_EFI_BOOT_SERVICES_APPLICATION;
+	case 0x80000004:
+		return TcgLogEventType::EV_EFI_BOOT_SERVICES_DRIVER;
+	case 0x80000005:
+		return TcgLogEventType::EV_EFI_RUNTIME_SERVICES_DRIVER;
+	case 0x80000006:
+		return TcgLogEventType::EV_EFI_GPT_EVENT;
+	case 0x80000007:
+		return TcgLogEventType::EV_EFI_ACTION;
+	case 0x80000008:
+		return TcgLogEventType::EV_EFI_PLATFORM_FIRMWARE_BLOB;
+	case 0x80000009:
+		return TcgLogEventType::EV_EFI_HANDOFF_TABLES;
+	case 0x8000000A:
+		return TcgLogEventType::EV_EFI_HCRTM_EVENT;
+	case 0x800000E0:
+		return TcgLogEventType::EV_EFI_VARIABLE_AUTHORITY;
+	default:
+	{
+		auto msg = std::format("Invalid TCG log event type: {0}", eventType);
+		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
+	}
 	}
 }
 
@@ -80,41 +80,41 @@ TPM_ALG_ID TcgLog::GetTpmAlgId(uint16_t algId)
 {
 	switch (algId)
 	{
-		case 0x0000:
-			return TPM_ALG_ID::TPM_ALG_ERROR;
-		case 0x0001:
-			return TPM_ALG_ID::TPM_ALG_RSA;
-		case 0x0004:
-			return TPM_ALG_ID::TPM_ALG_SHA1;
-		case 0x0005:
-			return TPM_ALG_ID::TPM_ALG_HMAC;
-		case 0x0006:
-			return TPM_ALG_ID::TPM_ALG_AES;
-		case 0x0007:
-			return TPM_ALG_ID::TPM_ALG_MGF1;
-		case 0x0008:
-			return TPM_ALG_ID::TPM_ALG_KEYEDHASH;
-		case 0x000A:
-			return TPM_ALG_ID::TPM_ALG_XOR;
-		case 0x000B:
-			return TPM_ALG_ID::TPM_ALG_SHA256;
-		case 0x000C:
-			return TPM_ALG_ID::TPM_ALG_SHA384;
-		case 0x000D:
-			return TPM_ALG_ID::TPM_ALG_SHA512;
-		case 0x0010:
-			return TPM_ALG_ID::TPM_ALG_SM3_256;
-		case 0x0023:
-			return TPM_ALG_ID::TPM_ALG_SHA3_256;
-		case 0x0024:
-			return TPM_ALG_ID::TPM_ALG_SHA3_384;
-		case 0x0025:
-			return TPM_ALG_ID::TPM_ALG_SHA3_512;
-		default:
-		{
-			auto msg = std::format("Invalid TCG log digest algorithm: {0}", algId);
-			SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
-		}
+	case 0x0000:
+		return TPM_ALG_ID::TPM_ALG_ERROR;
+	case 0x0001:
+		return TPM_ALG_ID::TPM_ALG_RSA;
+	case 0x0004:
+		return TPM_ALG_ID::TPM_ALG_SHA1;
+	case 0x0005:
+		return TPM_ALG_ID::TPM_ALG_HMAC;
+	case 0x0006:
+		return TPM_ALG_ID::TPM_ALG_AES;
+	case 0x0007:
+		return TPM_ALG_ID::TPM_ALG_MGF1;
+	case 0x0008:
+		return TPM_ALG_ID::TPM_ALG_KEYEDHASH;
+	case 0x000A:
+		return TPM_ALG_ID::TPM_ALG_XOR;
+	case 0x000B:
+		return TPM_ALG_ID::TPM_ALG_SHA256;
+	case 0x000C:
+		return TPM_ALG_ID::TPM_ALG_SHA384;
+	case 0x000D:
+		return TPM_ALG_ID::TPM_ALG_SHA512;
+	case 0x0010:
+		return TPM_ALG_ID::TPM_ALG_SM3_256;
+	case 0x0023:
+		return TPM_ALG_ID::TPM_ALG_SHA3_256;
+	case 0x0024:
+		return TPM_ALG_ID::TPM_ALG_SHA3_384;
+	case 0x0025:
+		return TPM_ALG_ID::TPM_ALG_SHA3_512;
+	default:
+	{
+		auto msg = std::format("Invalid TCG log digest algorithm: {0}", algId);
+		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
+	}
 	}
 }
 
@@ -122,27 +122,27 @@ uint32_t TcgLog::GetDigestSize(TPM_ALG_ID algId)
 {
 	switch (algId)
 	{
-		case TPM_ALG_ID::TPM_ALG_SHA1:
-			return 20;
-		case TPM_ALG_ID::TPM_ALG_SHA256:
-			return 32;
-		case TPM_ALG_ID::TPM_ALG_SHA384:
-			return 48;
-		case TPM_ALG_ID::TPM_ALG_SHA512:
-			return 64;
-		case TPM_ALG_ID::TPM_ALG_SM3_256:
-			return 32;
-		case TPM_ALG_ID::TPM_ALG_SHA3_256:
-			return 32;
-		case TPM_ALG_ID::TPM_ALG_SHA3_384:
-			return 48;
-		case TPM_ALG_ID::TPM_ALG_SHA3_512:
-			return 64;
-		default:
-		{
-			auto msg = std::format("Invalid TCG log digest algorithm: {0}", (uint16_t)algId);
-			SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
-		}
+	case TPM_ALG_ID::TPM_ALG_SHA1:
+		return 20;
+	case TPM_ALG_ID::TPM_ALG_SHA256:
+		return 32;
+	case TPM_ALG_ID::TPM_ALG_SHA384:
+		return 48;
+	case TPM_ALG_ID::TPM_ALG_SHA512:
+		return 64;
+	case TPM_ALG_ID::TPM_ALG_SM3_256:
+		return 32;
+	case TPM_ALG_ID::TPM_ALG_SHA3_256:
+		return 32;
+	case TPM_ALG_ID::TPM_ALG_SHA3_384:
+		return 48;
+	case TPM_ALG_ID::TPM_ALG_SHA3_512:
+		return 64;
+	default:
+	{
+		auto msg = std::format("Invalid TCG log digest algorithm: {0}", (uint16_t)algId);
+		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
+	}
 	}
 }
 
@@ -153,14 +153,14 @@ TcgLog TcgLog::Parse(const std::vector<uint8_t>& tcgLogData)
 	SPOK_BinaryReader stream(tcgLogData);
 
 	// Parse the TCG log header
-	if(tcgLogData.size() < 65)
+	if (tcgLogData.size() < 65)
 	{
 		auto msg = std::format("Invalid TCG log size: {0}", tcgLogData.size());
 		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
 	}
 
 	auto pcrIndex = stream.LE_Read32();
-	if(pcrIndex != 0)
+	if (pcrIndex != 0)
 	{
 		auto msg = std::format("Invalid PCR index: {0}", pcrIndex);
 		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
@@ -168,14 +168,14 @@ TcgLog TcgLog::Parse(const std::vector<uint8_t>& tcgLogData)
 
 	TcgLogEventType eventType = GetEventType(stream.LE_Read32());
 
-	if(eventType != TcgLogEventType::EV_NO_ACTION)
+	if (eventType != TcgLogEventType::EV_NO_ACTION)
 	{
 		auto msg = std::format("Invalid TCG log event type: {0}", (uint32_t)eventType);
 		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
 	}
 
 	auto digest = stream.Read(20);
-	if(digest != std::vector<uint8_t>(20, 0))
+	if (digest != std::vector<uint8_t>(20, 0))
 	{
 		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, "Invalid TCG log digest");
 	}
@@ -281,7 +281,7 @@ std::vector<uint8_t> TcgLog::ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_I
 		auto msg = std::format("Unsupported TCG log digest algorithm: {0}", (uint16_t)algId);
 		SPOK_THROW_ERROR(SPOK_TCGLOG_FAILURE, msg);
 	}
-		
+
 	std::vector<uint8_t> softPCRTable;
 	//foreach pcr compute the hash of all the events
 	for (uint32_t pcrIndex = 0; pcrIndex < 24; pcrIndex++)
@@ -291,7 +291,7 @@ std::vector<uint8_t> TcgLog::ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_I
 		std::fill(pcrValue.begin(), pcrValue.end(), fillValue);
 		for (const auto& event : tcgLog.Events)
 		{
-			if(event.Type == TcgLogEventType::EV_NO_ACTION)
+			if (event.Type == TcgLogEventType::EV_NO_ACTION)
 			{
 				continue;
 			}
@@ -304,7 +304,7 @@ std::vector<uint8_t> TcgLog::ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_I
 
 				for (const auto& digest : event.Digests)
 				{
-					if(digest.AlgorithmId == algId)
+					if (digest.AlgorithmId == algId)
 					{
 						//hash the pcr
 						hasher.HashData(pcrValue);
@@ -322,7 +322,7 @@ std::vector<uint8_t> TcgLog::ComputeSoftPCRTable(const TcgLog& tcgLog, TPM_ALG_I
 bool TcgLog::VerifyLogIntegrity(const TcgLog& tcgLog)
 {
 	bool valid = true;
-	
+
 	//check the event digest against the data
 	for (const auto& event : tcgLog.Events)
 	{

@@ -30,4 +30,3 @@ private:
 	SPOK_Blob::Blob m_Signature;
 	SPOK_Blob::Blob m_tsbLog;
 };
-

@@ -88,7 +88,6 @@ SPOKSTATUS SPC_AIKGetPlatformAttestation(const wchar_t* aikName, const NCRYPT_MA
 	}
 }
 
-
 SPOKSTATUS SPC_GetEndorsementPublicKey(uint8_t* pBytes, const size_t cbBytes, size_t& sizeOut)
 {
 	try
@@ -111,7 +110,7 @@ SPOKSTATUS SPC_AIKGetPublicKey(const wchar_t* name, const NCRYPT_MACHINE_KEY fla
 		auto key = SPOK_PlatformKey{ name, flag };
 		SPOKClient client;
 		auto blob = client.AIKGetPublicKey(key);
-	
+
 		SPOK_Blob::Copy2CStylePtr(blob, pBytes, cbBytes, sizeOut);
 		return SPOK_OKAY;
 	}

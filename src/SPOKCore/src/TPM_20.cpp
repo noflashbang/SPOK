@@ -10,29 +10,27 @@
 #include <format>
 #include "SPOKError.h"
 
-
-
 // Hard-coded policies - from PCPTool.
-const uint8_t defaultUserPolicy[] = { 0x8f, 0xcd, 0x21, 0x69, 0xab, 0x92, 0x69, 0x4e,
-								  0x0c, 0x63, 0x3f, 0x1a, 0xb7, 0x72, 0x84, 0x2b,
-								  0x82, 0x41, 0xbb, 0xc2, 0x02, 0x88, 0x98, 0x1f,
-								  0xc7, 0xac, 0x1e, 0xdd, 0xc1, 0xfd, 0xdb, 0x0e };
-const uint8_t adminObjectChangeAuthPolicy[] = { 0xe5, 0x29, 0xf5, 0xd6, 0x11, 0x28, 0x72, 0x95,
-											0x4e, 0x8e, 0xd6, 0x60, 0x51, 0x17, 0xb7, 0x57,
-											0xe2, 0x37, 0xc6, 0xe1, 0x95, 0x13, 0xa9, 0x49,
-											0xfe, 0xe1, 0xf2, 0x04, 0xc4, 0x58, 0x02, 0x3a };
-const uint8_t adminCertifyPolicy[] = { 0xaf, 0x2c, 0xa5, 0x69, 0x69, 0x9c, 0x43, 0x6a,
-								   0x21, 0x00, 0x6f, 0x1c, 0xb8, 0xa2, 0x75, 0x6c,
-								   0x98, 0xbc, 0x1c, 0x76, 0x5a, 0x35, 0x59, 0xc5,
-								   0xfe, 0x1c, 0x3f, 0x5e, 0x72, 0x28, 0xa7, 0xe7 };
-const uint8_t adminCertifyPolicyNoPin[] = { 0x04, 0x8e, 0x9a, 0x3a, 0xce, 0x08, 0x58, 0x3f,
-										0x79, 0xf3, 0x44, 0xff, 0x78, 0x5b, 0xbe, 0xa9,
-										0xf0, 0x7a, 0xc7, 0xfa, 0x33, 0x25, 0xb3, 0xd4,
-										0x9a, 0x21, 0xdd, 0x51, 0x94, 0xc6, 0x58, 0x50 };
+const uint8_t defaultUserPolicy[] =				{ 0x8f, 0xcd, 0x21, 0x69, 0xab, 0x92, 0x69, 0x4e,
+												  0x0c, 0x63, 0x3f, 0x1a, 0xb7, 0x72, 0x84, 0x2b,
+												  0x82, 0x41, 0xbb, 0xc2, 0x02, 0x88, 0x98, 0x1f,
+												  0xc7, 0xac, 0x1e, 0xdd, 0xc1, 0xfd, 0xdb, 0x0e };
+const uint8_t adminObjectChangeAuthPolicy[] =	{ 0xe5, 0x29, 0xf5, 0xd6, 0x11, 0x28, 0x72, 0x95,
+												  0x4e, 0x8e, 0xd6, 0x60, 0x51, 0x17, 0xb7, 0x57,
+												  0xe2, 0x37, 0xc6, 0xe1, 0x95, 0x13, 0xa9, 0x49,
+												  0xfe, 0xe1, 0xf2, 0x04, 0xc4, 0x58, 0x02, 0x3a };
+const uint8_t adminCertifyPolicy[] =			{ 0xaf, 0x2c, 0xa5, 0x69, 0x69, 0x9c, 0x43, 0x6a,
+												  0x21, 0x00, 0x6f, 0x1c, 0xb8, 0xa2, 0x75, 0x6c,
+												  0x98, 0xbc, 0x1c, 0x76, 0x5a, 0x35, 0x59, 0xc5,
+												  0xfe, 0x1c, 0x3f, 0x5e, 0x72, 0x28, 0xa7, 0xe7 };
+const uint8_t adminCertifyPolicyNoPin[] =		{ 0x04, 0x8e, 0x9a, 0x3a, 0xce, 0x08, 0x58, 0x3f,
+												  0x79, 0xf3, 0x44, 0xff, 0x78, 0x5b, 0xbe, 0xa9,
+												  0xf0, 0x7a, 0xc7, 0xfa, 0x33, 0x25, 0xb3, 0xd4,
+												  0x9a, 0x21, 0xdd, 0x51, 0x94, 0xc6, 0x58, 0x50 };
 const uint8_t adminActivateCredentialPolicy[] = { 0xc4, 0x13, 0xa8, 0x47, 0xb1, 0x11, 0x12, 0xb1,
-											  0xcb, 0xdd, 0xd4, 0xec, 0xa4, 0xda, 0xaa, 0x15,
-											  0xa1, 0x85, 0x2c, 0x1c, 0x3b, 0xba, 0x57, 0x46,
-											  0x1d, 0x25, 0x76, 0x05, 0xf3, 0xd5, 0xaf, 0x53 };
+												  0xcb, 0xdd, 0xd4, 0xec, 0xa4, 0xda, 0xaa, 0x15,
+												  0xa1, 0x85, 0x2c, 0x1c, 0x3b, 0xba, 0x57, 0x46,
+												  0x1d, 0x25, 0x76, 0x05, 0xf3, 0xd5, 0xaf, 0x53 };
 
 uint32_t TPM2B_PCR_SELECTION::GetMask() const
 {
@@ -75,12 +73,12 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 	rsp.resize(512);
 
 	uint32_t rspSize = SAFE_CAST_TO_UINT32(rsp.size());
-	
+
 	auto bw = SPOK_BinaryWriter(cmd);
 	uint32_t usageAuthSize = 2 * sizeof(UINT32) + // authHandle
-					2 * sizeof(UINT16) + // nonceNULL
-					2 * sizeof(BYTE) +   // sessionAttributes
-					2 * sizeof(UINT16); // password size
+		2 * sizeof(UINT16) + // nonceNULL
+		2 * sizeof(BYTE) +   // sessionAttributes
+		2 * sizeof(UINT16); // password size
 
 	// TPM2.0 certify command
 	bw.BE_Write16(0x8002); // TPM_ST_SESSIONS
@@ -88,9 +86,9 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 	bw.BE_Write32(0x00000148); // TPM_CC_Certify
 	bw.BE_Write32(keyHandle); // keyhandle
 	bw.BE_Write32(aikHandle); // aikHandle
-	
+
 	bw.BE_Write32(usageAuthSize); // size of the usage auth area
-	
+
 	bw.BE_Write32(0x40000009); // TPM_RS_PW
 	bw.BE_Write16(0x0000); // nonce size
 	bw.Write(0x00); // session attributes
@@ -171,7 +169,7 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	auto tsbLog = NCryptUtil::GetFilteredTbsLog(pcrsToInclude);
 	//auto tsbLog = NCryptUtil::GetTbsLog();
 	auto log = TcgLog::Parse(tsbLog);
-	
+
 	//grab the largest hash algorithm
 	uint16_t maxDigest = 0;
 	TPM_ALG_ID algIdfromTcg = TPM_ALG_ID::TPM_ALG_SHA1;
@@ -318,13 +316,13 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 
 	auto pcrMask = boundPcrs.GetMask();
 	uint32_t objectAttributes = 0x00060400;
-	if(pcrMask == 0)
+	if (pcrMask == 0)
 	{
 		objectAttributes = objectAttributes | 0x00000040;
 	}
 
 	bool usingDefaultExponent = false;
-	if((pKeyPair->cbPublicExp == 3) && memcmp(key.data() + sizeof(BCRYPT_RSAKEY_BLOB), defaultExponent.data(), defaultExponent.size()) == 0)
+	if ((pKeyPair->cbPublicExp == 3) && memcmp(key.data() + sizeof(BCRYPT_RSAKEY_BLOB), defaultExponent.data(), defaultExponent.size()) == 0)
 	{
 		usingDefaultExponent = true;
 	}
@@ -341,7 +339,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	SPOK_Blob::Blob pcrCompositeDigest;
 
 	uint32_t policyListSize = sizeof(uint32_t) + // count
-							  4 * (sizeof(uint16_t) + SHA256_DIGEST_SIZE); // we can only have 4 policies
+		4 * (sizeof(uint16_t) + SHA256_DIGEST_SIZE); // we can only have 4 policies
 	SPOK_Blob::Blob policyDigestList(policyListSize);
 	auto pdlbw = SPOK_BinaryWriter(policyDigestList);
 	pdlbw.BE_Write32(0x00000004); // count
@@ -358,20 +356,20 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	{
 		//policy for pcr binding
 		uint32_t pcrPolicySize = SHA256_DIGEST_SIZE + // default policy hash
-								 sizeof(uint32_t)   + // TPM_CC_PolicyPCR
-								 sizeof(uint32_t)   + // count
-								 sizeof(uint16_t)   + // hash
-								 sizeof(uint8_t)    + // size
-								 3                  + // pcr selection
-								 SHA256_DIGEST_SIZE;  // pcr digest
+			sizeof(uint32_t) + // TPM_CC_PolicyPCR
+			sizeof(uint32_t) + // count
+			sizeof(uint16_t) + // hash
+			sizeof(uint8_t) + // size
+			3 + // pcr selection
+			SHA256_DIGEST_SIZE;  // pcr digest
 
 		SPOK_Blob::Blob pcrPolicy(pcrPolicySize);
 		auto ppbw = SPOK_BinaryWriter(pcrPolicy);
 
 		SPOK_Blob::Blob pcrComposite;
-		
+
 		//add all selected pcrs to the composite
-		for(uint32_t ii = 0; ii < AVAILABLE_PLATFORM_PCRS; ++ii)
+		for (uint32_t ii = 0; ii < AVAILABLE_PLATFORM_PCRS; ++ii)
 		{
 			if (pcrMask & (1 << ii))
 			{
@@ -417,12 +415,12 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 
 	uint32_t pcrBindingSize = 0;
 	uint32_t pcrDigestSize = 0;
-	
+
 	if (pcrMask != 0)
 	{
 		pcrBindingSize = sizeof(uint8_t) +
-						 sizeof(uint8_t) +
-						 sizeof(uint8_t);
+			sizeof(uint8_t) +
+			sizeof(uint8_t);
 		pcrDigestSize = SHA256_DIGEST_SIZE;
 	}
 	SPOK_Blob::Blob pcrBinding(pcrBindingSize);
@@ -497,11 +495,11 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	esbw.Write(encryptedSeed);
 
 	uint32_t tpm12HostageBlobSize = sizeof(uint16_t) +     // TPM2B_SENSITIVE.size
-									sizeof(uint16_t) +     // TPMT_SENSITIVE.sensitiveType
-									sizeof(uint16_t) +     // authValue.Size
-									sizeof(uint16_t) +     // symValue.Size
-									sizeof(uint16_t) +     // TPMU_SENSITIVE_COMPOSITE.size
-									pKeyPair->cbPrime1;
+		sizeof(uint16_t) +     // TPMT_SENSITIVE.sensitiveType
+		sizeof(uint16_t) +     // authValue.Size
+		sizeof(uint16_t) +     // symValue.Size
+		sizeof(uint16_t) +     // TPMU_SENSITIVE_COMPOSITE.size
+		pKeyPair->cbPrime1;
 
 	SPOK_Blob::Blob tpm12HostageBlob(tpm12HostageBlobSize);
 	auto thbw = SPOK_BinaryWriter(tpm12HostageBlob);
@@ -528,7 +526,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	hibw.Write(protectedBlob);
 	hibw.Write(publicName);
 
-	//calculate the hmac	
+	//calculate the hmac
 	auto hmacHasher = Hasher::Create_HMAC(TPM_API_ALG_ID_SHA256, hmacKey);
 	auto outerHmac = hmacHasher.OneShotHash(hmacInput);
 
@@ -553,7 +551,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	keyBlobOut.resize(sizeof(PCP_20_KEY_BLOB) + keyBlob.PublicSize + keyBlob.PolicyDigestListSize + keyBlob.PcrBindingSize + keyBlob.PcrDigestSize + keyBlob.EncryptedSecretSize + keyBlob.Tpm12HostageBlobSize);
 	auto bw = SPOK_BinaryWriter(keyBlobOut);
 	bw.Write((uint8_t*)&keyBlob, sizeof(PCP_20_KEY_BLOB));
-	
+
 	bw.BE_Write16(SAFE_CAST_TO_UINT16(publicKey.size()));
 	bw.Write(publicKey);
 
@@ -561,7 +559,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	bw.Write(pcrBinding);
 	bw.Write(pcrDigest);
 	bw.Write(encryptedSecret);
-	
+
 	bw.BE_Write16(SAFE_CAST_TO_UINT16((sizeof(uint16_t) + outerHmac.size() + protectedBlob.size())));
 	bw.BE_Write16(SAFE_CAST_TO_UINT16(outerHmac.size()));
 	bw.Write(outerHmac);
@@ -620,12 +618,12 @@ TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob::Blob& publicBlob)
 
 	auto exponentBlob = SPOK_Blob::Blob();
 
-	auto exponentArray = std::array<uint8_t, 4> 
+	auto exponentArray = std::array<uint8_t, 4>
 	{
 		static_cast<uint8_t>((exponent >> 24) & 0xFF),
-		static_cast<uint8_t>((exponent >> 16) & 0xFF),
-		static_cast<uint8_t>((exponent >> 8) & 0xFF),
-		static_cast<uint8_t>(exponent & 0xFF)
+			static_cast<uint8_t>((exponent >> 16) & 0xFF),
+			static_cast<uint8_t>((exponent >> 8) & 0xFF),
+			static_cast<uint8_t>(exponent & 0xFF)
 	};
 
 	if (exponentArray[0] == 0x00)
@@ -636,7 +634,7 @@ TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob::Blob& publicBlob)
 		exponentArray[2] = 0x01;
 		exponentArray[3] = 0x00;
 	}
-	
+
 	exponentBlob.insert(exponentBlob.end(), exponentArray.begin(), exponentArray.end());
 
 	//remove any trailing 0s
@@ -774,7 +772,7 @@ TPM2B_ATTEST_CERTIFY TPM2B_ATTEST_CERTIFY::Decode(const SPOK_Blob::Blob& certify
 
 	auto qualifiedNameSize = br.BE_Read16();
 	auto qualifiedName = br.Read(qualifiedNameSize);
-	
+
 	return TPM2B_ATTEST_CERTIFY{ generated, type, qualifiedSigner, creationNonce, clockInfo, firmwareVersion, name, qualifiedName, certifyBlob };
 }
 
@@ -911,10 +909,10 @@ SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, 
 
 	//create the challenge
 	uint16_t challengeSize = SAFE_CAST_TO_UINT16((sizeof(uint16_t) +                      // TPM2B_ID_OBJECT.size
-							                      sizeof(uint16_t) + SHA256_DIGEST_SIZE + // TPM2B_DIGEST outerHAMC
-							                      encryptedSecret.size()                + // TPM2B_DIGEST credential value
-							                      sizeof(uint16_t) + ekBlockLength));     // TPM2B_ENCRYPTED_SECRET protecting credential value
-								
+		sizeof(uint16_t) + SHA256_DIGEST_SIZE + // TPM2B_DIGEST outerHAMC
+		encryptedSecret.size() + // TPM2B_DIGEST credential value
+		sizeof(uint16_t) + ekBlockLength));     // TPM2B_ENCRYPTED_SECRET protecting credential value
+
 	auto challengeObject = SPOK_Blob::Blob(challengeSize);
 	auto challengeBw = SPOK_BinaryWriter(challengeObject);
 
@@ -966,7 +964,7 @@ SPOK_Blob::Blob TPM_20::KDFa(const uint16_t nameAlgId, const SPOK_Blob::Blob& ke
 		bw.BE_Write32(iteration);
 
 		auto hash = hasher.OneShotHash(buffer);
-		if(hash.size() <= remaining)
+		if (hash.size() <= remaining)
 		{
 			out.insert(out.end(), hash.begin(), hash.end());
 			counter += SAFE_CAST_TO_UINT16(hash.size());

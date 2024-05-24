@@ -25,8 +25,7 @@ public:
 	bool VerifySignature() const;
 
 	SPOK_VerifyResult Verify(const SPOK_AIKTpmVerify& verify) const;
-	
+
 private:
 	TPM2B_IDBINDING m_idBinding;
 };
-

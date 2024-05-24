@@ -20,11 +20,10 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-#pragma once 
+#pragma once
 #include <string>
 
 #include "SPOKApiTypes.h"
-
 
 #define SHA1_DIGEST_SIZE (20)
 #define SHA256_DIGEST_SIZE (32)
@@ -65,7 +64,6 @@
 #define PCR_24 (0x01000000)
 #endif
 
-
 struct SPOK_PlatformKey
 {
 	std::wstring Name;
@@ -75,22 +73,21 @@ struct SPOK_PlatformKey
 #define SPOK_KEY_ATT_MAGIC 'SPKA' // Key Attestation Data Structure
 struct SPOK_KEY_ATT_BLOB
 {
-    uint32_t Magic;
-    uint32_t TpmVersion;
-    uint32_t HeaderSize;
-    uint32_t KeyAttestSize;
-    uint32_t SignatureSize;
+	uint32_t Magic;
+	uint32_t TpmVersion;
+	uint32_t HeaderSize;
+	uint32_t KeyAttestSize;
+	uint32_t SignatureSize;
 };
 
 #define SPOK_PLATFORM_ATT_MAGIC 'SPPA' // Platform Attestation Data Structure
-struct SPOK_PLATFORM_ATT_BLOB 
+struct SPOK_PLATFORM_ATT_BLOB
 {
-    uint32_t Magic;
-    uint32_t TpmVersion;
-    uint32_t HeaderSize;
-    uint32_t PcrValuesSize;
-    uint32_t QuoteSize;
-    uint32_t SignatureSize;
-    uint32_t TsbSize;
+	uint32_t Magic;
+	uint32_t TpmVersion;
+	uint32_t HeaderSize;
+	uint32_t PcrValuesSize;
+	uint32_t QuoteSize;
+	uint32_t SignatureSize;
+	uint32_t TsbSize;
 };
-
