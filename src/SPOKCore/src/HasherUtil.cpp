@@ -20,7 +20,7 @@ BCryptHashHandle::BCryptHashHandle(const BCryptAlgHandle& hAlg)
 	}
 }
 
-BCryptHashHandle::BCryptHashHandle(const BCryptAlgHandle& hAlg, SPOK_Blob::Blob secret)
+BCryptHashHandle::BCryptHashHandle(const BCryptAlgHandle& hAlg, SPOK_Blob secret)
 {
 	m_Secret = secret;
 	NTSTATUS status = BCryptCreateHash(hAlg, &m_hHash, nullptr, 0, secret.data(), SAFE_CAST_TO_UINT32(secret.size()), 0);
@@ -61,7 +61,7 @@ HasherUtil::HasherUtil(HasherType type) : m_hAlg((TPM_ALG_ID)type), m_hHash(m_hA
 {
 }
 
-HasherUtil::HasherUtil(HasherType type, SPOK_Blob::Blob secret) : m_hAlg((TPM_ALG_ID)type, true), m_hHash(m_hAlg, secret)
+HasherUtil::HasherUtil(HasherType type, SPOK_Blob secret) : m_hAlg((TPM_ALG_ID)type, true), m_hHash(m_hAlg, secret)
 {
 }
 
@@ -69,13 +69,13 @@ HasherUtil::~HasherUtil()
 {
 }
 
-SPOK_Blob::Blob HasherUtil::OneShotHash(const SPOK_Blob::Blob& data)
+SPOK_Blob HasherUtil::OneShotHash(const SPOK_Blob& data)
 {
 	HashData(data);
 	return FinishHash();
 }
 
-void HasherUtil::HashData(const SPOK_Blob::Blob& data)
+void HasherUtil::HashData(const SPOK_Blob& data)
 {
 	NTSTATUS status = BCryptHashData(m_hHash, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), 0);
 	if (!SUCCEEDED(status))
@@ -84,7 +84,7 @@ void HasherUtil::HashData(const SPOK_Blob::Blob& data)
 		SPOK_THROW_ERROR(SPOK_BCRYPT_FAILURE, fmtError);
 	}
 }
-SPOK_Blob::Blob HasherUtil::FinishHash()
+SPOK_Blob HasherUtil::FinishHash()
 {
 	uint32_t hashSize = m_hHash.GetHashSize();
 	auto hash = SPOK_Blob::New(hashSize);
@@ -98,7 +98,7 @@ SPOK_Blob::Blob HasherUtil::FinishHash()
 	return hash;
 }
 
-SPOK_Blob::Blob Hasher::PublicKeyHash(const SPOK_Blob::Blob& keyBlob)
+SPOK_Blob Hasher::PublicKeyHash(const SPOK_Blob& keyBlob)
 {
 	const BCRYPT_RSAKEY_BLOB* pBlob = (const BCRYPT_RSAKEY_BLOB*)keyBlob.data();
 
@@ -108,8 +108,8 @@ SPOK_Blob::Blob Hasher::PublicKeyHash(const SPOK_Blob::Blob& keyBlob)
 	memcpy(exponentV.data(), keyBlob.data() + sizeof(BCRYPT_RSAKEY_BLOB), pBlob->cbPublicExp);
 	memcpy(modulusV.data(), keyBlob.data() + sizeof(BCRYPT_RSAKEY_BLOB) + pBlob->cbPublicExp, pBlob->cbModulus);
 
-	SPOK_Blob::Blob encodedKey;
-	SPOK_BinaryWriter bw(encodedKey);
+	SPOK_Blob encodedKey;
+	auto bw = encodedKey.GetWriter();
 
 	std::vector<uint8_t> modulusTL;
 	std::vector<uint8_t> exponentTL;
@@ -209,7 +209,7 @@ SPOK_Blob::Blob Hasher::PublicKeyHash(const SPOK_Blob::Blob& keyBlob)
 	return hasher.OneShotHash(encodedKey);
 }
 
-SPOK_Nonce::Nonce Hasher::Blob2Nonce(const SPOK_Blob::Blob& blob)
+SPOK_Nonce::Nonce Hasher::Blob2Nonce(const SPOK_Blob& blob)
 {
 	HasherUtil hasher(HasherType::SHA1);
 	auto hash = hasher.OneShotHash(blob);
@@ -241,7 +241,7 @@ HasherUtil Hasher::Create(uint16_t algId)
 	}
 }
 
-HasherUtil Hasher::Create_HMAC(uint16_t algId, SPOK_Blob::Blob secret)
+HasherUtil Hasher::Create_HMAC(uint16_t algId, SPOK_Blob secret)
 {
 	if (algId == 0x0004)
 	{

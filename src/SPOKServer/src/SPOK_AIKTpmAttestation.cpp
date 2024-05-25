@@ -4,7 +4,7 @@
 #include "BCryptUtil.h"
 #include "Util.h"
 
-SPOK_AIKTpmAttestation::SPOK_AIKTpmAttestation(SPOK_Blob::Blob idBinding)
+SPOK_AIKTpmAttestation::SPOK_AIKTpmAttestation(SPOK_Blob idBinding)
 {
 	m_idBinding = TPM_20::DecodeIDBinding(idBinding);
 }
@@ -18,7 +18,7 @@ TPM2B_IDBINDING SPOK_AIKTpmAttestation::GetData() const
 	return m_idBinding;
 }
 
-SPOK_Blob::Blob SPOK_AIKTpmAttestation::GetPublicRSABlob() const
+SPOK_Blob SPOK_AIKTpmAttestation::GetPublicRSABlob() const
 {
 	auto rsaBlob = SPOK_Blob::New(24 + m_idBinding.Public.Exponent.size() + m_idBinding.Public.Modulus.size());
 	auto bw = SPOK_BinaryWriter(rsaBlob);
@@ -36,7 +36,7 @@ SPOK_Blob::Blob SPOK_AIKTpmAttestation::GetPublicRSABlob() const
 	return rsaBlob;
 }
 
-SPOK_Blob::Blob SPOK_AIKTpmAttestation::GetPublicName() const
+SPOK_Blob SPOK_AIKTpmAttestation::GetPublicName() const
 {
 	auto hasher = Hasher::Create(m_idBinding.Public.NameAlg);
 	auto nameHash = hasher.OneShotHash(m_idBinding.Public.Raw);
@@ -50,7 +50,7 @@ SPOK_Blob::Blob SPOK_AIKTpmAttestation::GetPublicName() const
 	return nameBlob;
 }
 
-SPOK_Blob::Blob SPOK_AIKTpmAttestation::GetCreationDigest() const
+SPOK_Blob SPOK_AIKTpmAttestation::GetCreationDigest() const
 {
 	auto hasher = Hasher::Create(m_idBinding.Public.NameAlg);
 	return hasher.OneShotHash(m_idBinding.CreationData.Raw);

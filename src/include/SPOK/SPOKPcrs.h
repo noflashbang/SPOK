@@ -39,7 +39,7 @@ class SPOK_Pcrs
 {
 public:
 	SPOK_Pcrs(uint8_t digestSize);
-	SPOK_Pcrs(SPOK_Blob::Blob blob);
+	SPOK_Pcrs(SPOK_Blob blob);
 
 	SPOK_Pcrs(const SPOK_Pcrs& other);
 	SPOK_Pcrs& operator=(const SPOK_Pcrs& other);
@@ -48,7 +48,7 @@ public:
 
 	void FillDefaultPcrs();
 
-	SPOK_Blob::Blob GetBlob() const;
+	SPOK_Blob GetBlob() const;
 
 	std::array<uint8_t, TPM_PCRS_MAXSIZE> GetPcr(const uint8_t pcrRegister) const;
 	void SetPcr(const uint8_t pcrRegister, const std::array<uint8_t, TPM_PCRS_MAXSIZE>& pcrValue);

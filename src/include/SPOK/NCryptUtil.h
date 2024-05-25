@@ -85,15 +85,15 @@ public:
 	PlatformAik(const SPOK_PlatformKey& aik);
 	~PlatformAik();
 
-	SPOK_Blob::Blob GetIdBinding();
-	SPOK_Blob::Blob GetPublicKey();
+	SPOK_Blob GetIdBinding();
+	SPOK_Blob GetPublicKey();
 
 	NCRYPT_PROV_HANDLE GetProviderHandle();
 	TBS_HCONTEXT GetTsbHandle();
 	uint32_t GetPlatformHandle();
 	uint32_t GetSignatureSize();
 
-	SPOK_Blob::Blob ActiveChallenge(const SPOK_Blob::Blob& challenge);
+	SPOK_Blob ActiveChallenge(const SPOK_Blob& challenge);
 
 private:
 	NCryptKeyHandle m_key;
@@ -106,7 +106,7 @@ public:
 	PlatformKey(const SPOK_PlatformKey& aik, const NCRYPT_PROV_HANDLE& hProv);
 	~PlatformKey();
 
-	SPOK_Blob::Blob GetPublicKey();
+	SPOK_Blob GetPublicKey();
 	uint16_t KeySize() const;
 	uint16_t MaxMessage() const;
 
@@ -115,10 +115,10 @@ public:
 	uint32_t GetPlatformHandle();
 	uint32_t GetSignatureSize();
 
-	SPOK_Blob::Blob Encrypt(const SPOK_Blob::Blob& data);
-	SPOK_Blob::Blob Decrypt(const SPOK_Blob::Blob& data);
-	SPOK_Blob::Blob Sign(const SPOK_Blob::Blob& data);
-	bool Verify(const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature);
+	SPOK_Blob Encrypt(const SPOK_Blob& data);
+	SPOK_Blob Decrypt(const SPOK_Blob& data);
+	SPOK_Blob Sign(const SPOK_Blob& data);
+	bool Verify(const SPOK_Blob& data, const SPOK_Blob& signature);
 
 private:
 	NCryptKeyHandle m_key;
@@ -137,19 +137,19 @@ public:
 	static PlatformAik CreateAik(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce);
 	static void DeleteKey(const SPOK_PlatformKey& aik);
 
-	static SPOK_Blob::Blob GetTpmPublicEndorsementKey();
-	static SPOK_Blob::Blob GetTpmSrk();
-	static SPOK_Blob::Blob GetPcrTable();
-	static SPOK_Blob::Blob GetTbsLog();
-	static SPOK_Blob::Blob GetFilteredTbsLog(uint32_t pcrsToInclude);
+	static SPOK_Blob GetTpmPublicEndorsementKey();
+	static SPOK_Blob GetTpmSrk();
+	static SPOK_Blob GetPcrTable();
+	static SPOK_Blob GetTbsLog();
+	static SPOK_Blob GetFilteredTbsLog(uint32_t pcrsToInclude);
 
 	//import an opaque key into the TPM
-	static void ImportPlatformKey(const SPOK_PlatformKey& platformKey, const SPOK_Blob::Blob& key, KeyBlobType type);
+	static void ImportPlatformKey(const SPOK_PlatformKey& platformKey, const SPOK_Blob& key, KeyBlobType type);
 	static void CreatePlatformKey(const SPOK_PlatformKey& platformKey);
 
 	//Platform key operations
-	static SPOK_Blob::Blob Encrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);
-	static SPOK_Blob::Blob Decrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);
-	static SPOK_Blob::Blob Sign(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data);
-	static bool Verify(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature);
+	static SPOK_Blob Encrypt(const SPOK_PlatformKey& key, const SPOK_Blob& data);
+	static SPOK_Blob Decrypt(const SPOK_PlatformKey& key, const SPOK_Blob& data);
+	static SPOK_Blob Sign(const SPOK_PlatformKey& key, const SPOK_Blob& data);
+	static bool Verify(const SPOK_PlatformKey& key, const SPOK_Blob& data, const SPOK_Blob& signature);
 };

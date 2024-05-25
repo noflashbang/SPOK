@@ -254,7 +254,7 @@ TEST_CASE("SPC_GetPublicEndorsementKey")
 	//get the size
 	REQUIRE(SPOK_SUCCESS(SPC_GetEndorsementPublicKey(pBytes.get(), cbSize, sizeOut)));
 
-	SPOK_Blob::Blob blob = SPOK_Blob::New(pBytes.get(), sizeOut);
+	SPOK_Blob blob = SPOK_Blob::New(pBytes.get(), sizeOut);
 
 	auto hash = Hasher::PublicKeyHash(blob);
 	auto str = SPOK_Blob::BlobToHex(hash);
@@ -277,7 +277,7 @@ TEST_CASE("SPC_GetSRK")
 	//get the size
 	REQUIRE(SPOK_SUCCESS(SPC_GetStorageRootKey(pBytes.get(), cbSize, sizeOut)));
 
-	SPOK_Blob::Blob blob = SPOK_Blob::New(pBytes.get(), sizeOut);
+	SPOK_Blob blob = SPOK_Blob::New(pBytes.get(), sizeOut);
 
 	auto hash = Hasher::PublicKeyHash(blob);
 	auto str = SPOK_Blob::BlobToHex(hash);
@@ -415,7 +415,7 @@ TEST_CASE("SPC_AIKGetPlatformAttestation")
 	size_t sizeOut = 0;
 	pBytes = std::make_unique<unsigned char[]>(cbSize);
 
-	SPOK_Blob::Blob aikPub;
+	SPOK_Blob aikPub;
 
 	{
 		std::wstring name = L"TestAIK";

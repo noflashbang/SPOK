@@ -23,7 +23,7 @@ using IAttestation = std::variant<SPOK_AIKPlatformAttestation, SPOK_AIKTpmAttest
 class Attestation
 {
 public:
-	static IAttestation Create(AttestationType type, SPOK_Blob::Blob blob)
+	static IAttestation Create(AttestationType type, SPOK_Blob blob)
 	{
 		switch (type)
 		{

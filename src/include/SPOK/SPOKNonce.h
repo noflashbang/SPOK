@@ -50,7 +50,7 @@ public:
 		return nonce;
 	};
 
-	static Nonce Make(const SPOK_Blob::Blob& data)
+	static Nonce Make(const SPOK_Blob& data)
 	{
 		auto nonce = Zero();
 		auto min = std::min(data.size(), nonce.max_size());

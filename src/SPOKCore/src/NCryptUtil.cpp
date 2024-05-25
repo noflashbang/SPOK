@@ -93,7 +93,7 @@ PlatformAik::~PlatformAik()
 {
 }
 
-SPOK_Blob::Blob PlatformAik::GetIdBinding()
+SPOK_Blob PlatformAik::GetIdBinding()
 {
 	DWORD bindingSize = 0;
 	// Get the ID binding
@@ -115,7 +115,7 @@ SPOK_Blob::Blob PlatformAik::GetIdBinding()
 	return binding;
 }
 
-SPOK_Blob::Blob PlatformAik::GetPublicKey()
+SPOK_Blob PlatformAik::GetPublicKey()
 {
 	DWORD keySize = 0;
 	// Get the public key
@@ -194,7 +194,7 @@ uint32_t PlatformAik::GetSignatureSize()
 	return signatureSize;
 }
 
-SPOK_Blob::Blob PlatformAik::ActiveChallenge(const SPOK_Blob::Blob& challenge)
+SPOK_Blob PlatformAik::ActiveChallenge(const SPOK_Blob& challenge)
 {
 	DWORD responseSize = 0;
 
@@ -230,7 +230,7 @@ PlatformKey::~PlatformKey()
 {
 }
 
-SPOK_Blob::Blob PlatformKey::GetPublicKey()
+SPOK_Blob PlatformKey::GetPublicKey()
 {
 	DWORD keySize = 0;
 	// Get the public key
@@ -328,7 +328,7 @@ uint32_t PlatformKey::GetSignatureSize()
 	return signatureSize;
 }
 
-SPOK_Blob::Blob PlatformKey::Encrypt(const SPOK_Blob::Blob& data)
+SPOK_Blob PlatformKey::Encrypt(const SPOK_Blob& data)
 {
 	if (data.size() > MaxMessage())
 	{
@@ -362,7 +362,7 @@ SPOK_Blob::Blob PlatformKey::Encrypt(const SPOK_Blob::Blob& data)
 	return encryptedData;
 }
 
-SPOK_Blob::Blob PlatformKey::Decrypt(const SPOK_Blob::Blob& data)
+SPOK_Blob PlatformKey::Decrypt(const SPOK_Blob& data)
 {
 	DWORD dataSize = 0;
 	//OAEP padding
@@ -393,7 +393,7 @@ SPOK_Blob::Blob PlatformKey::Decrypt(const SPOK_Blob::Blob& data)
 	return decryptedData;
 }
 
-SPOK_Blob::Blob PlatformKey::Sign(const SPOK_Blob::Blob& data)
+SPOK_Blob PlatformKey::Sign(const SPOK_Blob& data)
 {
 	if (data.size() > MaxMessage())
 	{
@@ -424,7 +424,7 @@ SPOK_Blob::Blob PlatformKey::Sign(const SPOK_Blob::Blob& data)
 	return signature;
 }
 
-bool PlatformKey::Verify(const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature)
+bool PlatformKey::Verify(const SPOK_Blob& data, const SPOK_Blob& signature)
 {
 	DWORD signatureSize = 0;
 
@@ -511,7 +511,7 @@ void NCryptUtil::DeleteKey(const SPOK_PlatformKey& aik)
 	}
 }
 
-SPOK_Blob::Blob NCryptUtil::GetTpmPublicEndorsementKey()
+SPOK_Blob NCryptUtil::GetTpmPublicEndorsementKey()
 {
 	NCryptProvHandle hProv;
 	DWORD keySize = 0;
@@ -534,7 +534,7 @@ SPOK_Blob::Blob NCryptUtil::GetTpmPublicEndorsementKey()
 	return key;
 }
 
-SPOK_Blob::Blob NCryptUtil::GetTpmSrk()
+SPOK_Blob NCryptUtil::GetTpmSrk()
 {
 	NCryptProvHandle hProv;
 	DWORD keySize = 0;
@@ -557,7 +557,7 @@ SPOK_Blob::Blob NCryptUtil::GetTpmSrk()
 	return key;
 }
 
-SPOK_Blob::Blob NCryptUtil::GetPcrTable()
+SPOK_Blob NCryptUtil::GetPcrTable()
 {
 	NCryptProvHandle hProv;
 	DWORD pcrTableSize = 0;
@@ -579,7 +579,7 @@ SPOK_Blob::Blob NCryptUtil::GetPcrTable()
 	return pcrTable;
 }
 
-SPOK_Blob::Blob NCryptUtil::GetTbsLog()
+SPOK_Blob NCryptUtil::GetTbsLog()
 {
 	TBS_HCONTEXT hPlatformTbsHandle = 0;
 	NCryptProvHandle hProv;
@@ -604,7 +604,7 @@ SPOK_Blob::Blob NCryptUtil::GetTbsLog()
 
 	return bootLog;
 }
-SPOK_Blob::Blob NCryptUtil::GetFilteredTbsLog(uint32_t pcrsToInclude)
+SPOK_Blob NCryptUtil::GetFilteredTbsLog(uint32_t pcrsToInclude)
 {
 	auto tsbLog = GetTbsLog();
 	auto tcgLog = TcgLog::Parse(tsbLog);
@@ -612,7 +612,7 @@ SPOK_Blob::Blob NCryptUtil::GetFilteredTbsLog(uint32_t pcrsToInclude)
 	return TcgLog::Serialize(filteredLog);
 }
 
-void NCryptUtil::ImportPlatformKey(const SPOK_PlatformKey& platformKey, const SPOK_Blob::Blob& key, KeyBlobType type)
+void NCryptUtil::ImportPlatformKey(const SPOK_PlatformKey& platformKey, const SPOK_Blob& key, KeyBlobType type)
 {
 	NCryptProvHandle hProv;
 	NCRYPT_KEY_HANDLE hKey = NULL;
@@ -689,25 +689,25 @@ void NCryptUtil::CreatePlatformKey(const SPOK_PlatformKey& platformKey)
 	}
 }
 
-SPOK_Blob::Blob NCryptUtil::Encrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data)
+SPOK_Blob NCryptUtil::Encrypt(const SPOK_PlatformKey& key, const SPOK_Blob& data)
 {
 	PlatformKey platformKey(key);
 	return platformKey.Encrypt(data);
 }
 
-SPOK_Blob::Blob NCryptUtil::Decrypt(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data)
+SPOK_Blob NCryptUtil::Decrypt(const SPOK_PlatformKey& key, const SPOK_Blob& data)
 {
 	PlatformKey platformKey(key);
 	return platformKey.Decrypt(data);
 }
 
-SPOK_Blob::Blob NCryptUtil::Sign(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data)
+SPOK_Blob NCryptUtil::Sign(const SPOK_PlatformKey& key, const SPOK_Blob& data)
 {
 	PlatformKey platformKey(key);
 	return platformKey.Sign(data);
 }
 
-bool NCryptUtil::Verify(const SPOK_PlatformKey& key, const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature)
+bool NCryptUtil::Verify(const SPOK_PlatformKey& key, const SPOK_Blob& data, const SPOK_Blob& signature)
 {
 	PlatformKey platformKey(key);
 	return platformKey.Verify(data, signature);

@@ -39,28 +39,28 @@ public:
 	~SPOKServer();
 
 	//AIK Platform Attestation
-	SPOK_AIKPlatformAttestation AIKAttestationDecode(const SPOK_Blob::Blob& attQuote);
+	SPOK_AIKPlatformAttestation AIKAttestationDecode(const SPOK_Blob& attQuote);
 	SPOK_Pcrs AIKAttestationGetPCR(IAttestation& attestation);
-	SPOK_Blob::Blob AIKAttestationGetTcgLog(IAttestation& attestation);
+	SPOK_Blob AIKAttestationGetTcgLog(IAttestation& attestation);
 
 	//AIK TPM Attestation
-	SPOK_AIKTpmAttestation AIKTpmAttestationDecode(const SPOK_Blob::Blob& idBinding);
-	SPOK_Blob::Blob AIKGetTpmAttestationChallenge(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& aikName, const SPOK_Blob::Blob& secret);
+	SPOK_AIKTpmAttestation AIKTpmAttestationDecode(const SPOK_Blob& idBinding);
+	SPOK_Blob AIKGetTpmAttestationChallenge(const uint16_t ekNameAlgId, const SPOK_Blob& ekPub, const SPOK_Blob& aikName, const SPOK_Blob& secret);
 
 	//AIK Key Attestation
-	SPOK_AIKKeyAttestation AIKKeyAttestationDecode(const SPOK_Blob::Blob& attKey);
+	SPOK_AIKKeyAttestation AIKKeyAttestationDecode(const SPOK_Blob& attKey);
 
 	//All Types of Attestation
 	SPOK_VerifyResult AttestationVerify(IAttestation& attestation, const SPOK_AttestationVerify& verify);
 
 	//Basic Crypto Operations
-	SPOK_Blob::Blob Decrypt(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data);
-	SPOK_Blob::Blob Encrypt(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data);
-	SPOK_Blob::Blob Sign(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data);
-	bool VerifySignature(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature);
+	SPOK_Blob Decrypt(const SPOK_Blob& key, const SPOK_Blob& data);
+	SPOK_Blob Encrypt(const SPOK_Blob& key, const SPOK_Blob& data);
+	SPOK_Blob Sign(const SPOK_Blob& key, const SPOK_Blob& data);
+	bool VerifySignature(const SPOK_Blob& key, const SPOK_Blob& data, const SPOK_Blob& signature);
 
 	//Key Helpers
-	SPOK_Blob::Blob GenerateRSAKeyPair(KeySize keySize);
-	SPOK_Blob::Blob WrapKeyForPlatformImport(const SPOK_Blob::Blob& keyToWrap, const SPOK_Blob::Blob& srk, const SPOK_Pcrs& boundPcrs);
-	SPOK_Blob::Blob GetWrappedKeyName(const SPOK_Blob::Blob& keyWrap);
+	SPOK_Blob GenerateRSAKeyPair(KeySize keySize);
+	SPOK_Blob WrapKeyForPlatformImport(const SPOK_Blob& keyToWrap, const SPOK_Blob& srk, const SPOK_Pcrs& boundPcrs);
+	SPOK_Blob GetWrappedKeyName(const SPOK_Blob& keyWrap);
 };

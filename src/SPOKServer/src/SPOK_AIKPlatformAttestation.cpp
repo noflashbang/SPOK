@@ -4,7 +4,7 @@
 #include <SPOKPcrs.h>
 #include <TcgLog.h>
 
-SPOK_AIKPlatformAttestation::SPOK_AIKPlatformAttestation(SPOK_Blob::Blob attQuote)
+SPOK_AIKPlatformAttestation::SPOK_AIKPlatformAttestation(SPOK_Blob attQuote)
 {
 	auto attQuoteReader = SPOK_BinaryReader(attQuote);
 	m_AttBlobHeader.Magic = attQuoteReader.LE_Read32();
@@ -36,21 +36,21 @@ SPOK_AIKPlatformAttestation::SPOK_AIKPlatformAttestation(SPOK_Blob::Blob attQuot
 	m_AttBlobHeader.TsbSize = attQuoteReader.LE_Read32();
 
 	//read the rest of the attQuote
-	m_pcrs = SPOK_Blob::Blob(attQuoteReader.Read(m_AttBlobHeader.PcrValuesSize));
+	m_pcrs = SPOK_Blob(attQuoteReader.Read(m_AttBlobHeader.PcrValuesSize));
 	m_Quote = TPM2B_ATTEST_QUOTE::Decode(attQuoteReader.Read(m_AttBlobHeader.QuoteSize));
-	m_Signature = SPOK_Blob::Blob(attQuoteReader.Read(m_AttBlobHeader.SignatureSize));
-	m_tsbLog = SPOK_Blob::Blob(attQuoteReader.Read(m_AttBlobHeader.TsbSize));
+	m_Signature = SPOK_Blob(attQuoteReader.Read(m_AttBlobHeader.SignatureSize));
+	m_tsbLog = SPOK_Blob(attQuoteReader.Read(m_AttBlobHeader.TsbSize));
 }
 SPOK_AIKPlatformAttestation::~SPOK_AIKPlatformAttestation()
 {
 }
 
-SPOK_Blob::Blob SPOK_AIKPlatformAttestation::GetQuoteDigest() const
+SPOK_Blob SPOK_AIKPlatformAttestation::GetQuoteDigest() const
 {
 	auto hasher = Hasher::Create(TPM_API_ALG_ID_SHA1);
 	return hasher.OneShotHash(m_Quote.Raw);
 }
-SPOK_Blob::Blob SPOK_AIKPlatformAttestation::GetTrustedPcrs() const
+SPOK_Blob SPOK_AIKPlatformAttestation::GetTrustedPcrs() const
 {
 	auto table = SPOK_Pcrs(m_pcrs);
 	if (m_Quote.PcrSelection.size() != 1)
@@ -63,7 +63,7 @@ SPOK_Blob::Blob SPOK_AIKPlatformAttestation::GetTrustedPcrs() const
 	auto trustedPcrs = table.GetFiltered(mask);
 	return trustedPcrs.GetBlob();
 }
-SPOK_Blob::Blob SPOK_AIKPlatformAttestation::GetTrustedTsbLog() const
+SPOK_Blob SPOK_AIKPlatformAttestation::GetTrustedTsbLog() const
 {
 	auto log = TcgLog::Parse(m_tsbLog);
 	if (m_Quote.PcrSelection.size() != 1)
@@ -82,7 +82,7 @@ bool SPOK_AIKPlatformAttestation::VerifyNonce(const SPOK_Nonce::Nonce& nonce) co
 	auto quoteNonce = m_Quote.CreationNonce;
 	return SPOK_Nonce::Equal(quoteNonce, nonce);
 }
-bool SPOK_AIKPlatformAttestation::VerifySignature(SPOK_Blob::Blob aikPubBlob) const
+bool SPOK_AIKPlatformAttestation::VerifySignature(SPOK_Blob aikPubBlob) const
 {
 	auto hasher = Hasher::Create(TPM_API_ALG_ID_SHA1);
 	auto digest = hasher.OneShotHash(m_Quote.Raw);
@@ -98,7 +98,7 @@ bool SPOK_AIKPlatformAttestation::VerifyPcrs() const
 	auto trustedPcrs = SPOK_Pcrs(GetTrustedPcrs());
 	auto hashSize = trustedPcrs.GetDigestSize();
 	auto pcrMask = trustedPcrs.GetMask();
-	auto pcrBuffer = SPOK_Blob::Blob();
+	auto pcrBuffer = SPOK_Blob();
 
 	bool equal = true;
 	for (int i = 0; i < TPM_PCRS_CNT; i++)

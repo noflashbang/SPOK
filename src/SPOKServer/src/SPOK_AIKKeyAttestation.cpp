@@ -3,7 +3,7 @@
 
 #include <HasherUtil.h>
 
-SPOK_AIKKeyAttestation::SPOK_AIKKeyAttestation(SPOK_Blob::Blob attCertify)
+SPOK_AIKKeyAttestation::SPOK_AIKKeyAttestation(SPOK_Blob attCertify)
 {
 	auto certifyReader = SPOK_BinaryReader(attCertify);
 	m_KeyBlobHeader.Magic = certifyReader.LE_Read32();
@@ -34,14 +34,14 @@ SPOK_AIKKeyAttestation::SPOK_AIKKeyAttestation(SPOK_Blob::Blob attCertify)
 
 	//read the rest of the attQuote
 	m_KeyCertify = TPM2B_ATTEST_CERTIFY::Decode(certifyReader.Read(m_KeyBlobHeader.KeyAttestSize));
-	m_Signature = SPOK_Blob::Blob(certifyReader.Read(m_KeyBlobHeader.SignatureSize));
+	m_Signature = SPOK_Blob(certifyReader.Read(m_KeyBlobHeader.SignatureSize));
 }
 
 SPOK_AIKKeyAttestation::~SPOK_AIKKeyAttestation()
 {
 }
 
-SPOK_Blob::Blob SPOK_AIKKeyAttestation::GetCertifyDigest() const
+SPOK_Blob SPOK_AIKKeyAttestation::GetCertifyDigest() const
 {
 	auto hasher = Hasher::Create(TPM_API_ALG_ID_SHA1);
 	return hasher.OneShotHash(m_KeyCertify.Raw);
@@ -53,13 +53,13 @@ bool SPOK_AIKKeyAttestation::VerifyNonce(const SPOK_Nonce::Nonce& nonce) const
 	return SPOK_Nonce::Equal(quoteNonce, nonce);
 }
 
-bool SPOK_AIKKeyAttestation::VerifyName(const SPOK_Blob::Blob& name) const
+bool SPOK_AIKKeyAttestation::VerifyName(const SPOK_Blob& name) const
 {
 	auto keyName = m_KeyCertify.Name;
 	return (keyName == name);
 }
 
-bool SPOK_AIKKeyAttestation::VerifySignature(SPOK_Blob::Blob aikPubBlob) const
+bool SPOK_AIKKeyAttestation::VerifySignature(SPOK_Blob aikPubBlob) const
 {
 	auto hasher = Hasher::Create(TPM_API_ALG_ID_SHA1);
 	auto digest = hasher.OneShotHash(m_KeyCertify.Raw);

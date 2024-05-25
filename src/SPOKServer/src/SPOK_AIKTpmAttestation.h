@@ -10,14 +10,14 @@
 class SPOK_AIKTpmAttestation
 {
 public:
-	SPOK_AIKTpmAttestation(SPOK_Blob::Blob idBinding);
+	SPOK_AIKTpmAttestation(SPOK_Blob idBinding);
 	~SPOK_AIKTpmAttestation();
 
 	TPM2B_IDBINDING GetData() const;
 
-	SPOK_Blob::Blob GetPublicRSABlob() const;
-	SPOK_Blob::Blob GetPublicName() const;
-	SPOK_Blob::Blob GetCreationDigest() const;
+	SPOK_Blob GetPublicRSABlob() const;
+	SPOK_Blob GetPublicName() const;
+	SPOK_Blob GetCreationDigest() const;
 
 	bool VerifyName() const;
 	bool VerifyCreation() const;

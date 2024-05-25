@@ -144,7 +144,7 @@ std::string BCryptAlgHandle::Name() const
 	}
 }
 
-BCryptKey::BCryptKey(SPOK_Blob::Blob keyBlob) : m_hAlg(TPM_ALG_ID::TPM_ALG_RSA)
+BCryptKey::BCryptKey(SPOK_Blob keyBlob) : m_hAlg(TPM_ALG_ID::TPM_ALG_RSA)
 {
 	BCRYPT_KEY_HANDLE hKey;
 	// Open the key
@@ -178,7 +178,7 @@ BCryptKey::operator BCRYPT_KEY_HANDLE() const
 	return m_hKey;
 }
 
-SPOK_Blob::Blob BCryptKey::GetPublicKey()
+SPOK_Blob BCryptKey::GetPublicKey()
 {
 	DWORD keyBlobSize = 0;
 	HRESULT status = BCryptExportKey(m_hKey, NULL, BCRYPT_RSAPUBLIC_BLOB, NULL, 0, &keyBlobSize, 0);
@@ -231,7 +231,7 @@ uint16_t BCryptKey::MaxMessage() const
 	return maxMessage;
 }
 
-SPOK_Blob::Blob BCryptKey::Encrypt(const SPOK_Blob::Blob& data, bool useIdentity)
+SPOK_Blob BCryptKey::Encrypt(const SPOK_Blob& data, bool useIdentity)
 {
 	if (data.size() > MaxMessage())
 	{
@@ -270,7 +270,7 @@ SPOK_Blob::Blob BCryptKey::Encrypt(const SPOK_Blob::Blob& data, bool useIdentity
 
 	return encryptedData;
 }
-SPOK_Blob::Blob BCryptKey::Decrypt(const SPOK_Blob::Blob& data)
+SPOK_Blob BCryptKey::Decrypt(const SPOK_Blob& data)
 {
 	DWORD dataSize = 0;
 
@@ -304,7 +304,7 @@ void  BCryptKey::SetSignHashAlg(uint16_t algId)
 	m_signHashAlg = algId;
 }
 
-SPOK_Blob::Blob BCryptKey::Sign(const SPOK_Blob::Blob& hash)
+SPOK_Blob BCryptKey::Sign(const SPOK_Blob& hash)
 {
 	if (hash.size() > MaxMessage())
 	{
@@ -353,7 +353,7 @@ SPOK_Blob::Blob BCryptKey::Sign(const SPOK_Blob::Blob& hash)
 
 	return signature;
 }
-bool BCryptKey::Verify(const SPOK_Blob::Blob& hash, const SPOK_Blob::Blob& signature)
+bool BCryptKey::Verify(const SPOK_Blob& hash, const SPOK_Blob& signature)
 {
 	BCRYPT_PKCS1_PADDING_INFO padInfo;
 	if (m_signHashAlg == 0x0004)
@@ -387,7 +387,7 @@ bool BCryptKey::Verify(const SPOK_Blob::Blob& hash, const SPOK_Blob::Blob& signa
 	return false;
 }
 
-SymmetricCipher::SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob::Blob& iv) : m_hAlg(TPM_ALG_ID::TPM_ALG_AES), m_hKey(NULL), m_iv(iv)
+SymmetricCipher::SymmetricCipher(const SPOK_Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob& iv) : m_hAlg(TPM_ALG_ID::TPM_ALG_AES), m_hKey(NULL), m_iv(iv)
 {
 	if (alg != BCRYPT_AES_ALGORITHM)
 	{
@@ -430,7 +430,7 @@ SymmetricCipher::operator BCRYPT_KEY_HANDLE() const
 	return m_hKey;
 }
 
-SPOK_Blob::Blob SymmetricCipher::Encrypt(const SPOK_Blob::Blob& data)
+SPOK_Blob SymmetricCipher::Encrypt(const SPOK_Blob& data)
 {
 	DWORD dataSize = 0;
 	NTSTATUS status = BCryptEncrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), NULL, 0, &dataSize, BCRYPT_BLOCK_PADDING);
@@ -450,7 +450,7 @@ SPOK_Blob::Blob SymmetricCipher::Encrypt(const SPOK_Blob::Blob& data)
 
 	return encryptedData;
 }
-SPOK_Blob::Blob SymmetricCipher::Decrypt(const SPOK_Blob::Blob& data)
+SPOK_Blob SymmetricCipher::Decrypt(const SPOK_Blob& data)
 {
 	DWORD dataSize = 0;
 	NTSTATUS status = BCryptDecrypt(m_hKey, const_cast<uint8_t*>(data.data()), SAFE_CAST_TO_UINT32(data.size()), NULL, const_cast<uint8_t*>(m_iv.data()), SAFE_CAST_TO_UINT32(m_iv.size()), NULL, 0, &dataSize, 0);
@@ -471,7 +471,7 @@ SPOK_Blob::Blob SymmetricCipher::Decrypt(const SPOK_Blob::Blob& data)
 	return decryptedData;
 }
 
-std::wstring BCryptUtil::RsaKeyType(const SPOK_Blob::Blob& keyBlob)
+std::wstring BCryptUtil::RsaKeyType(const SPOK_Blob& keyBlob)
 {
 	const BCRYPT_RSAKEY_BLOB* pBlob = (const BCRYPT_RSAKEY_BLOB*)keyBlob.data();
 	if (pBlob->Magic == BCRYPT_RSAPUBLIC_MAGIC)
@@ -488,12 +488,12 @@ std::wstring BCryptUtil::RsaKeyType(const SPOK_Blob::Blob& keyBlob)
 	}
 }
 
-BCryptKey BCryptUtil::Open(const SPOK_Blob::Blob& keyBlob)
+BCryptKey BCryptUtil::Open(const SPOK_Blob& keyBlob)
 {
 	return BCryptKey(keyBlob);
 }
 
-SPOK_Blob::Blob BCryptUtil::GenerateRsaKeyPair(const KeySize keySize)
+SPOK_Blob BCryptUtil::GenerateRsaKeyPair(const KeySize keySize)
 {
 	BCryptAlgHandle hAlg(TPM_ALG_ID::TPM_ALG_RSA);
 	BCRYPT_KEY_HANDLE hKey;
@@ -532,7 +532,7 @@ SPOK_Blob::Blob BCryptUtil::GenerateRsaKeyPair(const KeySize keySize)
 	return keyBlob;
 }
 
-SPOK_Blob::Blob BCryptUtil::GetRandomBytes(const uint32_t size)
+SPOK_Blob BCryptUtil::GetRandomBytes(const uint32_t size)
 {
 	BCryptAlgHandle hAlg(TPM_ALG_ID::TPM_ALG_RNG);
 	auto randomBytes = SPOK_Blob::New(size);
@@ -550,7 +550,7 @@ SPOK_Nonce::Nonce BCryptUtil::GetRandomNonce()
 	return SPOK_Nonce::Make(GetRandomBytes(20));
 }
 
-SymmetricCipher BCryptUtil::CreateSymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob::Blob& iv)
+SymmetricCipher BCryptUtil::CreateSymmetricCipher(const SPOK_Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob& iv)
 {
 	return SymmetricCipher(key, alg, mode, iv);
 }

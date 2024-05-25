@@ -1,16 +1,35 @@
 #include "SPOKBlob.h"
+#include "SPOKBlob.h"
+#include "SPOKBlob.h"
+#include "SPOKBlob.h"
+#include "SPOKBlob.h"
 #include "SPOKError.h"
 
-SPOK_Blob::Blob SPOK_Blob::New(const size_t size)
+SPOK_BinaryReader SPOK_Blob::GetReader() const
 {
-	return Blob(size, 0);
-}
-SPOK_Blob::Blob SPOK_Blob::New(const uint8_t* data, const size_t size)
-{
-	return Blob(data, data + size);
+	return SPOK_BinaryReader::New(*this);
 }
 
-void SPOK_Blob::Copy2CStylePtr(const SPOK_Blob::Blob& source, uint8_t* destPtr, const size_t destSize, size_t& sizeOut)
+SPOK_BinaryWriter SPOK_Blob::GetWriter()
+{
+	return SPOK_BinaryWriter::New(*this);
+}
+
+SPOK_Blob SPOK_Blob::New(const std::vector<uint8_t>& source)
+{
+	return SPOK_Blob(source);
+}
+
+SPOK_Blob SPOK_Blob::New(const size_t size)
+{
+	return SPOK_Blob(size, 0);
+}
+SPOK_Blob SPOK_Blob::New(const uint8_t* data, const size_t size)
+{
+	return SPOK_Blob(data, size);
+}
+
+void SPOK_Blob::Copy2CStylePtr(const SPOK_Blob& source, uint8_t* destPtr, const size_t destSize, size_t& sizeOut)
 {
 	sizeOut = source.size();
 	if (destPtr == nullptr || destSize <= sizeOut)
@@ -20,7 +39,7 @@ void SPOK_Blob::Copy2CStylePtr(const SPOK_Blob::Blob& source, uint8_t* destPtr, 
 	memcpy_s(destPtr, destSize, source.data(), source.size());
 }
 
-std::string SPOK_Blob::BlobToHex(const Blob& blob)
+std::string SPOK_Blob::BlobToHex(const SPOK_Blob& blob)
 {
 	std::string hex;
 	hex.reserve(blob.size() * 2);
@@ -32,9 +51,9 @@ std::string SPOK_Blob::BlobToHex(const Blob& blob)
 	return hex;
 }
 
-SPOK_Blob::Blob SPOK_Blob::HexToBlob(const std::string& hex)
+SPOK_Blob SPOK_Blob::HexToBlob(const std::string& hex)
 {
-	Blob blob;
+	SPOK_Blob blob;
 	blob.reserve(hex.size() / 2);
 	for (size_t i = 0; i < hex.size(); i += 2)
 	{
@@ -43,7 +62,7 @@ SPOK_Blob::Blob SPOK_Blob::HexToBlob(const std::string& hex)
 	return blob;
 }
 
-std::string SPOK_Blob::BlobToBase64(const Blob& blob)
+std::string SPOK_Blob::BlobToBase64(const SPOK_Blob& blob)
 {
 	static const std::string base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	std::string base64;
@@ -81,7 +100,7 @@ std::string SPOK_Blob::BlobToBase64(const Blob& blob)
 	return base64;
 }
 
-SPOK_Blob::Blob SPOK_Blob::Base64ToBlob(const std::string& base64)
+SPOK_Blob SPOK_Blob::Base64ToBlob(const std::string& base64)
 {
 	static const std::array<uint8_t, 256> base64Values = []()
 		{
@@ -94,7 +113,7 @@ SPOK_Blob::Blob SPOK_Blob::Base64ToBlob(const std::string& base64)
 			values['='] = 0;
 			return values;
 		}();
-		Blob blob;
+		SPOK_Blob blob;
 		blob.reserve((base64.size() + 3) / 4 * 3);
 		for (size_t i = 0; i < base64.size(); i += 4)
 		{
@@ -121,9 +140,9 @@ SPOK_Blob::Blob SPOK_Blob::Base64ToBlob(const std::string& base64)
 		return blob;
 }
 
-SPOK_Blob::Blob SPOK_Blob::FromString(const std::string& str)
+SPOK_Blob SPOK_Blob::FromString(const std::string& str)
 {
-	return Blob(str.begin(), str.end());
+	return SPOK_Blob(str.begin(), str.end());
 }
 
 uint8_t SPOK_BinaryReader::Read()
@@ -256,7 +275,7 @@ void SPOK_BinaryReader::Read(uint8_t* dest, const size_t size)
 	m_cursor += size;
 }
 
-SPOK_Blob::Blob SPOK_BinaryReader::Read(const size_t size)
+SPOK_Blob SPOK_BinaryReader::Read(const size_t size)
 {
 	if (CanRead(size) == false)
 	{
@@ -277,7 +296,7 @@ void SPOK_BinaryWriter::Write(const uint8_t* source, const size_t size)
 	m_cursor += size;
 }
 
-void SPOK_BinaryWriter::Write(const SPOK_Blob::Blob& source)
+void SPOK_BinaryWriter::Write(const SPOK_Blob& source)
 {
 	Write(source.data(), source.size());
 }
@@ -301,6 +320,10 @@ size_t SPOK_BinaryReader::Tell() const
 {
 	return m_cursor;
 }
+SPOK_BinaryReader SPOK_BinaryReader::New(const SPOK_Blob& data)
+{
+	return SPOK_BinaryReader(data);
+}
 size_t SPOK_BinaryWriter::Tell() const
 {
 	return m_cursor;
@@ -314,6 +337,11 @@ void SPOK_BinaryWriter::Clear()
 void SPOK_BinaryWriter::Resize(const size_t size)
 {
 	m_data.resize(size);
+}
+
+SPOK_BinaryWriter SPOK_BinaryWriter::New(SPOK_Blob& data)
+{
+	return SPOK_BinaryWriter(data);
 }
 
 bool SPOK_BinaryReader::CanRead(const size_t size) const

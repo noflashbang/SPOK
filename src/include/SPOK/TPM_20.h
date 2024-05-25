@@ -45,7 +45,7 @@
 struct TPM2B_PCR_SELECTION
 {
 	uint16_t AlgId;
-	SPOK_Blob::Blob Bitmap;
+	SPOK_Blob Bitmap;
 
 	uint32_t GetMask() const;
 };
@@ -63,88 +63,88 @@ struct TPM2B_PUBLIC
 	uint16_t Type;
 	uint16_t NameAlg;
 	uint32_t ObjectAttributes;
-	SPOK_Blob::Blob AuthPolicy;
+	SPOK_Blob AuthPolicy;
 	uint16_t Symmetric;
 	uint16_t Scheme;
 	uint16_t SignHash;
 	uint16_t KeyBits;
-	SPOK_Blob::Blob Exponent;
-	SPOK_Blob::Blob Modulus;
+	SPOK_Blob Exponent;
+	SPOK_Blob Modulus;
 
-	SPOK_Blob::Blob Raw;
-	static TPM2B_PUBLIC Decode(const SPOK_Blob::Blob& publicBlob);
+	SPOK_Blob Raw;
+	static TPM2B_PUBLIC Decode(const SPOK_Blob& publicBlob);
 };
 
 struct TPM2B_CREATION_DATA
 {
 	std::vector<TPM2B_PCR_SELECTION> PcrSelection;
-	SPOK_Blob::Blob Digest;
+	SPOK_Blob Digest;
 	uint8_t Locality;
 	uint16_t ParentNameAlg;
-	SPOK_Blob::Blob ParentName;
-	SPOK_Blob::Blob ParentQualifiedName;
+	SPOK_Blob ParentName;
+	SPOK_Blob ParentQualifiedName;
 	SPOK_Nonce::Nonce CreationNonce;
 
-	SPOK_Blob::Blob Raw;
-	static TPM2B_CREATION_DATA Decode(const SPOK_Blob::Blob& creationData);
+	SPOK_Blob Raw;
+	static TPM2B_CREATION_DATA Decode(const SPOK_Blob& creationData);
 };
 
 struct TPM2B_ATTEST_QUOTE
 {
 	uint32_t Generated;
 	uint16_t Type;
-	SPOK_Blob::Blob QualifiedSigner;
+	SPOK_Blob QualifiedSigner;
 	SPOK_Nonce::Nonce CreationNonce;
 	TPMS_CLOCK_INFO ClockInfo;
 	uint64_t FirmwareVersion;
 
 	std::vector<TPM2B_PCR_SELECTION> PcrSelection;
-	SPOK_Blob::Blob PcrDigest;
+	SPOK_Blob PcrDigest;
 
-	SPOK_Blob::Blob Raw;
-	static TPM2B_ATTEST_QUOTE Decode(const SPOK_Blob::Blob& attest);
+	SPOK_Blob Raw;
+	static TPM2B_ATTEST_QUOTE Decode(const SPOK_Blob& attest);
 };
 
 struct TPM2B_ATTEST_CERTIFY
 {
 	uint32_t Generated;
 	uint16_t Type;
-	SPOK_Blob::Blob QualifiedSigner;
+	SPOK_Blob QualifiedSigner;
 	SPOK_Nonce::Nonce CreationNonce;
 	TPMS_CLOCK_INFO ClockInfo;
 	uint64_t FirmwareVersion;
 
-	SPOK_Blob::Blob Name;
-	SPOK_Blob::Blob QualifiedName;
+	SPOK_Blob Name;
+	SPOK_Blob QualifiedName;
 
-	SPOK_Blob::Blob Raw;
-	static TPM2B_ATTEST_CERTIFY Decode(const SPOK_Blob::Blob& attest);
+	SPOK_Blob Raw;
+	static TPM2B_ATTEST_CERTIFY Decode(const SPOK_Blob& attest);
 };
 
 struct TPM2B_ATTEST_CREATION
 {
 	uint32_t Generated;
 	uint16_t Type;
-	SPOK_Blob::Blob QualifiedSigner;
+	SPOK_Blob QualifiedSigner;
 	SPOK_Nonce::Nonce CreationNonce;
 	TPMS_CLOCK_INFO ClockInfo;
 	uint64_t FirmwareVersion;
 
-	SPOK_Blob::Blob ObjectName;
-	SPOK_Blob::Blob CreationHash;
+	SPOK_Blob ObjectName;
+	SPOK_Blob CreationHash;
 
-	SPOK_Blob::Blob Raw;
-	static TPM2B_ATTEST_CREATION Decode(const SPOK_Blob::Blob& attest);
+	SPOK_Blob Raw;
+	static TPM2B_ATTEST_CREATION Decode(const SPOK_Blob& attest);
 };
 
 struct TPMT_SIGNATURE
 {
 	uint16_t SigAlg;
 	uint16_t HashAlg;
-	SPOK_Blob::Blob Signature;
+	SPOK_Blob Signature;
 
-	SPOK_Blob::Blob Raw;
-	static TPMT_SIGNATURE Decode(const SPOK_Blob::Blob& signature);
+	SPOK_Blob Raw;
+	static TPMT_SIGNATURE Decode(const SPOK_Blob& signature);
 };
 
 struct TPM2B_IDBINDING
@@ -181,17 +181,17 @@ struct PCP_20_KEY_BLOB
 class TPM_20
 {
 public:
-	static SPOK_Blob::Blob CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest);
-	static SPOK_Blob::Blob AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, uint32_t pcrsToInclude);
-	static SPOK_Blob::Blob WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& srk, const SPOK_Pcrs& boundPcrs);
-	static SPOK_Blob::Blob GetWrappedKeyName(const SPOK_Blob::Blob& wrappedKey);
+	static SPOK_Blob CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest);
+	static SPOK_Blob AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, uint32_t pcrsToInclude);
+	static SPOK_Blob WrapKey(const SPOK_Blob& key, const SPOK_Blob& srk, const SPOK_Pcrs& boundPcrs);
+	static SPOK_Blob GetWrappedKeyName(const SPOK_Blob& wrappedKey);
 
-	static TPM2B_IDBINDING DecodeIDBinding(const SPOK_Blob::Blob& idBinding);
-	static SPOK_Blob::Blob GenerateChallengeCredential(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& aikName, const SPOK_Blob::Blob& secret);
-	static SPOK_Blob::Blob KDFa(const uint16_t nameAlgId, const SPOK_Blob::Blob& key, const std::string& label, const SPOK_Blob::Blob& contextU, const SPOK_Blob::Blob& contextV, uint16_t bits);
-	static SPOK_Blob::Blob CFB(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& iv, const SPOK_Blob::Blob& data);
+	static TPM2B_IDBINDING DecodeIDBinding(const SPOK_Blob& idBinding);
+	static SPOK_Blob GenerateChallengeCredential(const uint16_t ekNameAlgId, const SPOK_Blob& ekPub, const SPOK_Blob& aikName, const SPOK_Blob& secret);
+	static SPOK_Blob KDFa(const uint16_t nameAlgId, const SPOK_Blob& key, const std::string& label, const SPOK_Blob& contextU, const SPOK_Blob& contextV, uint16_t bits);
+	static SPOK_Blob CFB(const SPOK_Blob& key, const SPOK_Blob& iv, const SPOK_Blob& data);
 
 private:
 
-	static SPOK_Blob::Blob GetNameForPublic(const SPOK_Blob::Blob& publicBlob);
+	static SPOK_Blob GetNameForPublic(const SPOK_Blob& publicBlob);
 };

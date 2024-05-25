@@ -14,14 +14,14 @@ struct SPOK_AIKTpmVerify
 struct SPOK_AIKKeyVerify
 {
 	SPOK_Nonce::Nonce Nonce;
-	SPOK_Blob::Blob AikBlob;
-	SPOK_Blob::Blob Name;
+	SPOK_Blob AikBlob;
+	SPOK_Blob Name;
 };
 
 struct SPOK_AIKPlatformVerify
 {
 	SPOK_Nonce::Nonce Nonce;
-	SPOK_Blob::Blob AIKBlob;
+	SPOK_Blob AIKBlob;
 };
 
 struct SPOK_TpmVerifyResult

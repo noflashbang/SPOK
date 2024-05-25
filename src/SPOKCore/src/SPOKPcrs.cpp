@@ -10,7 +10,7 @@ SPOK_Pcrs::SPOK_Pcrs(uint8_t digestSize) : _digestSize(digestSize)
 	FillDefaultPcrs();
 }
 
-SPOK_Pcrs::SPOK_Pcrs(SPOK_Blob::Blob blob)
+SPOK_Pcrs::SPOK_Pcrs(SPOK_Blob blob)
 {
 	std::fill(_pcrTable.begin(), _pcrTable.end(), 0); //zero out the table
 
@@ -55,9 +55,9 @@ void SPOK_Pcrs::FillDefaultPcrs()
 	}
 }
 
-SPOK_Blob::Blob SPOK_Pcrs::GetBlob() const
+SPOK_Blob SPOK_Pcrs::GetBlob() const
 {
-	SPOK_Blob::Blob blob;
+	SPOK_Blob blob;
 	std::copy(_pcrTable.begin(), _pcrTable.end(), std::back_inserter(blob));
 	return blob;
 }

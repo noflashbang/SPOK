@@ -51,12 +51,12 @@ private:
 class BCryptKey
 {
 public:
-	BCryptKey(SPOK_Blob::Blob keyBlob);
+	BCryptKey(SPOK_Blob keyBlob);
 	BCryptKey(const BCRYPT_KEY_HANDLE& hKey);
 	~BCryptKey();
 	operator BCRYPT_KEY_HANDLE() const;
 
-	SPOK_Blob::Blob GetPublicKey();
+	SPOK_Blob GetPublicKey();
 
 	bool IsValid() const
 	{
@@ -67,12 +67,12 @@ public:
 	uint16_t BlockLength() const;
 	uint16_t MaxMessage() const;
 
-	SPOK_Blob::Blob Encrypt(const SPOK_Blob::Blob& data, bool useIdentity); //TODO: remove useIdentity
-	SPOK_Blob::Blob Decrypt(const SPOK_Blob::Blob& data);
+	SPOK_Blob Encrypt(const SPOK_Blob& data, bool useIdentity); //TODO: remove useIdentity
+	SPOK_Blob Decrypt(const SPOK_Blob& data);
 
 	void SetSignHashAlg(uint16_t algId);
-	SPOK_Blob::Blob Sign(const SPOK_Blob::Blob& data);
-	bool Verify(const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature);
+	SPOK_Blob Sign(const SPOK_Blob& data);
+	bool Verify(const SPOK_Blob& data, const SPOK_Blob& signature);
 
 private:
 	uint16_t m_signHashAlg = 0x000B; //TPM_ALG_SHA256
@@ -90,28 +90,28 @@ enum class KeySize : uint32_t
 class SymmetricCipher
 {
 public:
-	SymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob::Blob& iv);
+	SymmetricCipher(const SPOK_Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob& iv);
 	~SymmetricCipher();
 	operator BCRYPT_KEY_HANDLE() const;
 
-	SPOK_Blob::Blob Encrypt(const SPOK_Blob::Blob& data);
-	SPOK_Blob::Blob Decrypt(const SPOK_Blob::Blob& data);
+	SPOK_Blob Encrypt(const SPOK_Blob& data);
+	SPOK_Blob Decrypt(const SPOK_Blob& data);
 
 private:
 	BCryptAlgHandle m_hAlg;
 	BCRYPT_KEY_HANDLE m_hKey;
-	SPOK_Blob::Blob m_iv;
+	SPOK_Blob m_iv;
 };
 
 class BCryptUtil
 {
 public:
-	static std::wstring RsaKeyType(const SPOK_Blob::Blob& keyBlob);
+	static std::wstring RsaKeyType(const SPOK_Blob& keyBlob);
 
-	static BCryptKey Open(const SPOK_Blob::Blob& keyBlob);
-	static SPOK_Blob::Blob GenerateRsaKeyPair(const KeySize keySize);
-	static SPOK_Blob::Blob GetRandomBytes(const uint32_t size);
+	static BCryptKey Open(const SPOK_Blob& keyBlob);
+	static SPOK_Blob GenerateRsaKeyPair(const KeySize keySize);
+	static SPOK_Blob GetRandomBytes(const uint32_t size);
 	static SPOK_Nonce::Nonce GetRandomNonce();
 
-	static SymmetricCipher CreateSymmetricCipher(const SPOK_Blob::Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob::Blob& iv);
+	static SymmetricCipher CreateSymmetricCipher(const SPOK_Blob& key, const std::wstring& alg, const std::wstring& mode, const SPOK_Blob& iv);
 };

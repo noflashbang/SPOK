@@ -150,7 +150,8 @@ TcgLog TcgLog::Parse(const std::vector<uint8_t>& tcgLogData)
 {
 	TcgLog tcgLog;
 	uint32_t offset = 0;
-	SPOK_BinaryReader stream(tcgLogData);
+	auto logBlob = SPOK_Blob::New(tcgLogData);
+	auto stream = logBlob.GetReader();
 
 	// Parse the TCG log header
 	if (tcgLogData.size() < 65)
@@ -377,7 +378,7 @@ std::vector<uint8_t> TcgLog::Serialize(const TcgLog& tcgLog)
 		size += 4; //DataSize
 		size += SAFE_CAST_TO_UINT32(event.Data.size()); //Data
 	}
-	SPOK_Blob::Blob tbsLog(size);
+	SPOK_Blob tbsLog(size);
 	SPOK_BinaryWriter stream(tbsLog);
 
 	stream.LE_Write32(0);

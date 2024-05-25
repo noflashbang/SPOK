@@ -10,7 +10,7 @@ SPOKServer::~SPOKServer()
 {
 }
 
-SPOK_AIKPlatformAttestation SPOKServer::AIKAttestationDecode(const SPOK_Blob::Blob& attQuote)
+SPOK_AIKPlatformAttestation SPOKServer::AIKAttestationDecode(const SPOK_Blob& attQuote)
 {
 	return SPOK_AIKPlatformAttestation(attQuote);
 }
@@ -25,7 +25,7 @@ SPOK_Pcrs SPOKServer::AIKAttestationGetPCR(IAttestation& attestation)
 	auto aikPlatformAttestation = std::get<SPOK_AIKPlatformAttestation>(attestation);
 	return aikPlatformAttestation.GetTrustedPcrs();
 }
-SPOK_Blob::Blob SPOKServer::AIKAttestationGetTcgLog(IAttestation& attestation)
+SPOK_Blob SPOKServer::AIKAttestationGetTcgLog(IAttestation& attestation)
 {
 	if (!std::holds_alternative<SPOK_AIKPlatformAttestation>(attestation))
 	{
@@ -37,18 +37,18 @@ SPOK_Blob::Blob SPOKServer::AIKAttestationGetTcgLog(IAttestation& attestation)
 	return aikPlatformAttestation.GetTrustedTsbLog();
 }
 
-SPOK_AIKTpmAttestation SPOKServer::AIKTpmAttestationDecode(const SPOK_Blob::Blob& idBinding)
+SPOK_AIKTpmAttestation SPOKServer::AIKTpmAttestationDecode(const SPOK_Blob& idBinding)
 {
 	return SPOK_AIKTpmAttestation(idBinding);
 }
 
-SPOK_Blob::Blob SPOKServer::AIKGetTpmAttestationChallenge(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& aikName, const SPOK_Blob::Blob& secret)
+SPOK_Blob SPOKServer::AIKGetTpmAttestationChallenge(const uint16_t ekNameAlgId, const SPOK_Blob& ekPub, const SPOK_Blob& aikName, const SPOK_Blob& secret)
 {
 	auto challenge = TPM_20::GenerateChallengeCredential(ekNameAlgId, ekPub, aikName, secret);
 	return challenge;
 };
 
-SPOK_AIKKeyAttestation SPOKServer::AIKKeyAttestationDecode(const SPOK_Blob::Blob& attKey)
+SPOK_AIKKeyAttestation SPOKServer::AIKKeyAttestationDecode(const SPOK_Blob& attKey)
 {
 	return SPOK_AIKKeyAttestation(attKey);
 }
@@ -60,40 +60,40 @@ SPOK_VerifyResult SPOKServer::AttestationVerify(IAttestation& attestation, const
 }
 
 //Basic Crypto Operations
-SPOK_Blob::Blob SPOKServer::Decrypt(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data)
+SPOK_Blob SPOKServer::Decrypt(const SPOK_Blob& key, const SPOK_Blob& data)
 {
 	BCryptKey keyHandle(key);
 	return keyHandle.Decrypt(data);
 }
 
-SPOK_Blob::Blob SPOKServer::Encrypt(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data)
+SPOK_Blob SPOKServer::Encrypt(const SPOK_Blob& key, const SPOK_Blob& data)
 {
 	BCryptKey keyHandle(key);
 	return keyHandle.Encrypt(data, false);
 }
-SPOK_Blob::Blob SPOKServer::Sign(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data)
+SPOK_Blob SPOKServer::Sign(const SPOK_Blob& key, const SPOK_Blob& data)
 {
 	BCryptKey keyHandle(key);
 	return keyHandle.Sign(data);
 }
-bool SPOKServer::VerifySignature(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& data, const SPOK_Blob::Blob& signature)
+bool SPOKServer::VerifySignature(const SPOK_Blob& key, const SPOK_Blob& data, const SPOK_Blob& signature)
 {
 	BCryptKey keyHandle(key);
 	return keyHandle.Verify(data, signature);
 }
 
 //Key Helpers
-SPOK_Blob::Blob SPOKServer::GenerateRSAKeyPair(KeySize keySize)
+SPOK_Blob SPOKServer::GenerateRSAKeyPair(KeySize keySize)
 {
 	return BCryptUtil::GenerateRsaKeyPair(keySize);
 }
 
-SPOK_Blob::Blob SPOKServer::WrapKeyForPlatformImport(const SPOK_Blob::Blob& keyToWrap, const SPOK_Blob::Blob& srk, const SPOK_Pcrs& boundPcrs)
+SPOK_Blob SPOKServer::WrapKeyForPlatformImport(const SPOK_Blob& keyToWrap, const SPOK_Blob& srk, const SPOK_Pcrs& boundPcrs)
 {
 	return TPM_20::WrapKey(keyToWrap, srk, boundPcrs);
 }
 
-SPOK_Blob::Blob SPOKServer::GetWrappedKeyName(const SPOK_Blob::Blob& keyWrap)
+SPOK_Blob SPOKServer::GetWrappedKeyName(const SPOK_Blob& keyWrap)
 {
 	return TPM_20::GetWrappedKeyName(keyWrap);
 }

@@ -49,7 +49,7 @@ uint32_t TPM2B_PCR_SELECTION::GetMask() const
 	return pcrsToInclude;
 }
 
-SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest)
+SPOK_Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, const SPOK_PlatformKey& keyToAttest)
 {
 	PlatformAik aikKey(aik);
 	auto aikProvider = aikKey.GetProviderHandle();
@@ -67,14 +67,14 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 	auto keyHandle = key.GetPlatformHandle();
 	auto aikSignatureSize = aikKey.GetSignatureSize();
 
-	SPOK_Blob::Blob cmd;
+	SPOK_Blob cmd;
 	cmd.resize(512);
-	SPOK_Blob::Blob rsp;
+	SPOK_Blob rsp;
 	rsp.resize(512);
 
 	uint32_t rspSize = SAFE_CAST_TO_UINT32(rsp.size());
 
-	auto bw = SPOK_BinaryWriter(cmd);
+	auto bw = cmd.GetWriter();
 	uint32_t usageAuthSize = 2 * sizeof(UINT32) + // authHandle
 		2 * sizeof(UINT16) + // nonceNULL
 		2 * sizeof(BYTE) +   // sessionAttributes
@@ -146,8 +146,8 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 
 	// calculate the quote length
 	auto required = sizeof(SPOK_KEY_ATT_BLOB) + certifyInfoSize + sigSize;
-	auto quote = SPOK_Blob::Blob(required);
-	auto bwQuote = SPOK_BinaryWriter(quote);
+	auto quote = SPOK_Blob::New(required);
+	auto bwQuote = quote.GetWriter();
 
 	SPOK_KEY_ATT_BLOB keyAttBlob;
 	keyAttBlob.Magic = SPOK_KEY_ATT_MAGIC;
@@ -163,7 +163,7 @@ SPOK_Blob::Blob TPM_20::CertifyKey(const SPOK_PlatformKey& aik, const SPOK_Nonce
 	return quote;
 }
 
-SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, uint32_t pcrsToInclude)
+SPOK_Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_Nonce::Nonce& nonce, uint32_t pcrsToInclude)
 {
 	//Grab the tsb log
 	auto tsbLog = NCryptUtil::GetFilteredTbsLog(pcrsToInclude);
@@ -183,7 +183,7 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	}
 	uint16_t algId = static_cast<uint16_t>(algIdfromTcg);
 
-	SPOK_Blob::Blob pcrProfile;
+	SPOK_Blob pcrProfile;
 	//count
 	pcrProfile.push_back(0x00);
 	pcrProfile.push_back(0x00);
@@ -207,12 +207,12 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	auto aikHandle = aikKey.GetPlatformHandle();
 	auto aikSignatureSize = aikKey.GetSignatureSize();
 
-	SPOK_Blob::Blob cmd;
+	SPOK_Blob cmd;
 	cmd.resize(512);
-	SPOK_Blob::Blob rsp;
+	SPOK_Blob rsp;
 	rsp.resize(512);
 
-	auto bw = SPOK_BinaryWriter(cmd);
+	auto bw = cmd.GetWriter();
 	uint32_t usageAuthSize = sizeof(UINT32) + // authHandle
 		sizeof(UINT16) + // nonceNULL
 		sizeof(BYTE) +   // sessionAttributes
@@ -286,8 +286,8 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 
 	// calculate the quote length
 	auto required = sizeof(SPOK_PLATFORM_ATT_BLOB) + pcrsSize + quoteSize + sigSize + tsbLog.size();
-	auto quoteBlob = SPOK_Blob::Blob(required);
-	auto bwQuote = SPOK_BinaryWriter(quoteBlob);
+	auto quoteBlob = SPOK_Blob::New(required);
+	auto bwQuote = quoteBlob.GetWriter();
 
 	SPOK_PLATFORM_ATT_BLOB platAttBlob;
 	platAttBlob.Magic = SPOK_PLATFORM_ATT_MAGIC;
@@ -307,11 +307,11 @@ SPOK_Blob::Blob TPM_20::AttestPlatform(const SPOK_PlatformKey& aik, const SPOK_N
 	return quoteBlob;
 }
 
-SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& srk, const SPOK_Pcrs& boundPcrs)
+SPOK_Blob TPM_20::WrapKey(const SPOK_Blob& key, const SPOK_Blob& srk, const SPOK_Pcrs& boundPcrs)
 {
 	PCP_20_KEY_BLOB keyBlob;
 	memset(&keyBlob, 0, sizeof(PCP_20_KEY_BLOB));
-	SPOK_Blob::Blob defaultExponent = { 0x01, 0x00, 0x01 };
+	SPOK_Blob defaultExponent = { 0x01, 0x00, 0x01 };
 	BCRYPT_RSAKEY_BLOB* pKeyPair = (BCRYPT_RSAKEY_BLOB*)key.data();
 
 	auto pcrMask = boundPcrs.GetMask();
@@ -330,18 +330,18 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	BCryptKey srkKey(srk);
 	auto blockLength = srkKey.BlockLength();
 
-	SPOK_Blob::Blob orPolicy(SHA256_DIGEST_SIZE + sizeof(uint32_t) + (4 * SHA256_DIGEST_SIZE)); // TPM_CC_PolicyOR + 4 * (Policies)
-	auto opbw = SPOK_BinaryWriter(orPolicy);
-	SPOK_Blob::Blob zeroHash(SHA256_DIGEST_SIZE, 0x00);
+	SPOK_Blob orPolicy(SHA256_DIGEST_SIZE + sizeof(uint32_t) + (4 * SHA256_DIGEST_SIZE)); // TPM_CC_PolicyOR + 4 * (Policies)
+	auto opbw = orPolicy.GetWriter();
+	SPOK_Blob zeroHash(SHA256_DIGEST_SIZE, 0x00);
 	opbw.Write(zeroHash);
 	opbw.BE_Write32(0x00000171); // TPM_CC_PolicyOR
 
-	SPOK_Blob::Blob pcrCompositeDigest;
+	SPOK_Blob pcrCompositeDigest;
 
 	uint32_t policyListSize = sizeof(uint32_t) + // count
 		4 * (sizeof(uint16_t) + SHA256_DIGEST_SIZE); // we can only have 4 policies
-	SPOK_Blob::Blob policyDigestList(policyListSize);
-	auto pdlbw = SPOK_BinaryWriter(policyDigestList);
+	SPOK_Blob policyDigestList(policyListSize);
+	auto pdlbw = policyDigestList.GetWriter();
 	pdlbw.BE_Write32(0x00000004); // count
 
 	if (pcrMask == 0)
@@ -363,10 +363,10 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 			3 + // pcr selection
 			SHA256_DIGEST_SIZE;  // pcr digest
 
-		SPOK_Blob::Blob pcrPolicy(pcrPolicySize);
-		auto ppbw = SPOK_BinaryWriter(pcrPolicy);
+		SPOK_Blob pcrPolicy(pcrPolicySize);
+		auto ppbw = pcrPolicy.GetWriter();
 
-		SPOK_Blob::Blob pcrComposite;
+		SPOK_Blob pcrComposite;
 
 		//add all selected pcrs to the composite
 		for (uint32_t ii = 0; ii < AVAILABLE_PLATFORM_PCRS; ++ii)
@@ -423,17 +423,17 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 			sizeof(uint8_t);
 		pcrDigestSize = SHA256_DIGEST_SIZE;
 	}
-	SPOK_Blob::Blob pcrBinding(pcrBindingSize);
-	SPOK_Blob::Blob pcrDigest(pcrDigestSize);
+	SPOK_Blob pcrBinding(pcrBindingSize);
+	SPOK_Blob pcrDigest(pcrDigestSize);
 
 	if (pcrMask != 0)
 	{
-		auto pbw = SPOK_BinaryWriter(pcrBinding);
+		auto pbw = pcrBinding.GetWriter();
 		pbw.Write(SAFE_CAST_TO_UINT8(pcrMask & 0x000000ff));
 		pbw.Write(SAFE_CAST_TO_UINT8((pcrMask & 0x0000ff00) >> 8));
 		pbw.Write(SAFE_CAST_TO_UINT8((pcrMask & 0x00ff0000) >> 16));
 
-		auto pdbw = SPOK_BinaryWriter(pcrDigest);
+		auto pdbw = pcrDigest.GetWriter();
 		pdbw.Write(pcrCompositeDigest);
 	}
 
@@ -452,8 +452,8 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 		sizeof(uint32_t) + // exponent
 		sizeof(uint16_t) + // size
 		pKeyPair->cbModulus; // modulus
-	SPOK_Blob::Blob publicKey(publicSize);
-	auto pkbw = SPOK_BinaryWriter(publicKey);
+	SPOK_Blob publicKey(publicSize);
+	auto pkbw = publicKey.GetWriter();
 	pkbw.BE_Write16(0x0001); // TPM_ALG_RSA
 	pkbw.BE_Write16(TPM_API_ALG_ID_SHA256); // TPM_ALG_SHA256
 	pkbw.BE_Write32(objectAttributes); // objectAttributes
@@ -482,8 +482,8 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	auto publicName = GetNameForPublic(publicKey);
 
 	uint32_t encryptedSecretSize = sizeof(uint16_t) + blockLength;
-	SPOK_Blob::Blob encryptedSecret(encryptedSecretSize);
-	auto esbw = SPOK_BinaryWriter(encryptedSecret);
+	SPOK_Blob encryptedSecret(encryptedSecretSize);
+	auto esbw = encryptedSecret.GetWriter();
 	esbw.BE_Write16(blockLength);
 
 	//get the random seed
@@ -501,8 +501,8 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 		sizeof(uint16_t) +     // TPMU_SENSITIVE_COMPOSITE.size
 		pKeyPair->cbPrime1;
 
-	SPOK_Blob::Blob tpm12HostageBlob(tpm12HostageBlobSize);
-	auto thbw = SPOK_BinaryWriter(tpm12HostageBlob);
+	SPOK_Blob tpm12HostageBlob(tpm12HostageBlobSize);
+	auto thbw = tpm12HostageBlob.GetWriter();
 	thbw.BE_Write16(SAFE_CAST_TO_UINT16((tpm12HostageBlobSize - sizeof(uint16_t)))); // TPM2B_SENSITIVE.size
 	thbw.BE_Write16(0x0001); // TPMT_SENSITIVE.sensitiveType = RSA
 	thbw.BE_Write16(0x0000); // authValue.Size
@@ -522,7 +522,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	auto hmacKey = KDFa(TPM_API_ALG_ID_SHA256, seed, "INTEGRITY", SPOK_Blob::New(0), SPOK_Blob::New(0), SHA256_DIGEST_SIZE * 8);
 
 	auto hmacInput = SPOK_Blob::New(protectedBlob.size() + publicName.size());
-	auto hibw = SPOK_BinaryWriter(hmacInput);
+	auto hibw = hmacInput.GetWriter();
 	hibw.Write(protectedBlob);
 	hibw.Write(publicName);
 
@@ -547,9 +547,9 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	keyBlob.PcrAlgId = boundPcrs.GetAlgId();
 
 	//build the key blob
-	SPOK_Blob::Blob keyBlobOut;
+	SPOK_Blob keyBlobOut;
 	keyBlobOut.resize(sizeof(PCP_20_KEY_BLOB) + keyBlob.PublicSize + keyBlob.PolicyDigestListSize + keyBlob.PcrBindingSize + keyBlob.PcrDigestSize + keyBlob.EncryptedSecretSize + keyBlob.Tpm12HostageBlobSize);
-	auto bw = SPOK_BinaryWriter(keyBlobOut);
+	auto bw = keyBlobOut.GetWriter();
 	bw.Write((uint8_t*)&keyBlob, sizeof(PCP_20_KEY_BLOB));
 
 	bw.BE_Write16(SAFE_CAST_TO_UINT16(publicKey.size()));
@@ -568,7 +568,7 @@ SPOK_Blob::Blob TPM_20::WrapKey(const SPOK_Blob::Blob& key, const SPOK_Blob::Blo
 	return keyBlobOut;
 }
 
-SPOK_Blob::Blob TPM_20::GetWrappedKeyName(const SPOK_Blob::Blob& wrappedKey)
+SPOK_Blob TPM_20::GetWrappedKeyName(const SPOK_Blob& wrappedKey)
 {
 	//seek to the start of the public key
 	auto br = SPOK_BinaryReader(wrappedKey);
@@ -579,7 +579,7 @@ SPOK_Blob::Blob TPM_20::GetWrappedKeyName(const SPOK_Blob::Blob& wrappedKey)
 	return GetNameForPublic(publicKey);
 }
 
-TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob::Blob& publicBlob)
+TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob& publicBlob)
 {
 	auto br = SPOK_BinaryReader(publicBlob);
 
@@ -616,7 +616,7 @@ TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob::Blob& publicBlob)
 	auto keybits = br.BE_Read16();
 	auto exponent = br.BE_Read32();
 
-	auto exponentBlob = SPOK_Blob::Blob();
+	auto exponentBlob = SPOK_Blob();
 
 	auto exponentArray = std::array<uint8_t, 4>
 	{
@@ -649,7 +649,7 @@ TPM2B_PUBLIC TPM2B_PUBLIC::Decode(const SPOK_Blob::Blob& publicBlob)
 	return TPM2B_PUBLIC{ type, nameAlg, objectAttributes, authPolicy, symmetric, scheme, signHashAlg, keybits, exponentBlob, modulus, publicBlob };
 }
 
-TPM2B_CREATION_DATA TPM2B_CREATION_DATA::Decode(const SPOK_Blob::Blob& creationBlob)
+TPM2B_CREATION_DATA TPM2B_CREATION_DATA::Decode(const SPOK_Blob& creationBlob)
 {
 	auto br = SPOK_BinaryReader(creationBlob);
 
@@ -684,7 +684,7 @@ TPM2B_CREATION_DATA TPM2B_CREATION_DATA::Decode(const SPOK_Blob::Blob& creationB
 	return TPM2B_CREATION_DATA{ prcSelection, digest, locality, parentNameAlg, parentName, parentQualifiedName, creationNonce, creationBlob };
 }
 
-TPM2B_ATTEST_QUOTE TPM2B_ATTEST_QUOTE::Decode(const SPOK_Blob::Blob& attestBlob)
+TPM2B_ATTEST_QUOTE TPM2B_ATTEST_QUOTE::Decode(const SPOK_Blob& attestBlob)
 {
 	auto br = SPOK_BinaryReader(attestBlob);
 
@@ -734,7 +734,7 @@ TPM2B_ATTEST_QUOTE TPM2B_ATTEST_QUOTE::Decode(const SPOK_Blob::Blob& attestBlob)
 	return TPM2B_ATTEST_QUOTE{ generated, type, qualifiedSigner, creationNonce, clockInfo, firmwareVersion, prcSelection, pcrDigest, attestBlob };
 }
 
-TPM2B_ATTEST_CERTIFY TPM2B_ATTEST_CERTIFY::Decode(const SPOK_Blob::Blob& certifyBlob)
+TPM2B_ATTEST_CERTIFY TPM2B_ATTEST_CERTIFY::Decode(const SPOK_Blob& certifyBlob)
 {
 	auto br = SPOK_BinaryReader(certifyBlob);
 
@@ -776,7 +776,7 @@ TPM2B_ATTEST_CERTIFY TPM2B_ATTEST_CERTIFY::Decode(const SPOK_Blob::Blob& certify
 	return TPM2B_ATTEST_CERTIFY{ generated, type, qualifiedSigner, creationNonce, clockInfo, firmwareVersion, name, qualifiedName, certifyBlob };
 }
 
-TPM2B_ATTEST_CREATION TPM2B_ATTEST_CREATION::Decode(const SPOK_Blob::Blob& attestBlob)
+TPM2B_ATTEST_CREATION TPM2B_ATTEST_CREATION::Decode(const SPOK_Blob& attestBlob)
 {
 	auto br = SPOK_BinaryReader(attestBlob);
 
@@ -818,7 +818,7 @@ TPM2B_ATTEST_CREATION TPM2B_ATTEST_CREATION::Decode(const SPOK_Blob::Blob& attes
 	return TPM2B_ATTEST_CREATION{ generated, type, qualifiedSigner, creationNonce, clockInfo, firmwareVersion, objectName, creationHash, attestBlob };
 }
 
-TPMT_SIGNATURE TPMT_SIGNATURE::Decode(const SPOK_Blob::Blob& signatureBlob)
+TPMT_SIGNATURE TPMT_SIGNATURE::Decode(const SPOK_Blob& signatureBlob)
 {
 	auto br = SPOK_BinaryReader(signatureBlob);
 
@@ -830,7 +830,7 @@ TPMT_SIGNATURE TPMT_SIGNATURE::Decode(const SPOK_Blob::Blob& signatureBlob)
 	return TPMT_SIGNATURE{ sigAlg, sigHashAlg, signature, signatureBlob };
 }
 
-TPM2B_IDBINDING TPM_20::DecodeIDBinding(const SPOK_Blob::Blob& idBinding)
+TPM2B_IDBINDING TPM_20::DecodeIDBinding(const SPOK_Blob& idBinding)
 {
 	auto br = SPOK_BinaryReader(idBinding);
 
@@ -854,7 +854,7 @@ TPM2B_IDBINDING TPM_20::DecodeIDBinding(const SPOK_Blob::Blob& idBinding)
 	return TPM2B_IDBINDING{ pubStruct, creationStruct, attStruct, sigStruct };
 }
 
-SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, const SPOK_Blob::Blob& ekPub, const SPOK_Blob::Blob& aikName, const SPOK_Blob::Blob& secret)
+SPOK_Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, const SPOK_Blob& ekPub, const SPOK_Blob& aikName, const SPOK_Blob& secret)
 {
 	//AES key size
 	const uint16_t AES_KEY_SIZE = 16;
@@ -870,14 +870,14 @@ SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, 
 	auto seed = BCryptUtil::GetRandomBytes(AES_KEY_SIZE);
 
 	//create the AES key from the seed
-	auto aesKey = KDFa(ekNameAlgId, seed, "STORAGE", aikName, SPOK_Blob::Blob(), AES_KEY_SIZE * 8);
+	auto aesKey = KDFa(ekNameAlgId, seed, "STORAGE", aikName, SPOK_Blob(), AES_KEY_SIZE * 8);
 
 	//create the IV - zeros
-	auto iv = SPOK_Blob::Blob(AES_KEY_SIZE, 0x00);
+	auto iv = SPOK_Blob(AES_KEY_SIZE, 0x00);
 
 	//encrypt the secret
 	auto secretBlob = SPOK_Blob::New(secret.size() + sizeof(uint16_t));
-	auto bw = SPOK_BinaryWriter(secretBlob);
+	auto bw = secretBlob.GetWriter();
 	bw.BE_Write16(SAFE_CAST_TO_UINT16(secret.size()));
 	bw.Write(secret);
 
@@ -886,12 +886,12 @@ SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, 
 	encryptedSecret.resize(secretBlob.size());
 
 	//generate hmac key
-	auto hmacKey = KDFa(ekNameAlgId, seed, "INTEGRITY", SPOK_Blob::Blob(), SPOK_Blob::Blob(), SHA256_DIGEST_SIZE * 8);
+	auto hmacKey = KDFa(ekNameAlgId, seed, "INTEGRITY", SPOK_Blob(), SPOK_Blob(), SHA256_DIGEST_SIZE * 8);
 
 	//calculate the outer hmac
 	auto outerHmacHaser = Hasher::Create_HMAC(ekNameAlgId, hmacKey);
 	auto outerBlob = SPOK_Blob::New(encryptedSecret.size() + aikName.size());
-	auto outerBw = SPOK_BinaryWriter(outerBlob);
+	auto outerBw = outerBlob.GetWriter();
 	outerBw.Write(encryptedSecret);
 	outerBw.Write(aikName);
 	auto outerHmac = outerHmacHaser.OneShotHash(outerBlob);
@@ -913,8 +913,8 @@ SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, 
 		encryptedSecret.size() + // TPM2B_DIGEST credential value
 		sizeof(uint16_t) + ekBlockLength));     // TPM2B_ENCRYPTED_SECRET protecting credential value
 
-	auto challengeObject = SPOK_Blob::Blob(challengeSize);
-	auto challengeBw = SPOK_BinaryWriter(challengeObject);
+	auto challengeObject = SPOK_Blob::New(challengeSize);
+	auto challengeBw = challengeObject.GetWriter();
 
 	challengeBw.BE_Write16(SAFE_CAST_TO_UINT16(challengeSize - sizeof(uint16_t) - sizeof(uint16_t) - ekBlockLength));
 	challengeBw.BE_Write16(SAFE_CAST_TO_UINT16(outerHmac.size()));
@@ -927,18 +927,18 @@ SPOK_Blob::Blob TPM_20::GenerateChallengeCredential(const uint16_t ekNameAlgId, 
 	return challengeObject;
 }
 
-SPOK_Blob::Blob TPM_20::KDFa(const uint16_t nameAlgId, const SPOK_Blob::Blob& key, const std::string& label, const SPOK_Blob::Blob& contextU, const SPOK_Blob::Blob& contextV, uint16_t bits)
+SPOK_Blob TPM_20::KDFa(const uint16_t nameAlgId, const SPOK_Blob& key, const std::string& label, const SPOK_Blob& contextU, const SPOK_Blob& contextV, uint16_t bits)
 {
 	uint32_t iteration = 0;
 	uint16_t outSize = bits / 8;
 	uint16_t counter = 0;
-	SPOK_Blob::Blob out;
+	SPOK_Blob out;
 
 	//calculate the size of the buffer
 	auto bufferSize = sizeof(uint32_t) + label.size() + sizeof(uint8_t) + sizeof(UINT16) + contextU.size() + contextV.size() + sizeof(UINT16);
-	auto buffer = SPOK_Blob::Blob(bufferSize);
+	auto buffer = SPOK_Blob::New(bufferSize);
 
-	auto bw = SPOK_BinaryWriter(buffer);
+	auto bw = buffer.GetWriter();
 	bw.BE_Write32(iteration);
 	bw.Write((const uint8_t*)label.data(), label.size());
 	bw.Write(0x00); //null terminator
@@ -978,13 +978,13 @@ SPOK_Blob::Blob TPM_20::KDFa(const uint16_t nameAlgId, const SPOK_Blob::Blob& ke
 	return out;
 }
 
-SPOK_Blob::Blob TPM_20::CFB(const SPOK_Blob::Blob& key, const SPOK_Blob::Blob& iv, const SPOK_Blob::Blob& data)
+SPOK_Blob TPM_20::CFB(const SPOK_Blob& key, const SPOK_Blob& iv, const SPOK_Blob& data)
 {
 	auto cipher = BCryptUtil::CreateSymmetricCipher(key, BCRYPT_AES_ALGORITHM, BCRYPT_CHAIN_MODE_CFB, iv);
 	return cipher.Encrypt(data);
 }
 
-SPOK_Blob::Blob TPM_20::GetNameForPublic(const SPOK_Blob::Blob& publicBlob)
+SPOK_Blob TPM_20::GetNameForPublic(const SPOK_Blob& publicBlob)
 {
 	auto pkbr = SPOK_BinaryReader(publicBlob);
 	pkbr.BE_Read16(); // TPM_ALG_RSA
@@ -994,8 +994,8 @@ SPOK_Blob::Blob TPM_20::GetNameForPublic(const SPOK_Blob::Blob& publicBlob)
 	auto publicNameHash = hasherPublicName.OneShotHash(publicBlob);
 
 	//add the algid and return
-	SPOK_Blob::Blob publicName(sizeof(uint16_t) + publicNameHash.size());
-	auto pnbw = SPOK_BinaryWriter(publicName);
+	SPOK_Blob publicName(sizeof(uint16_t) + publicNameHash.size());
+	auto pnbw = publicName.GetWriter();
 	pnbw.BE_Write16(tpmAlgId);
 	pnbw.Write(publicNameHash);
 
