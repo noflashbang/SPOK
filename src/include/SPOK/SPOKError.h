@@ -116,12 +116,6 @@ public:
 	SPOK_TcgLogFailure(const std::string& message) noexcept : std::runtime_error(message) {}
 };
 
-#define SPOK_OKAY  ( 0)
-#define SPOK_ERROR (0x80000000)
-
-#define SPOK_SUCCESS(x) ((x & SPOK_ERROR) == 0)
-#define SPOK_FAILURE(x) ((x & SPOK_ERROR) != 0)
-
 #define SPOK_THROW_ERROR(x, msg) throw SPOK_Error::SPOK_This_Error(x, msg)
 
 #define SPOK_OVERFLOW             (0x80000001)

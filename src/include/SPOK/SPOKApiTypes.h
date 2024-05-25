@@ -35,3 +35,9 @@ enum class NCRYPT_MACHINE_KEY : int
 };
 
 typedef std::int32_t SPOKSTATUS;
+
+#define SPOK_OKAY  (0)
+#define SPOK_ERROR (0x80000000)
+
+#define SPOK_SUCCESS(x) ((x & SPOK_ERROR) == 0)
+#define SPOK_FAILURE(x) ((x & SPOK_ERROR) != 0)

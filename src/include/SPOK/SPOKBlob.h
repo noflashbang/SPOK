@@ -80,6 +80,7 @@ public:
 
 	//string conversions
 	static SPOK_Blob FromString(const std::string& str);
+	static SPOK_Blob FromString(const std::wstring& str);
 
 private:
 

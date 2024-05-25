@@ -145,6 +145,11 @@ SPOK_Blob SPOK_Blob::FromString(const std::string& str)
 	return SPOK_Blob(str.begin(), str.end());
 }
 
+SPOK_Blob SPOK_Blob::FromString(const std::wstring& str)
+{
+	return SPOK_Blob(str.begin(), str.end());
+}
+
 uint8_t SPOK_BinaryReader::Read()
 {
 	if (CanRead(1) == false)
