@@ -1,6 +1,6 @@
 # SPOK API
 
-The SPOK API is divided into two main parts: the Client API (SPOKClientApi.h) and the Server API (SPOKServerApi.h).
+The Secure Platform Ops Kit (SPOK) API is divided into two main parts: the Client API (SPOKClientApi.h) and the Server API (SPOKServerApi.h).
 
 Together, these APIs provide a comprehensive set of functions for managing and using Attestation Identity Keys (AIKs), performing cryptographic operations, and handling attestations. They are designed to be used in a client-server model, where the client performs operations and the server verifies and responds to those operations.
 
